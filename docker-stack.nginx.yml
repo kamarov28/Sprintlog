@@ -1,0 +1,94 @@
+version: "3.8"
+
+services:
+  web:
+    image: your-dockerhub/sprintlog-nginx:1.0
+    ports:
+      - "80:80"
+    networks:
+      - sprintlog
+    deploy:
+      replicas: 1
+
+  app:
+    image: your-dockerhub/sprintlog-app:1.0
+    environment:
+      APP_NAME: SprintLog
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://sprintlog.local}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: sprintlog
+      DB_USERNAME: sprintlog
+      DB_PASSWORD: ${DB_PASSWORD}
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      MAIL_MAILER: smtp
+      MAIL_HOST: ${MAIL_HOST:-mail.sprintlog.local}
+      MAIL_PORT: ${MAIL_PORT:-25}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@sprintlog.local}
+      MAIL_FROM_NAME: SprintLog
+    networks:
+      - sprintlog
+    volumes:
+      - sprintlog_storage:/var/www/html/storage
+    deploy:
+      replicas: 1
+
+  worker:
+    image: your-dockerhub/sprintlog-app:1.0
+    command: php artisan queue:work database --sleep=3 --tries=3 --max-time=3600
+    environment:
+      APP_NAME: SprintLog
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://sprintlog.local}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: sprintlog
+      DB_USERNAME: sprintlog
+      DB_PASSWORD: ${DB_PASSWORD}
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      MAIL_MAILER: smtp
+      MAIL_HOST: ${MAIL_HOST:-mail.sprintlog.local}
+      MAIL_PORT: ${MAIL_PORT:-25}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@sprintlog.local}
+      MAIL_FROM_NAME: SprintLog
+    networks:
+      - sprintlog
+    volumes:
+      - sprintlog_storage:/var/www/html/storage
+    deploy:
+      replicas: 1
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: sprintlog
+      MYSQL_USER: sprintlog
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    networks:
+      - sprintlog
+    volumes:
+      - sprintlog_db:/var/lib/mysql
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == sprintlog-data
+
+networks:
+  sprintlog:
+    driver: overlay
+
+volumes:
+  sprintlog_db:
+  sprintlog_storage:

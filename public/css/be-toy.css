@@ -1,0 +1,678 @@
+/* Backend Toy Standard: dense admin surfaces with the shared pastel neo-brutalist language. */
+body.theme-toy-be.app-shell--be {
+    background:
+        linear-gradient(90deg, rgba(20, 20, 20, 0.045) 1px, transparent 1px),
+        linear-gradient(rgba(20, 20, 20, 0.045) 1px, transparent 1px),
+        var(--color-bg) !important;
+    background-size: 26px 26px !important;
+    color: var(--color-text-main);
+    font-family: var(--font-body) !important;
+    overflow-x: hidden;
+}
+
+body.theme-toy-be.app-shell--be,
+body.theme-toy-be.app-shell--be .font-ui {
+    font-family: var(--font-ui) !important;
+    letter-spacing: 0 !important;
+}
+
+body.theme-toy-be.app-shell--be {
+    font-family: var(--font-body) !important;
+}
+
+body.theme-toy-be.app-shell--be .font-bank,
+body.theme-toy-be.app-shell--be .font-modula {
+    font-family: var(--font-title) !important;
+    letter-spacing: 0.035em !important;
+}
+
+body.theme-toy-be.app-shell--be h1,
+body.theme-toy-be.app-shell--be h2,
+body.theme-toy-be.app-shell--be h3,
+body.theme-toy-be.app-shell--be .logo-text,
+body.theme-toy-be.app-shell--be .be-stat__value,
+body.theme-toy-be.app-shell--be .metric-value {
+    font-family: var(--font-title) !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.035em !important;
+}
+
+body.theme-toy-be.app-shell--be .top-nav__section,
+body.theme-toy-be.app-shell--be .top-nav__description,
+body.theme-toy-be.app-shell--be .top-nav__date,
+body.theme-toy-be.app-shell--be .sidebar-section-label,
+body.theme-toy-be.app-shell--be .be-stat__label,
+body.theme-toy-be.app-shell--be .be-btn,
+body.theme-toy-be.app-shell--be .be-badge,
+body.theme-toy-be.app-shell--be th,
+body.theme-toy-be.app-shell--be label {
+    font-family: var(--font-ui) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: none !important;
+}
+
+body.theme-toy-be.app-shell--be .be-container {
+    min-height: 100vh;
+}
+
+body.theme-toy-be.app-shell--be .sidebar {
+    width: 300px;
+    padding: 1.4rem;
+    background: var(--color-panel) !important;
+    border-right: 3px solid var(--color-panel-border) !important;
+    box-shadow: 7px 0 0 var(--color-panel-border) !important;
+}
+
+body.theme-toy-be.app-shell--be .sidebar-role-card,
+body.theme-toy-be.app-shell--be .hud-panel,
+body.theme-toy-be.app-shell--be .ui-surface,
+body.theme-toy-be.app-shell--be .form-cluster,
+body.theme-toy-be.app-shell--be .auth-card,
+body.theme-toy-be.app-shell--be .metric-card,
+body.theme-toy-be.app-shell--be .be-empty {
+    border: 3px solid var(--color-panel-border) !important;
+    border-radius: 8px !important;
+    background: var(--color-panel) !important;
+    box-shadow: 7px 7px 0 var(--color-panel-border) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+body.theme-toy-be.app-shell--be .hud-panel:hover,
+body.theme-toy-be.app-shell--be .ui-surface:hover,
+body.theme-toy-be.app-shell--be .form-cluster:hover,
+body.theme-toy-be.app-shell--be .auth-card:hover,
+body.theme-toy-be.app-shell--be .metric-card:hover {
+    transform: none !important;
+    box-shadow: 7px 7px 0 var(--color-panel-border) !important;
+}
+
+body.theme-toy-be.app-shell--be .hud-panel::before,
+body.theme-toy-be.app-shell--be .hud-panel::after {
+    display: none !important;
+}
+
+body.theme-toy-be.app-shell--be .be-quick-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+}
+
+body.theme-toy-be.app-shell--be .mobile-toggle {
+    border: 3px solid var(--color-panel-border);
+    border-radius: 8px;
+    background: var(--color-sun);
+    box-shadow: 4px 4px 0 var(--color-panel-border);
+    min-height: 48px;
+    padding: 0.35rem 0.65rem;
+}
+
+body.theme-toy-be.app-shell--be .be-quick-search input,
+body.theme-toy-be.app-shell--be input[type="text"],
+body.theme-toy-be.app-shell--be input[type="password"],
+body.theme-toy-be.app-shell--be input[type="email"],
+body.theme-toy-be.app-shell--be input[type="number"],
+body.theme-toy-be.app-shell--be input[type="search"],
+body.theme-toy-be.app-shell--be input[type="file"],
+body.theme-toy-be.app-shell--be select,
+body.theme-toy-be.app-shell--be textarea {
+    min-height: 42px;
+    border: 3px solid var(--color-panel-border) !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: var(--color-text-main) !important;
+    box-shadow: 4px 4px 0 var(--color-panel-border) !important;
+    font-family: var(--font-body) !important;
+    font-weight: 700;
+}
+
+body.theme-toy-be.app-shell--be input:focus,
+body.theme-toy-be.app-shell--be select:focus,
+body.theme-toy-be.app-shell--be textarea:focus {
+    border-color: var(--color-panel-border) !important;
+    box-shadow: 4px 4px 0 var(--color-panel-border), 0 0 0 4px var(--color-sun) !important;
+    outline: none !important;
+}
+
+body.theme-toy-be.app-shell--be .be-btn,
+body.theme-toy-be.app-shell--be .btn-primary,
+body.theme-toy-be.app-shell--be .btn-secondary,
+body.theme-toy-be.app-shell--be .btn-neon,
+body.theme-toy-be.app-shell--be .btn-outline,
+body.theme-toy-be.app-shell--be .ui-button {
+    min-height: 40px;
+    border: 3px solid var(--color-panel-border) !important;
+    border-radius: 8px !important;
+    background: var(--color-panel) !important;
+    color: var(--color-text-main) !important;
+    box-shadow: 4px 4px 0 var(--color-panel-border) !important;
+}
+
+body.theme-toy-be.app-shell--be .be-btn--primary,
+body.theme-toy-be.app-shell--be .btn-primary,
+body.theme-toy-be.app-shell--be .ui-button--primary {
+    background: var(--color-primary) !important;
+}
+
+body.theme-toy-be.app-shell--be .be-btn--accent,
+body.theme-toy-be.app-shell--be .btn-secondary,
+body.theme-toy-be.app-shell--be .ui-button--secondary {
+    background: var(--color-lilac) !important;
+}
+
+body.theme-toy-be.app-shell--be .be-btn--danger {
+    background: var(--color-peach) !important;
+}
+
+body.theme-toy-be.app-shell--be .be-btn:hover,
+body.theme-toy-be.app-shell--be .btn-primary:hover,
+body.theme-toy-be.app-shell--be .btn-secondary:hover,
+body.theme-toy-be.app-shell--be .btn-neon:hover,
+body.theme-toy-be.app-shell--be .btn-outline:hover,
+body.theme-toy-be.app-shell--be .ui-button:hover {
+    transform: translate(2px, 2px) !important;
+    box-shadow: 2px 2px 0 var(--color-panel-border) !important;
+}
+
+body.theme-toy-be.app-shell--be .sidebar-links {
+    gap: 0.45rem;
+}
+
+body.theme-toy-be.app-shell--be .sidebar-links a {
+    border: 3px solid transparent;
+    border-radius: 8px;
+    padding: 0.8rem 0.9rem;
+    margin: 0;
+    font-family: var(--font-ui) !important;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: none;
+}
+
+body.theme-toy-be.app-shell--be .sidebar-links a:hover {
+    background: var(--color-sky) !important;
+    color: var(--color-text-main) !important;
+}
+
+body.theme-toy-be.app-shell--be .sidebar-links a.active {
+    border-color: var(--color-panel-border);
+    background: var(--color-primary) !important;
+    box-shadow: 5px 5px 0 var(--color-panel-border);
+}
+
+body.theme-toy-be.app-shell--be .sidebar-section-label {
+    margin: 1.35rem 0 0.5rem;
+    color: var(--color-gray);
+}
+
+body.theme-toy-be.app-shell--be .role-brief,
+body.theme-toy-be.app-shell--be .role-responsibility-grid,
+body.theme-toy-be.app-shell--be .qol-stat-grid,
+body.theme-toy-be.app-shell--be .branch-summary,
+body.theme-toy-be.app-shell--be .shipment-filter {
+    gap: 1rem;
+}
+
+body.theme-toy-be.app-shell--be .be-stat {
+    border: 2px solid var(--color-panel-border);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 4px 4px 0 var(--color-panel-border);
+}
+
+body.theme-toy-be.app-shell--be .be-stat:nth-child(2n) {
+    background: var(--color-lilac);
+}
+
+body.theme-toy-be.app-shell--be .be-stat:nth-child(3n) {
+    background: var(--color-primary);
+}
+
+body.theme-toy-be.app-shell--be .be-stat:nth-child(4n) {
+    background: var(--color-sky);
+}
+
+body.theme-toy-be.app-shell--be .be-stat__label {
+    color: var(--color-gray);
+}
+
+body.theme-toy-be.app-shell--be .app-table,
+body.theme-toy-be.app-shell--be .personnel-table,
+body.theme-toy-be.app-shell--be table {
+    font-family: var(--font-body) !important;
+    border-collapse: separate;
+    border-spacing: 0 0.45rem;
+}
+
+body.theme-toy-be.app-shell--be .app-table th,
+body.theme-toy-be.app-shell--be .personnel-table th {
+    color: var(--color-gray) !important;
+}
+
+body.theme-toy-be.app-shell--be .app-table tbody tr,
+body.theme-toy-be.app-shell--be .personnel-table tbody tr {
+    background: #ffffff;
+}
+
+body.theme-toy-be.app-shell--be .app-table tbody tr:hover,
+body.theme-toy-be.app-shell--be .hud-panel table tbody tr:hover {
+    background: var(--color-sky) !important;
+}
+
+body.theme-toy-be.app-shell--be .be-badge {
+    border: 2px solid var(--color-panel-border);
+    border-radius: 8px;
+    background: var(--color-panel);
+    color: var(--color-text-main);
+}
+
+body.theme-toy-be.app-shell--be .be-badge--primary,
+body.theme-toy-be.app-shell--be .be-badge--success {
+    background: var(--color-primary);
+}
+
+body.theme-toy-be.app-shell--be .be-badge--accent {
+    background: var(--color-lilac);
+}
+
+body.theme-toy-be.app-shell--be .be-badge--danger {
+    background: var(--color-peach);
+}
+
+body.theme-toy-be.app-shell--be .be-context-strip span,
+body.theme-toy-be.app-shell--be .inline-alert,
+body.theme-toy-be.app-shell--be .be-flash {
+    border: 3px solid var(--color-panel-border);
+    border-radius: 8px;
+    background: var(--color-sun);
+    color: var(--color-text-main);
+    box-shadow: 4px 4px 0 var(--color-panel-border);
+    font-family: var(--font-ui);
+    font-weight: 700;
+}
+
+/* Backend Toy Responsiveness Reset: one spacing/layout rhythm for every admin
+   surface so old inline grids and margin utilities cannot collapse card gaps. */
+body.theme-toy-be.app-shell--be {
+    --be-page-pad: clamp(1rem, 2.4vw, 2.65rem);
+    --be-stack-gap: clamp(1.25rem, 2vw, 1.85rem);
+    --be-card-gap: clamp(1.35rem, 2.2vw, 2.05rem);
+    --be-panel-pad: clamp(1.25rem, 2vw, 1.75rem);
+    --be-shadow-size: 7px;
+}
+
+body.theme-toy-be.app-shell--be .main-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--be-stack-gap);
+    padding: var(--be-page-pad);
+    min-width: 0;
+    overflow-x: clip;
+}
+
+body.theme-toy-be.app-shell--be .main-content > .top-nav,
+body.theme-toy-be.app-shell--be .main-content > .be-context-strip,
+body.theme-toy-be.app-shell--be .main-content > .hud-panel,
+body.theme-toy-be.app-shell--be .main-content > .ui-surface,
+body.theme-toy-be.app-shell--be .main-content > .grid-2,
+body.theme-toy-be.app-shell--be .main-content > .grid-3,
+body.theme-toy-be.app-shell--be .main-content > .grid-4 {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+body.theme-toy-be.app-shell--be .top-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.05rem;
+    min-height: 0;
+    padding: var(--be-panel-pad) !important;
+    align-items: start;
+    border: 3px solid var(--color-panel-border) !important;
+    border-radius: 8px !important;
+    background: var(--color-panel) !important;
+    box-shadow: 7px 7px 0 var(--color-panel-border) !important;
+    overflow: visible !important;
+    box-sizing: border-box;
+    max-width: calc(100% - var(--be-shadow-size));
+}
+
+body.theme-toy-be.app-shell--be .top-nav::before {
+    display: none !important;
+}
+
+body.theme-toy-be.app-shell--be .top-nav__identity {
+    grid-row: 2;
+    max-width: 760px;
+}
+
+body.theme-toy-be.app-shell--be .top-nav h2 {
+    max-width: 840px;
+    font-size: clamp(3rem, 4.45vw, 4.8rem) !important;
+    overflow-wrap: normal;
+    word-break: normal;
+    text-wrap: balance;
+}
+
+body.theme-toy-be.app-shell--be .top-nav__tools {
+    grid-row: 1;
+    justify-self: end;
+    position: static;
+    width: min(100%, 680px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 0.85rem;
+    align-self: start;
+}
+
+body.theme-toy-be.app-shell--be .top-nav__actions {
+    grid-column: auto;
+    justify-content: flex-start;
+    margin-top: 1rem;
+}
+
+body.theme-toy-be.app-shell--be .top-nav__date {
+    justify-self: end;
+    align-self: center;
+}
+
+body.theme-toy-be.app-shell--be .be-context-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin: 0 !important;
+}
+
+body.theme-toy-be.app-shell--be .hud-panel,
+body.theme-toy-be.app-shell--be .ui-surface,
+body.theme-toy-be.app-shell--be .form-cluster,
+body.theme-toy-be.app-shell--be .auth-card,
+body.theme-toy-be.app-shell--be .metric-card,
+body.theme-toy-be.app-shell--be .be-empty {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: calc(100% - var(--be-shadow-size));
+    padding: var(--be-panel-pad);
+}
+
+body.theme-toy-be.app-shell--be .grid-2,
+body.theme-toy-be.app-shell--be .grid-3,
+body.theme-toy-be.app-shell--be .grid-4,
+body.theme-toy-be.app-shell--be .be-grid,
+body.theme-toy-be.app-shell--be .qol-stat-grid,
+body.theme-toy-be.app-shell--be .branch-summary,
+body.theme-toy-be.app-shell--be .role-responsibility-grid {
+    display: grid;
+    gap: var(--be-card-gap) !important;
+    align-items: stretch;
+    min-width: 0;
+}
+
+body.theme-toy-be.app-shell--be .grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+}
+
+body.theme-toy-be.app-shell--be .be-grid--2 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+}
+
+body.theme-toy-be.app-shell--be .grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+body.theme-toy-be.app-shell--be .be-grid--3 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+body.theme-toy-be.app-shell--be .grid-4,
+body.theme-toy-be.app-shell--be .qol-stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+}
+
+body.theme-toy-be.app-shell--be .be-grid--4 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+}
+
+body.theme-toy-be.app-shell--be .branch-summary,
+body.theme-toy-be.app-shell--be .role-responsibility-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+body.theme-toy-be.app-shell--be .hud-panel > form > .grid-2,
+body.theme-toy-be.app-shell--be .hud-panel > form > .grid-3,
+body.theme-toy-be.app-shell--be .hud-panel > form > .grid-4,
+body.theme-toy-be.app-shell--be .be-form-grid,
+body.theme-toy-be.app-shell--be .hud-panel > form > [style*="grid-template-columns"] {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--be-form-grid-min, 230px)), 1fr)) !important;
+    gap: var(--be-card-gap) !important;
+    align-items: end !important;
+}
+
+body.theme-toy-be.app-shell--be .hud-panel > [style*="justify-content: flex-end"],
+body.theme-toy-be.app-shell--be .hud-header,
+body.theme-toy-be.app-shell--be .be-actions {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.85rem;
+    margin-top: var(--be-stack-gap) !important;
+}
+
+body.theme-toy-be.app-shell--be .hud-header {
+    justify-content: space-between;
+    margin-top: 0 !important;
+}
+
+body.theme-toy-be.app-shell--be .be-actions--start {
+    justify-content: flex-start;
+}
+
+body.theme-toy-be.app-shell--be .be-actions--between {
+    justify-content: space-between;
+}
+
+body.theme-toy-be.app-shell--be .metric-card {
+    min-height: 132px;
+}
+
+body.theme-toy-be.app-shell--be .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0 0 calc(var(--be-shadow-size) + 0.5rem);
+}
+
+body.theme-toy-be.app-shell--be .app-table,
+body.theme-toy-be.app-shell--be .personnel-table {
+    min-width: var(--be-table-min-width, 720px);
+}
+
+body.theme-toy-be.app-shell--be .be-field {
+    min-width: 0;
+}
+
+body.theme-toy-be.app-shell--be .be-field label {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+}
+
+body.theme-toy-be.app-shell--be .mb-2 {
+    margin-bottom: 0.65rem !important;
+}
+
+body.theme-toy-be.app-shell--be .mb-4 {
+    margin-bottom: var(--be-stack-gap) !important;
+}
+
+body.theme-toy-be.app-shell--be .pickup-queue-table {
+    --be-table-min-width: 1080px;
+}
+
+body.theme-toy-be.app-shell--be .pickup-assign-form {
+    display: grid;
+    grid-template-columns: minmax(132px, 1fr) auto;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 230px;
+    margin: 0;
+}
+
+body.theme-toy-be.app-shell--be .pickup-assign-select {
+    min-height: 42px;
+    width: 100%;
+    min-width: 0;
+    padding: 0.45rem 0.55rem !important;
+    font-size: 0.76rem !important;
+}
+
+body.theme-toy-be.app-shell--be .pickup-assign-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 78px;
+    min-height: 42px;
+    padding: 0.45rem 0.75rem !important;
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+    white-space: nowrap;
+    overflow: visible;
+}
+
+@media (max-width: 1180px) {
+    body.theme-toy-be.app-shell--be .pickup-assign-form {
+        grid-template-columns: 1fr;
+        min-width: 170px;
+    }
+
+    body.theme-toy-be.app-shell--be .pickup-assign-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 1280px) {
+    body.theme-toy-be.app-shell--be .top-nav {
+        grid-template-columns: 1fr;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__identity,
+    body.theme-toy-be.app-shell--be .top-nav h2 {
+        max-width: 100%;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__tools {
+        max-width: 760px;
+    }
+}
+
+@media (max-width: 760px) {
+    body.theme-toy-be.app-shell--be {
+        --be-page-pad: 1rem;
+        --be-stack-gap: 1rem;
+        --be-card-gap: 1rem;
+        --be-panel-pad: 1rem;
+        --be-shadow-size: 5px;
+    }
+
+    body.theme-toy-be.app-shell--be .main-content {
+        overflow-x: hidden;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav {
+        max-width: calc(100% - var(--be-shadow-size));
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__identity {
+        grid-row: 1;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__tools {
+        grid-row: 2;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__identity {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__identity,
+    body.theme-toy-be.app-shell--be .top-nav__identity > div,
+    body.theme-toy-be.app-shell--be .top-nav__tools {
+        min-width: 0;
+        width: 100%;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__identity .mobile-toggle {
+        justify-self: start;
+        margin-right: 0;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav h2 {
+        font-size: clamp(1.9rem, 8.2vw, 2.45rem) !important;
+        line-height: 1.05;
+        letter-spacing: 0.015em !important;
+        text-wrap: pretty;
+        overflow-wrap: normal;
+        word-break: keep-all;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__tools,
+    body.theme-toy-be.app-shell--be .be-quick-search {
+        grid-template-columns: 1fr;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__description {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    body.theme-toy-be.app-shell--be .top-nav__date,
+    body.theme-toy-be.app-shell--be .top-nav__actions {
+        justify-self: start;
+    }
+
+    body.theme-toy-be.app-shell--be .be-btn,
+    body.theme-toy-be.app-shell--be .btn-primary,
+    body.theme-toy-be.app-shell--be .btn-secondary,
+    body.theme-toy-be.app-shell--be .btn-neon,
+    body.theme-toy-be.app-shell--be .btn-outline,
+    body.theme-toy-be.app-shell--be .ui-button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+/* Toy UI: no scroll reveal. Admin users need to see that more content exists
+   immediately, so legacy "fade/slide in when visible" states are neutralized. */
+body.theme-toy .section-animate,
+body.theme-toy .reveal-on-scroll,
+body.theme-toy.app-shell .section-animate,
+body.theme-toy.app-shell .reveal-on-scroll,
+body.theme-toy-be.app-shell--be .section-animate,
+body.theme-toy-be.app-shell--be .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+body.theme-toy-be.app-shell--be .page-header h1,
+body.theme-toy-be.app-shell--be .page-header p,
+body.theme-toy-be.app-shell--be .top-nav h2,
+body.theme-toy-be.app-shell--be .hud-panel,
+body.theme-toy-be.app-shell--be .ui-surface,
+body.theme-toy-be.app-shell--be .metric-card,
+body.theme-toy-be.app-shell--be .be-empty {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    animation: none !important;
+}
