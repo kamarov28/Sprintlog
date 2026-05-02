@@ -2,7 +2,7 @@
 
 Folder ini menyiapkan skenario terbaru 2 VM:
 
-- VM 1: Ansible controller, Docker Swarm manager, DNS/DHCP optional, load balancer.
+- VM 1: Ansible controller, Docker Swarm manager, DNS/DHCP/mail optional, load balancer.
 - VM 2: Ansible managed node, Docker Swarm worker, aplikasi replica.
 
 ## Cara Pakai Cepat
@@ -20,7 +20,9 @@ cp inventory.example.ini inventory.ini
 Edit:
 
 - `inventory.ini`: IP dan user SSH VM.
-- `group_vars/all.yml`: `app_repo_url`, `sprintlog_image`, `APP_KEY`, password database, domain.
+- `group_vars/all.yml`: `app_repo_url`, IP, domain, dan password database.
+- `app_key` boleh dikosongkan untuk lab. Playbook akan membuat `APP_KEY` otomatis.
+- `database_seed_mode` default `accounts`, jadi akun deploy dibuat otomatis dari variable.
 
 Tes koneksi:
 
@@ -47,4 +49,7 @@ curl -I http://sprintlog.local
 
 - DHCP default `false`, aktifkan hanya kalau VM 1 memang satu-satunya DHCP server pada network lab.
 - DNS default `true`, domain `sprintlog.local` diarahkan ke VM 1/load balancer.
-- Image aplikasi harus sudah dipush ke registry yang bisa di-pull oleh VM 1 dan VM 2.
+- Mail server default `false`, aktifkan `enable_mail: true` hanya jika jobsheet meminta Postfix/Dovecot/Mutt.
+- VM 1 otomatis menjalankan registry lokal pada `controller_ip:5000`.
+- Playbook otomatis build image Apache dari repo hasil clone, push ke registry lokal, lalu deploy stack.
+- Data lokal tidak otomatis ikut. Jika ingin import data sekarang, export SQL ke `infra/database/restore.sql`, set `database_restore_enabled: true`, dan ubah `database_seed_mode: none`.

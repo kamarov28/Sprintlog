@@ -91,6 +91,132 @@
       when: enable_dhcp | bool
       notify: Restart isc-dhcp-server
 
+    - name: Preseed Postfix as internet site when mail is enabled
+      ansible.builtin.debconf:
+        name: postfix
+        question: "{{ item.question }}"
+        value: "{{ item.value }}"
+        vtype: "{{ item.vtype }}"
+      loop:
+        - question: postfix/mailname
+          value: "{{ mail_domain }}"
+          vtype: string
+        - question: postfix/main_mailer_type
+          value: Internet Site
+          vtype: select
+      when: enable_mail | bool
+
+    - name: Install mail server packages when enabled
+      ansible.builtin.apt:
+        name:
+          - postfix
+          - mailutils
+          - dovecot-core
+          - dovecot-imapd
+          - mutt
+        state: present
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      when: enable_mail | bool
+
+    - name: Configure mailname
+      ansible.builtin.template:
+        src: templates/mailname.j2
+        dest: /etc/mailname
+        mode: "0644"
+      when: enable_mail | bool
+      notify: Restart postfix
+
+    - name: Configure Postfix main.cf for lab mail
+      ansible.builtin.template:
+        src: templates/postfix-main.cf.j2
+        dest: /etc/postfix/main.cf
+        mode: "0644"
+      when: enable_mail | bool
+      notify: Restart postfix
+
+    - name: Configure Dovecot Maildir storage
+      ansible.builtin.lineinfile:
+        path: /etc/dovecot/conf.d/10-mail.conf
+        regexp: '^mail_location\s*='
+        line: 'mail_location = maildir:~/Maildir'
+        create: false
+      when: enable_mail | bool
+      notify: Restart dovecot
+
+    - name: Enable Dovecot IMAP protocol
+      ansible.builtin.lineinfile:
+        path: /etc/dovecot/dovecot.conf
+        regexp: '^protocols\s*='
+        line: 'protocols = imap'
+        insertafter: EOF
+      when: enable_mail | bool
+      notify: Restart dovecot
+
+    - name: Configure default Mutt profile for new users
+      ansible.builtin.template:
+        src: templates/muttrc.j2
+        dest: /etc/skel/.muttrc
+        mode: "0644"
+      when: enable_mail | bool
+
+    - name: Create lab mail users
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        shell: /bin/bash
+        create_home: true
+        state: present
+      loop: "{{ mail_test_users }}"
+      when: enable_mail | bool
+
+    - name: Set lab mail user passwords
+      ansible.builtin.shell: "echo '{{ item.name }}:{{ item.password }}' | chpasswd"
+      loop: "{{ mail_test_users }}"
+      no_log: true
+      when: enable_mail | bool
+
+    - name: Create Maildir folders for lab mail users
+      ansible.builtin.file:
+        path: "/home/{{ item.0.name }}/Maildir/{{ item.1 }}"
+        state: directory
+        owner: "{{ item.0.name }}"
+        group: "{{ item.0.name }}"
+        mode: "0700"
+      loop: "{{ mail_test_users | product(['cur', 'new', 'tmp', 'Sent', 'Drafts']) | list }}"
+      when: enable_mail | bool
+
+    - name: Configure Mutt profile for lab mail users
+      ansible.builtin.template:
+        src: templates/muttrc.j2
+        dest: "/home/{{ item.name }}/.muttrc"
+        owner: "{{ item.name }}"
+        group: "{{ item.name }}"
+        mode: "0644"
+      loop: "{{ mail_test_users }}"
+      when: enable_mail | bool
+
+    - name: Enable mail server service
+      ansible.builtin.service:
+        name: postfix
+        enabled: true
+        state: started
+      when: enable_mail | bool
+
+    - name: Enable Dovecot service
+      ansible.builtin.service:
+        name: dovecot
+        enabled: true
+        state: started
+      when: enable_mail | bool
+
+    - name: Send optional test mail from user2 to user1
+      ansible.builtin.shell: |
+        echo "Halo, email ini dikirim dari user2" | mail -s "Uji Coba" user1
+      become_user: user2
+      when:
+        - enable_mail | bool
+        - mail_send_test_message | bool
+
   handlers:
     - name: Restart bind9
       ansible.builtin.service:
@@ -102,12 +228,35 @@
         name: isc-dhcp-server
         state: restarted
 
+    - name: Restart postfix
+      ansible.builtin.service:
+        name: postfix
+        state: restarted
+
+    - name: Restart dovecot
+      ansible.builtin.service:
+        name: dovecot
+        state: restarted
+
 - name: Install Docker on both VMs
   hosts: docker_hosts
   become: true
   vars_files:
     - group_vars/all.yml
   tasks:
+    - name: Ensure Docker config directory exists
+      ansible.builtin.file:
+        path: /etc/docker
+        state: directory
+        mode: "0755"
+
+    - name: Configure Docker daemon for VM 1 local registry
+      ansible.builtin.template:
+        src: templates/docker-daemon.json.j2
+        dest: /etc/docker/daemon.json
+        mode: "0644"
+      notify: Restart docker
+
     - name: Install Docker engine packages
       ansible.builtin.apt:
         name: "{{ docker_engine_packages }}"
@@ -140,6 +289,12 @@
         append: true
       when: ansible_user is defined
 
+  handlers:
+    - name: Restart docker
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+
 - name: Initialize Docker Swarm on VM 1
   hosts: swarm_manager
   become: true
@@ -159,6 +314,37 @@
       ansible.builtin.command: docker swarm join-token -q worker
       register: worker_join_token
       changed_when: false
+
+    - name: Check local Docker registry container
+      ansible.builtin.command: docker inspect -f '{{ "{{.State.Running}}" }}' {{ docker_registry_container_name }}
+      register: registry_state
+      failed_when: false
+      changed_when: false
+
+    - name: Start existing local Docker registry container
+      ansible.builtin.command: docker start {{ docker_registry_container_name }}
+      when:
+        - registry_state.rc == 0
+        - registry_state.stdout != "true"
+
+    - name: Create local Docker registry on VM 1
+      ansible.builtin.command: >
+        docker run -d
+        --restart=always
+        -p 5000:5000
+        -v sprintlog_registry:/var/lib/registry
+        --name {{ docker_registry_container_name }}
+        registry:2
+      when: registry_state.rc != 0
+
+    - name: Wait until local registry responds
+      ansible.builtin.uri:
+        url: "http://{{ docker_registry_host }}/v2/"
+        status_code: 200
+      register: registry_health
+      retries: 10
+      delay: 3
+      until: registry_health.status == 200
 
 - name: Join VM 2 as Docker Swarm worker
   hosts: swarm_workers
@@ -191,6 +377,28 @@
         version: "{{ app_repo_version }}"
         update: true
 
+    - name: Build SprintLog Apache image from cloned repository
+      ansible.builtin.command: docker build -t {{ sprintlog_image }} -f Dockerfile.apache .
+      args:
+        chdir: "{{ app_deploy_path }}"
+
+    - name: Push SprintLog image to VM 1 local registry
+      ansible.builtin.command: docker push {{ sprintlog_image }}
+
+    - name: Decide whether APP_KEY must be generated
+      ansible.builtin.set_fact:
+        sprintlog_generate_app_key: "{{ (app_key | default('') | trim) == '' or 'CHANGE_THIS' in (app_key | default('')) }}"
+
+    - name: Generate Laravel APP_KEY automatically for lab deployment
+      ansible.builtin.command: docker run --rm --entrypoint php {{ sprintlog_image }} artisan key:generate --show
+      register: generated_app_key
+      changed_when: sprintlog_generate_app_key | bool
+      when: sprintlog_generate_app_key | bool
+
+    - name: Set runtime Laravel APP_KEY
+      ansible.builtin.set_fact:
+        sprintlog_runtime_app_key: "{{ generated_app_key.stdout if (sprintlog_generate_app_key | bool) else app_key }}"
+
     - name: Write stack environment file
       ansible.builtin.template:
         src: templates/stack.env.j2
@@ -214,3 +422,85 @@
     - name: Print SprintLog services
       ansible.builtin.debug:
         var: stack_services.stdout_lines
+
+    - name: Wait until database service has one replica
+      ansible.builtin.command: docker service ls --filter name={{ stack_name }}_db --format '{{ "{{.Replicas}}" }}'
+      register: db_replicas
+      changed_when: false
+      retries: 20
+      delay: 6
+      until: "'1/1' in db_replicas.stdout"
+
+    - name: Wait until app service has two replicas
+      ansible.builtin.command: docker service ls --filter name={{ stack_name }}_app --format '{{ "{{.Replicas}}" }}'
+      register: app_replicas
+      changed_when: false
+      retries: 20
+      delay: 6
+      until: "'2/2' in app_replicas.stdout"
+
+    - name: Check database restore file when enabled
+      ansible.builtin.stat:
+        path: "{{ database_restore_file }}"
+      register: database_restore_stat
+      when: database_restore_enabled | bool
+
+    - name: Fail when database restore file is missing
+      ansible.builtin.fail:
+        msg: "Database restore file not found: {{ database_restore_file }}"
+      when:
+        - database_restore_enabled | bool
+        - not database_restore_stat.stat.exists
+
+    - name: Restore SQL dump into SprintLog database when enabled
+      ansible.builtin.shell: |
+        docker run --rm \
+          --network {{ stack_name }}_sprintlog_net \
+          --env-file ./.env \
+          -v {{ database_restore_file }}:/restore.sql:ro \
+          mysql:8.4 \
+          sh -lc 'mysql -h db -u sprintlog -p"$DB_PASSWORD" sprintlog < /restore.sql'
+      args:
+        chdir: "{{ app_deploy_path }}/infra/docker"
+      when: database_restore_enabled | bool
+
+    - name: Run Laravel migration, storage link, and optimize automatically
+      ansible.builtin.shell: |
+        docker run --rm \
+          --network {{ stack_name }}_sprintlog_net \
+          --env-file ./.env \
+          -v {{ stack_name }}_sprintlog_storage:/var/www/html/storage \
+          {{ sprintlog_image }} \
+          sh -lc 'php artisan migrate --force && (php artisan storage:link || true) && php artisan optimize'
+      args:
+        chdir: "{{ app_deploy_path }}/infra/docker"
+      register: laravel_bootstrap
+      retries: 10
+      delay: 15
+      until: laravel_bootstrap.rc == 0
+
+    - name: Print Laravel bootstrap output
+      ansible.builtin.debug:
+        var: laravel_bootstrap.stdout_lines
+
+    - name: Seed deploy login accounts when enabled
+      ansible.builtin.shell: |
+        docker run --rm \
+          --network {{ stack_name }}_sprintlog_net \
+          --env-file ./.env \
+          {{ sprintlog_image }} \
+          php artisan db:seed --class=Database\\Seeders\\DeploymentAccountSeeder --force
+      args:
+        chdir: "{{ app_deploy_path }}/infra/docker"
+      when: database_seed_mode == "accounts"
+
+    - name: Seed full demo data when enabled
+      ansible.builtin.shell: |
+        docker run --rm \
+          --network {{ stack_name }}_sprintlog_net \
+          --env-file ./.env \
+          {{ sprintlog_image }} \
+          php artisan db:seed --force
+      args:
+        chdir: "{{ app_deploy_path }}/infra/docker"
+      when: database_seed_mode == "demo"

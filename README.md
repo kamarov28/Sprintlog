@@ -6,6 +6,8 @@ Dokumen ini dibuat sebagai panduan deployment ke Linux Ubuntu, baik dengan cara 
 
 Untuk skenario terbaru 2 VM dengan VM 1 sebagai controller/manager/load balancer dan VM 2 sebagai managed worker, lihat [docs/two-vm-infrastructure-runbook.md](docs/two-vm-infrastructure-runbook.md).
 
+Jika butuh format laporan/praktik seperti jobsheet lab, gunakan [docs/jobsheet-sprintlog-2vm-deployment.md](docs/jobsheet-sprintlog-2vm-deployment.md).
+
 Artefak Ansible dan Docker untuk skenario 2 VM tersedia di:
 
 - `infra/ansible`

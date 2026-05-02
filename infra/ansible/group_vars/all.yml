@@ -10,16 +10,54 @@ app_repo_url: "https://github.com/USERNAME/sprintlog.git"
 app_repo_version: "main"
 app_deploy_path: /opt/sprintlog
 
-# Docker image pushed from the VCS build output.
-sprintlog_image: "USERNAME/sprintlog-apache:latest"
+# Local registry and image. Ansible builds this image on VM 1 automatically.
+docker_registry_host: "{{ controller_ip }}:5000"
+docker_registry_container_name: sprintlog-registry
+sprintlog_image_name: sprintlog-apache
+sprintlog_image_tag: latest
+sprintlog_image: "{{ docker_registry_host }}/{{ sprintlog_image_name }}:{{ sprintlog_image_tag }}"
 stack_name: sprintlog
 swarm_manager_hostname: vm1
 
 # Laravel/runtime values. Replace before production or demo grading.
 app_url: "http://{{ lab_domain }}"
-app_key: "base64:CHANGE_THIS_WITH_php_artisan_key_generate_show"
+# Leave empty for lab automation. The playbook will generate APP_KEY automatically.
+app_key: ""
 db_password: "change_this_db_password"
 db_root_password: "change_this_root_password"
+
+# Data bootstrap. "accounts" creates login accounts only, "demo" runs full DatabaseSeeder, "none" skips seeding.
+database_seed_mode: accounts
+database_restore_enabled: false
+database_restore_file: "{{ app_deploy_path }}/infra/database/restore.sql"
+deploy_branch_name: "SprintLog Hub DKI Jakarta"
+deploy_branch_city: "DKI Jakarta"
+deploy_branch_address: "Jl. Operasional SprintLog, DKI Jakarta"
+deploy_branch_phone: "1500-P001"
+deploy_admin_name: "Admin Utama"
+deploy_admin_email: "admin@sprintlog.com"
+deploy_admin_password: "password"
+deploy_cashier_name: "Kasir DKI Jakarta"
+deploy_cashier_email: "kasir@sprintlog.com"
+deploy_cashier_password: "password"
+deploy_manager_name: "Manajer DKI Jakarta"
+deploy_manager_email: "manager@sprintlog.com"
+deploy_manager_password: "password"
+deploy_courier_name: "Kurir Satria"
+deploy_courier_email: "kurir@sprintlog.com"
+deploy_courier_password: "password"
+
+# Optional lab mail server on VM 1. Keep off unless required by the jobsheet.
+enable_mail: false
+mail_hostname: "mail.{{ lab_domain }}"
+mail_domain: "{{ lab_domain }}"
+mail_networks: "127.0.0.0/8 {{ controller_ip }}/32 {{ managed_ip }}/32"
+mail_test_users:
+  - name: user1
+    password: password
+  - name: user2
+    password: password
+mail_send_test_message: false
 
 base_packages:
   - ca-certificates
@@ -40,7 +78,6 @@ docker_engine_packages:
 
 docker_compose_v2_package: docker-compose-v2
 docker_compose_fallback_package: docker-compose
-  - docker-compose-v2
 
 enable_dns: true
 dns_zone_file: /etc/bind/db.sprintlog.local
