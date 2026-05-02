@@ -4,7 +4,13 @@ SprintLog adalah aplikasi logistik berbasis Laravel untuk landing page, tracking
 
 Dokumen ini dibuat sebagai panduan deployment ke Linux Ubuntu, baik dengan cara manual maupun dengan Docker, Docker Swarm, DNS, DHCP, dan Ansible.
 
-Untuk skenario infrastruktur 3 VM dengan Ansible controller dan managed nodes, lihat [docs/infrastructure-runbook.md](docs/infrastructure-runbook.md).
+Untuk skenario terbaru 2 VM dengan VM 1 sebagai controller/manager/load balancer dan VM 2 sebagai managed worker, lihat [docs/two-vm-infrastructure-runbook.md](docs/two-vm-infrastructure-runbook.md).
+
+Artefak Ansible dan Docker untuk skenario 2 VM tersedia di:
+
+- `infra/ansible`
+- `infra/docker/docker-stack.two-vm.yml`
+- `infra/docker/haproxy.cfg`
 
 ## Stack Aplikasi
 

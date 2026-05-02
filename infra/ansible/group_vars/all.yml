@@ -1,0 +1,55 @@
+---
+# Copy inventory.example.ini to inventory.ini, then adjust these values for the lab.
+lab_domain: sprintlog.local
+controller_ip: 192.168.56.10
+managed_ip: 192.168.56.20
+swarm_advertise_addr: "{{ controller_ip }}"
+
+# VCS source. Set this to the GitHub repo URL after the repository is pushed.
+app_repo_url: "https://github.com/USERNAME/sprintlog.git"
+app_repo_version: "main"
+app_deploy_path: /opt/sprintlog
+
+# Docker image pushed from the VCS build output.
+sprintlog_image: "USERNAME/sprintlog-apache:latest"
+stack_name: sprintlog
+swarm_manager_hostname: vm1
+
+# Laravel/runtime values. Replace before production or demo grading.
+app_url: "http://{{ lab_domain }}"
+app_key: "base64:CHANGE_THIS_WITH_php_artisan_key_generate_show"
+db_password: "change_this_db_password"
+db_root_password: "change_this_root_password"
+
+base_packages:
+  - ca-certificates
+  - curl
+  - git
+  - gnupg
+  - lsb-release
+  - openssh-server
+  - python3
+  - python3-apt
+  - python3-pip
+  - rsync
+  - software-properties-common
+  - unzip
+
+docker_engine_packages:
+  - docker.io
+
+docker_compose_v2_package: docker-compose-v2
+docker_compose_fallback_package: docker-compose
+  - docker-compose-v2
+
+enable_dns: true
+dns_zone_file: /etc/bind/db.sprintlog.local
+
+# Keep DHCP off unless this VM is the only DHCP server on that lab network.
+enable_dhcp: false
+dhcp_interface: enp0s8
+dhcp_subnet: 192.168.56.0
+dhcp_netmask: 255.255.255.0
+dhcp_range_start: 192.168.56.100
+dhcp_range_end: 192.168.56.200
+dhcp_router: 192.168.56.1

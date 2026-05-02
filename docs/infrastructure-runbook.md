@@ -2,6 +2,8 @@
 
 Dokumen ini adalah runbook persiapan deployment SprintLog dengan 3 VM. Alurnya disusun mengikuti kebutuhan infrastruktur: Ansible controller, managed nodes, remote SSH, web server, HTTPS, DNS, Docker, Dockerfile, Docker Swarm, backup/restore, dan VCS.
 
+> Update terbaru memakai 2 VM. Untuk skenario yang sekarang dipakai, gunakan [two-vm-infrastructure-runbook.md](two-vm-infrastructure-runbook.md). Dokumen 3 VM ini tetap disimpan sebagai referensi kalau topologi lab berubah lagi.
+
 Gunakan dokumen ini sebagai panduan lab dan checklist teknis sebelum deployment.
 
 ## Target Topologi
