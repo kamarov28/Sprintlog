@@ -20,6 +20,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         git \
+	libonig-dev \
         libpng-dev \
         libxml2-dev \
         libzip-dev \
