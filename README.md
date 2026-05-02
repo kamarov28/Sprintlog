@@ -10,7 +10,7 @@ Artefak Ansible dan Docker untuk skenario 2 VM tersedia di:
 
 - `infra/ansible`
 - `infra/docker/docker-stack.two-vm.yml`
-- `infra/docker/haproxy.cfg`
+- `infra/docker/nginx-lb.conf`
 
 ## Stack Aplikasi
 

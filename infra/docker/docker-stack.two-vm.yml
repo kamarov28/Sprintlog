@@ -23,12 +23,12 @@ x-app-env: &app-env
 
 services:
   lb:
-    image: haproxy:2.9-alpine
+    image: nginx:1.27-alpine
     ports:
       - "80:80"
     configs:
-      - source: haproxy_config
-        target: /usr/local/etc/haproxy/haproxy.cfg
+      - source: nginx_lb_config
+        target: /etc/nginx/conf.d/default.conf
     networks:
       - sprintlog_net
     deploy:
@@ -48,7 +48,6 @@ services:
       - sprintlog_storage:/var/www/html/storage
     deploy:
       replicas: 2
-      endpoint_mode: dnsrr
       placement:
         max_replicas_per_node: 1
       restart_policy:
@@ -99,5 +98,5 @@ volumes:
   sprintlog_storage:
 
 configs:
-  haproxy_config:
-    file: ./haproxy.cfg
+  nginx_lb_config:
+    file: ./nginx-lb.conf

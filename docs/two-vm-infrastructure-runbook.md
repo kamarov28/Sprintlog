@@ -6,7 +6,7 @@ Runbook ini mengikuti update terbaru: hanya ada 2 VM Ubuntu.
 
 | VM | Contoh IP | Role | Isi |
 | --- | --- | --- | --- |
-| VM 1 | `192.168.56.10` | Controller + Swarm manager + load balancer | Ansible, Git, Docker, DNS/DHCP optional, HAProxy, DB volume |
+| VM 1 | `192.168.56.10` | Controller + Swarm manager + load balancer | Ansible, Git, Docker, DNS/DHCP optional, Nginx load balancer, DB volume |
 | VM 2 | `192.168.56.20` | Managed node + Swarm worker | Docker, replica aplikasi |
 
 Domain lab:
@@ -25,7 +25,7 @@ admin.sprintlog.local -> 192.168.56.10
 5. Ansible install package, Docker, DNS/DHCP optional.
 6. Ansible init Docker Swarm di VM 1 dan join VM 2.
 7. VM 1 clone repo dari GitHub.
-8. Docker stack deploy aplikasi dengan HAProxy load balancer.
+8. Docker stack deploy aplikasi Apache dengan Nginx load balancer.
 
 ## VCS
 
@@ -44,7 +44,7 @@ Di VM 1 nanti Ansible akan clone dari `app_repo_url` pada `infra/ansible/group_v
 
 ## Build dan Push Image
 
-Pakai image Apache karena satu container sudah membawa web server + PHP sehingga lebih sederhana untuk load balancing 2 VM.
+Pakai image Apache untuk service aplikasi karena satu container sudah membawa web server + PHP. Load balancing tetap memakai Nginx pada service `lb`.
 
 ```bash
 docker build -t USERNAME/sprintlog-apache:latest -f Dockerfile.apache .
@@ -100,7 +100,7 @@ Stack ada di:
 infra/docker/docker-stack.two-vm.yml
 ```
 
-Kalau deploy manual dari VM 1, jalankan dari folder stack supaya path config HAProxy terbaca konsisten:
+Kalau deploy manual dari VM 1, jalankan dari folder stack supaya path config Nginx load balancer terbaca konsisten:
 
 ```bash
 cd /opt/sprintlog/infra/docker
@@ -112,7 +112,7 @@ docker stack deploy -c docker-stack.two-vm.yml sprintlog
 
 Service:
 
-- `lb`: HAProxy port 80 di VM 1.
+- `lb`: Nginx load balancer port 80 di VM 1.
 - `app`: 2 replica Laravel Apache, tersebar max 1 per node.
 - `worker`: Laravel queue worker.
 - `db`: MySQL 8.4, ditempatkan di VM 1.
@@ -186,7 +186,7 @@ docker exec -it "$APP_CONTAINER" php artisan optimize
 - [ ] `docker node ls` menampilkan 2 node.
 - [ ] Stack `sprintlog` aktif.
 - [ ] Service `app` punya 2 replica.
-- [ ] HAProxy/LB membuka `http://sprintlog.local`.
+- [ ] Nginx/LB membuka `http://sprintlog.local`.
 - [ ] DNS resolve ke VM 1.
 - [ ] Migration Laravel sukses.
 - [ ] Queue worker running.
