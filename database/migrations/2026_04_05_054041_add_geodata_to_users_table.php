@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('province_id')->nullable()->after('email')->constrained('locations')->onDelete('set null');
-            $table->decimal('latitude', 10, 8)->nullable()->after('city');
-            $table->decimal('longitude', 11, 8)->nullable()->after('latitude');
+            if (!Schema::hasColumn('users', 'province_id')) {
+                $table->foreignId('province_id')->nullable()->after('email')->constrained('locations')->onDelete('set null');
+            }
         });
     }
 
@@ -24,8 +24,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['province_id']);
-            $table->dropColumn(['province_id', 'latitude', 'longitude']);
+            if (Schema::hasColumn('users', 'province_id')) {
+                $table->dropForeign(['province_id']);
+                $table->dropColumn('province_id');
+            }
         });
     }
 };
