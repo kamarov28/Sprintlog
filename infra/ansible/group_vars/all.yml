@@ -6,7 +6,7 @@ managed_ip: 192.168.56.20
 swarm_advertise_addr: "{{ controller_ip }}"
 
 # VCS source. Set this to the GitHub repo URL after the repository is pushed.
-app_repo_url: "https://github.com/USERNAME/sprintlog.git"
+app_repo_url: "https://github.com/USERNAME/Sprintlog.git"
 app_repo_version: "main"
 app_deploy_path: /opt/sprintlog
 
