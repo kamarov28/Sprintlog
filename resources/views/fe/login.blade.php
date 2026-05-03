@@ -15,7 +15,7 @@
                     </x-fe.alert>
                 @endif
 
-                <form action="{{ route('login.post') }}" method="POST">
+                <form action="/login" method="POST">
                     @csrf
                     <x-fe.input type="email" label="Email" name="email" placeholder="nama@email.com" required />
                     <x-fe.input type="password" label="Password" name="password" placeholder="********" required />
