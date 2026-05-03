@@ -10,7 +10,7 @@
 
     <!-- Connect Custom Style -->
     <link rel="stylesheet" href="/css/style.css?v={{ config('app.asset_version') }}">
-    <link rel="stylesheet" href="{{ asset('css/be-toy.css') }}?v={{ config('app.asset_version') }}">
+    <link rel="stylesheet" href="/css/be-toy.css?v={{ config('app.asset_version') }}">
 
     @stack('head_assets')
 </head>
