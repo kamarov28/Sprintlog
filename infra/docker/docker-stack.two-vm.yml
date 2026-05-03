@@ -62,7 +62,7 @@ services:
     volumes:
       - sprintlog_storage:/var/www/html/storage
     deploy:
-      replicas: 1
+      replicas: 0
       placement:
         constraints:
           - node.role == manager

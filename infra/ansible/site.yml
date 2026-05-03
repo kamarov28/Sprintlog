@@ -378,7 +378,7 @@
         update: true
 
     - name: Build SprintLog Apache image from cloned repository
-      ansible.builtin.command: docker build -t {{ sprintlog_image }} -f Dockerfile.apache .
+      ansible.builtin.command: docker build --network=host -t {{ sprintlog_image }} -f Dockerfile.apache .
       args:
         chdir: "{{ app_deploy_path }}"
 
@@ -504,3 +504,7 @@
       args:
         chdir: "{{ app_deploy_path }}/infra/docker"
       when: database_seed_mode == "demo"
+    
+    - name: Start Sprintlog worker after database bootstrap
+      ansible.builtin.command: docker service scale {{ stack_name }}_worker=1
+      changed.when: true
