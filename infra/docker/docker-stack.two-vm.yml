@@ -5,7 +5,7 @@ x-app-env: &app-env
   APP_ENV: production
   APP_KEY: ${APP_KEY}
   APP_DEBUG: "false"
-  APP_URL: ${APP_URL:-http://sprintlog.local}
+  APP_URL: ${APP_URL:-https://sprintlog.local}
   DB_CONNECTION: mysql
   DB_HOST: db
   DB_PORT: "3306"
@@ -26,9 +26,12 @@ services:
     image: nginx:1.27-alpine
     ports:
       - "80:80"
+      - "443:443"
     configs:
       - source: nginx_lb_config
         target: /etc/nginx/conf.d/default.conf
+    volumes:
+      - ${TLS_CERT_DIR:-/opt/sprintlog/infra/docker/certs}:/etc/nginx/certs:ro
     networks:
       - sprintlog_net
     deploy:
