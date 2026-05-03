@@ -9,6 +9,7 @@ swarm_advertise_addr: "{{ controller_ip }}"
 app_repo_url: "https://github.com/USERNAME/Sprintlog.git"
 app_repo_version: "main"
 app_deploy_path: /opt/sprintlog
+app_repo_update: true
 
 # Local registry and image. Ansible builds this image on VM 1 automatically.
 docker_registry_host: "{{ controller_ip }}:5000"
@@ -79,10 +80,19 @@ docker_engine_packages:
 docker_compose_v2_package: docker-compose-v2
 docker_compose_fallback_package: docker-compose
 
+# DNS server. Keep dns_forward_ip equal to controller_ip for VM-only labs.
+# If the web must be reachable from another laptop, set dns_forward_ip to a bridged/LAN IP reachable by that laptop.
 enable_dns: true
 dns_zone_file: /etc/bind/db.sprintlog.local
+dns_forward_ip: "{{ controller_ip }}"
+dns_reverse_enabled: true
+dns_reverse_zone: "192.168.56.in-addr.arpa"
+dns_reverse_zone_file: /etc/bind/db.192.168.56
+dns_controller_ptr: "10"
+dns_managed_ptr: "20"
 
 # Keep DHCP off unless this VM is the only DHCP server on that lab network.
+# DHCP can distribute this VM as DNS server so clients can resolve lab_domain without editing hosts.
 enable_dhcp: false
 dhcp_interface: enp0s8
 dhcp_subnet: 192.168.56.0
@@ -90,3 +100,10 @@ dhcp_netmask: 255.255.255.0
 dhcp_range_start: 192.168.56.100
 dhcp_range_end: 192.168.56.200
 dhcp_router: 192.168.56.1
+dhcp_broadcast: 192.168.56.255
+dhcp_domain_name: "{{ lab_domain }}"
+dhcp_dns_servers:
+  - "{{ dns_forward_ip }}"
+dhcp_default_lease_time: 600
+dhcp_max_lease_time: 7200
+dhcp_reservations: []
