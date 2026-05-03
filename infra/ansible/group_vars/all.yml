@@ -21,11 +21,16 @@ stack_name: sprintlog
 swarm_manager_hostname: vm1
 
 # Laravel/runtime values. Replace before production or demo grading.
-app_url: "http://{{ lab_domain }}"
+app_url: "https://{{ lab_domain }}"
 # Leave empty for lab automation. The playbook will generate APP_KEY automatically.
 app_key: ""
 db_password: "change_this_db_password"
 db_root_password: "change_this_root_password"
+
+# Self-signed HTTPS for lab/demo. Browser will show a warning unless this cert is trusted by the client.
+tls_cert_dir: "{{ app_deploy_path }}/infra/docker/certs"
+tls_cert_file: "{{ tls_cert_dir }}/sprintlog.crt"
+tls_key_file: "{{ tls_cert_dir }}/sprintlog.key"
 
 # Data bootstrap. "accounts" creates login accounts only, "demo" runs full DatabaseSeeder, "none" skips seeding.
 database_seed_mode: accounts
@@ -73,6 +78,7 @@ base_packages:
   - rsync
   - software-properties-common
   - unzip
+  - openssl
 
 docker_engine_packages:
   - docker.io
