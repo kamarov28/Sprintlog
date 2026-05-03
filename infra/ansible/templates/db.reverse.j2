@@ -1,0 +1,14 @@
+$TTL 604800
+@   IN  SOA {{ lab_domain }}. admin.{{ lab_domain }}. (
+        2
+        604800
+        86400
+        2419200
+        604800 )
+
+@                       IN  NS      {{ lab_domain }}.
+{{ dns_controller_ptr }} IN  PTR     {{ lab_domain }}.
+{{ dns_controller_ptr }} IN  PTR     www.{{ lab_domain }}.
+{{ dns_controller_ptr }} IN  PTR     admin.{{ lab_domain }}.
+{{ dns_controller_ptr }} IN  PTR     vm1.{{ lab_domain }}.
+{{ dns_managed_ptr }}    IN  PTR     vm2.{{ lab_domain }}.

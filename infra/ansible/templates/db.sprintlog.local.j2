@@ -8,13 +8,15 @@ $TTL 604800
 
 @           IN  NS      {{ lab_domain }}.
 @           IN  MX 10   mail.{{ lab_domain }}.
-@           IN  A       {{ controller_ip }}
-www         IN  A       {{ controller_ip }}
-admin       IN  A       {{ controller_ip }}
-mail        IN  A       {{ controller_ip }}
-controller  IN  A       {{ controller_ip }}
-vm1         IN  A       {{ controller_ip }}
+
+@           IN  A       {{ dns_forward_ip }}
+www         IN  A       {{ dns_forward_ip }}
+admin       IN  A       {{ dns_forward_ip }}
+mail        IN  A       {{ dns_forward_ip }}
+controller  IN  A       {{ dns_forward_ip }}
+vm1         IN  A       {{ dns_forward_ip }}
+
 vm2         IN  A       {{ managed_ip }}
-app1        IN  A       {{ controller_ip }}
+app1        IN  A       {{ dns_forward_ip }}
 app2        IN  A       {{ managed_ip }}
 db          IN  A       {{ controller_ip }}

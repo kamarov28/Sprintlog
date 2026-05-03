@@ -2,3 +2,10 @@ zone "{{ lab_domain }}" {
     type master;
     file "{{ dns_zone_file }}";
 };
+
+{% if dns_reverse_enabled | bool %}
+zone "{{ dns_reverse_zone }}" {
+    type master;
+    file "{{ dns_reverse_zone_file }}";
+};
+{% endif %}
