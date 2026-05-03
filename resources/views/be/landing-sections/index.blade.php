@@ -194,7 +194,7 @@
             </div>
 
             <div class="landing-cms-actions">
-                <form action="{{ route('be.landing-sections.seed-defaults') }}" method="POST">
+                <form action="/be/landing-sections/seed-defaults" method="POST">
                     @csrf
                     <button type="submit" class="btn-neon" style="background: transparent;">FILL DEFAULTS</button>
                 </form>
