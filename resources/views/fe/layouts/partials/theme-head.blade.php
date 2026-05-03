@@ -1,3 +1,6 @@
+<link rel="icon" type="image/png" href="/artwork/logo.png">
+<link rel="shortcut icon" type="image/png" href="/artwork/logo.png">
+<link rel="apple-touch-icon" href="/artwork/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@500;600;700;800&family=Nunito:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
