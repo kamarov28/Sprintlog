@@ -533,6 +533,34 @@
       ansible.builtin.set_fact:
         sprintlog_runtime_app_key: "{{ generated_app_key.stdout if (sprintlog_generate_app_key | bool) else app_key }}"
 
+    # Self-signed HTTPS certificate for lab/demo.
+    # If removed: HTTP still works, but HTTPS on port 443 will fail because Nginx has no certificate.
+    - name: Ensure SprintLog TLS certificate directory exists
+      ansible.builtin.file:
+        path: "{{ tls_cert_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Check SprintLog TLS certificate
+      ansible.builtin.stat:
+        path: "{{ tls_cert_file }}"
+      register: sprintlog_tls_cert
+
+    - name: Generate self-signed SprintLog TLS certificate
+      ansible.builtin.command: >
+        openssl req -x509 -nodes -days 3650 -newkey rsa:2048
+        -keyout {{ tls_key_file }}
+        -out {{ tls_cert_file }}
+        -subj "/CN={{ lab_domain }}"
+        -addext "subjectAltName=DNS:{{ lab_domain }},DNS:www.{{ lab_domain }},DNS:admin.{{ lab_domain }},IP:{{ dns_forward_ip }},IP:{{ controller_ip }}"
+      when: not sprintlog_tls_cert.stat.exists
+
+    - name: Secure SprintLog TLS private key
+      ansible.builtin.file:
+        path: "{{ tls_key_file }}"
+        mode: "0600"
+      when: sprintlog_tls_cert.stat.exists or not sprintlog_tls_cert.stat.exists
+
     - name: Write stack environment file
       ansible.builtin.template:
         src: templates/stack.env.j2
