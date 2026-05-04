@@ -21,6 +21,14 @@
         group: www-data
         mode: "0775"
 
+    - name: Create NFS exports directory
+      ansible.builtin.file:
+        path: /etc/exports.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
     - name: Write SprintLog NFS export file
       ansible.builtin.template:
         src: templates/sprintlog-nfs-exports.j2
