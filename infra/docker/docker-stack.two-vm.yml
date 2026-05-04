@@ -37,7 +37,7 @@ services:
     volumes:
       - ${TLS_CERT_DIR:-/opt/sprintlog/infra/docker/certs}:/etc/nginx/certs:ro
     networks:
-      - sprintlog_net
+      - app_net
     deploy:
       replicas: 1
       placement:
@@ -50,9 +50,9 @@ services:
     image: ${SPRINTLOG_IMAGE:-USERNAME/sprintlog-apache:latest}
     environment: *app-env
     networks:
-      - sprintlog_net
+      - app_net
     volumes:
-      - sprintlog_storage:/var/www/html/storage
+      - app_storage:/var/www/html/storage
     deploy:
       replicas: 2
       placement:
@@ -65,9 +65,9 @@ services:
     command: php artisan queue:work database --sleep=3 --tries=3 --max-time=3600
     environment: *app-env
     networks:
-      - sprintlog_net
+      - app_net
     volumes:
-      - sprintlog_storage:/var/www/html/storage
+      - app_storage:/var/www/html/storage
     deploy:
       replicas: 0
       placement:
@@ -84,9 +84,9 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     networks:
-      - sprintlog_net
+      - app_net
     volumes:
-      - sprintlog_db:/var/lib/mysql
+      - db_data:/var/lib/mysql
     deploy:
       replicas: 1
       placement:
@@ -96,13 +96,16 @@ services:
         condition: any
 
 networks:
-  sprintlog_net:
+  app_net:
+    name: ${DOCKER_NETWORK_NAME:-sprintlog_net}
     driver: overlay
     attachable: true
 
 volumes:
-  sprintlog_db:
-  sprintlog_storage:
+  db_data:
+    name: ${DOCKER_DB_VOLUME_NAME:-sprintlog_db}
+  app_storage:
+    name: ${DOCKER_STORAGE_VOLUME_NAME:-sprintlog_storage}
 
 configs:
   nginx_lb_config:
