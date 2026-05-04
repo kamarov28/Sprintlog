@@ -1,4 +1,4 @@
-﻿@extends('fe.layouts.main')
+@extends('fe.layouts.main')
 
 @section('body_class', 'landing-macaron-page')
 
