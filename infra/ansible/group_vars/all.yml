@@ -33,10 +33,19 @@ nfs_export_cidr: "{{ controller_ip | regex_replace('\\.[0-9]+$', '.0') }}/24"
 
 # Laravel/runtime values. Replace before production or demo grading.
 app_url: "https://{{ lab_domain }}"
+app_timezone: Asia/Jakarta
 # Leave empty for lab automation. The playbook will generate APP_KEY automatically.
 app_key: ""
 db_password: "change_this_db_password"
 db_root_password: "change_this_root_password"
+
+# Optional phpMyAdmin service. In Docker Swarm the final service name becomes
+# <stack_name>_phpmyadmin. Set enable_phpmyadmin=false to keep the service scaled to 0.
+enable_phpmyadmin: true
+phpmyadmin_image: phpmyadmin:5.2-apache
+phpmyadmin_port: 8080
+phpmyadmin_upload_limit: 64M
+phpmyadmin_replicas: "{{ 1 if enable_phpmyadmin | bool else 0 }}"
 
 # Self-signed HTTPS for lab/demo. Browser will show a warning unless this cert is trusted by the client.
 tls_cert_dir: "{{ app_deploy_path }}/infra/docker/certs"
@@ -124,5 +133,3 @@ dhcp_dns_servers:
 dhcp_default_lease_time: 600
 dhcp_max_lease_time: 7200
 dhcp_reservations: []
-
-app_timezone: Asia/Jakarta
