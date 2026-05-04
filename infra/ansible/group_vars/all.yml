@@ -20,6 +20,12 @@ sprintlog_image: "{{ docker_registry_host }}/{{ sprintlog_image_name }}:{{ sprin
 stack_name: sprintlog
 swarm_manager_hostname: vm1
 
+# Docker Swarm resource names. Change these when a jobsheet asks for custom
+# network or volume names. Defaults match Docker stack's usual generated names.
+docker_network_name: "{{ stack_name }}_sprintlog_net"
+docker_db_volume_name: "{{ stack_name }}_sprintlog_db"
+docker_storage_volume_name: "{{ stack_name }}_sprintlog_storage"
+
 # Laravel/runtime values. Replace before production or demo grading.
 app_url: "https://{{ lab_domain }}"
 # Leave empty for lab automation. The playbook will generate APP_KEY automatically.
