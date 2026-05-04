@@ -1,0 +1,71 @@
+---
+- name: Initialize Docker Swarm on VM 1
+  hosts: swarm_manager
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+  tags:
+    - swarm
+    - registry
+  tasks:
+    - name: Check current Swarm state
+      ansible.builtin.command: docker info --format '{{ "{{.Swarm.LocalNodeState}}" }}'
+      register: swarm_state
+      changed_when: false
+
+    - name: Initialize Swarm manager
+      ansible.builtin.command: docker swarm init --advertise-addr {{ swarm_advertise_addr }}
+      when: swarm_state.stdout != "active"
+
+    - name: Read Swarm worker join token
+      ansible.builtin.command: docker swarm join-token -q worker
+      register: worker_join_token
+      changed_when: false
+
+    - name: Check local Docker registry container
+      ansible.builtin.command: docker inspect -f '{{ "{{.State.Running}}" }}' {{ docker_registry_container_name }}
+      register: registry_state
+      failed_when: false
+      changed_when: false
+
+    - name: Start existing local Docker registry container
+      ansible.builtin.command: docker start {{ docker_registry_container_name }}
+      when:
+        - registry_state.rc == 0
+        - registry_state.stdout != "true"
+
+    - name: Create local Docker registry on VM 1
+      ansible.builtin.command: >
+        docker run -d --restart=always -p 5000:5000
+        -v sprintlog_registry:/var/lib/registry
+        --name {{ docker_registry_container_name }} registry:2
+      when: registry_state.rc != 0
+
+    - name: Wait until local registry responds
+      ansible.builtin.uri:
+        url: "http://{{ docker_registry_host }}/v2/"
+        status_code: 200
+      register: registry_health
+      retries: 10
+      delay: 3
+      until: registry_health.status == 200
+
+- name: Join VM 2 as Docker Swarm worker
+  hosts: swarm_workers
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+  tags:
+    - swarm
+  tasks:
+    - name: Check current Swarm state
+      ansible.builtin.command: docker info --format '{{ "{{.Swarm.LocalNodeState}}" }}'
+      register: worker_swarm_state
+      changed_when: false
+
+    - name: Join worker to Swarm
+      ansible.builtin.command: >
+        docker swarm join
+        --token {{ hostvars[groups['swarm_manager'][0]].worker_join_token.stdout }}
+        {{ controller_ip }}:2377
+      when: worker_swarm_state.stdout != "active"
