@@ -26,6 +26,11 @@ docker_network_name: "{{ stack_name }}_sprintlog_net"
 docker_db_volume_name: "{{ stack_name }}_sprintlog_db"
 docker_storage_volume_name: "{{ stack_name }}_sprintlog_storage"
 
+# Shared storage for Laravel uploads when app replicas run on multiple Docker nodes.
+nfs_server: "{{ controller_ip }}"
+nfs_export_path: /srv/sprintlog-storage
+nfs_export_cidr: "{{ controller_ip | regex_replace('\\.[0-9]+$', '.0') }}/24"
+
 # Laravel/runtime values. Replace before production or demo grading.
 app_url: "https://{{ lab_domain }}"
 # Leave empty for lab automation. The playbook will generate APP_KEY automatically.
