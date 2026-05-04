@@ -12,7 +12,10 @@ class ProfileController extends Controller
 {
     public function index()
     {
-        $provinces = \DB::table('locations')->whereNull('parent_id')->get();
+        $provinces = \DB::table('locations')
+            ->where('type', 'provinsi')
+            ->orderBy('name')
+            ->get();
 
         return view('fe.profile', [
             'user' => Auth::user(),
