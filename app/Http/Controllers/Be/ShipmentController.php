@@ -675,8 +675,8 @@ class ShipmentController extends Controller
             'note' => 'nullable|string|max:1000',
         ]);
 
-        if ($request->scan_type === 'depart' && auth()->user()->role !== 'manager') {
-            abort(403, 'Departure hub hanya bisa dilakukan Manager Hub.');
+        if ($request->scan_type === 'depart' && ! in_array(auth()->user()->role, ['manager', 'cashier'], true)) {
+            abort(403, 'Departure hub hanya bisa dilakukan Manager Hub atau Kasir Hub.');
         }
 
         if ($shipment->payment && $shipment->payment->payment_status !== 'paid') {

@@ -199,12 +199,7 @@
                                 DEPART: {{ $departableLeg ? optional($departableLeg->originBranch)->name.' -> '.optional($departableLeg->destinationBranch)->name : 'NO OUTBOUND LEG READY' }}
                             </div>
                             <input type="text" name="note" placeholder="catatan outbound scan..." style="width: 100%; margin-bottom: 0.7rem;">
-                            <x-be.button type="submit" style="width: 100%;" :disabled="! $departableLeg || auth()->user()->role !== 'manager'">DEPART HUB</x-be.button>
-                            @if(auth()->user()->role !== 'manager')
-                                <div class="font-ui text-gray" style="font-size: 0.72rem; line-height: 1.55; margin-top: 0.55rem;">
-                                    Departure manifest dikontrol Manager Hub.
-                                </div>
-                            @endif
+                            <x-be.button type="submit" style="width: 100%;" :disabled="! $departableLeg">DEPART HUB</x-be.button>
                         </form>
                     </div>
                 </div>
