@@ -74,6 +74,29 @@
     <!-- Footer -->
     @include('fe.layouts.partials.footer')
 
+    <script>
+        window.previewImage = window.previewImage || function(input) {
+            const file = input && input.files ? input.files[0] : null;
+            if (!file) return;
+
+            const preview = document.getElementById('photo-preview');
+            const placeholder = document.getElementById('photo-placeholder');
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                if (preview) {
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                }
+
+                if (placeholder) {
+                    placeholder.style.display = 'none';
+                }
+            };
+
+            reader.readAsDataURL(file);
+        };
+    </script>
 
     @stack('scripts')
     <script>
