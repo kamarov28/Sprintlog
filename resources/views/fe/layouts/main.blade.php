@@ -9,6 +9,7 @@
 
     <!-- Connect CSS -->
     <link rel="stylesheet" href="/css/style.css?v={{ config('app.asset_version') }}">
+    <link rel="stylesheet" href="/css/background-clean.css?v={{ config('app.asset_version') }}">
 
     <!-- Tailwind (Optional for layouts, but sticking to custom primarily) -->
     <!-- Page Specific Assets -->
