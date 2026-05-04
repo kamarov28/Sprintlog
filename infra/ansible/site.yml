@@ -1,20 +1,8 @@
 ---
 # SprintLog infrastructure playbook
-#
-# This playbook automates the whole two-VM lab deployment:
-# base Linux setup, DNS/DHCP/mail support services, Docker, Swarm,
-# local registry, Laravel image build, stack deployment, migration,
-# seed accounts, and queue worker startup.
-#
-# Notes for defense/presentation:
-# - If a play is removed, the components depending on that play may still work
-#   only if they were configured manually beforehand.
-# - The playbook is meant to be idempotent: it can be run again to repair or
-#   re-apply configuration.
+# Modular two-VM lab deployment: base setup, optional support services,
+# Docker, Swarm, registry, and SprintLog stack deployment.
 
-# Purpose: prepare both VMs with required base tools and local name fallback.
-# If removed: later tasks may fail because tools like git, curl, Python, or SSH
-# may be missing; local hostname fallback in /etc/hosts will also be unavailable.
 - name: Prepare Ubuntu base packages on both VMs
   hosts: all
   become: true
@@ -43,9 +31,6 @@
           {{ controller_ip }} {{ lab_domain }} www.{{ lab_domain }} admin.{{ lab_domain }} controller.{{ lab_domain }} vm1
           {{ managed_ip }} vm2 app2.{{ lab_domain }}
 
-# Purpose: configure optional lab support services on VM1: DNS, DHCP, and mail.
-# If removed: the web application can still run by IP, but lab domain lookup,
-# automatic client IP/DNS distribution, and local mail testing will be unavailable.
 - name: Install Ansible support services on VM 1 controller
   hosts: controller
   become: true
@@ -56,15 +41,12 @@
   tasks:
     - name: Install Ansible on controller
       ansible.builtin.apt:
-        name:
-          - ansible
+        name: ansible
         state: present
         update_cache: true
       tags:
         - ansible
 
-    # DNS forward and reverse zones for local lab domains such as sprintlog.local.
-    # If removed: clients cannot resolve sprintlog.local through Bind9.
     - name: Install DNS packages when enabled
       ansible.builtin.apt:
         name:
@@ -139,8 +121,6 @@
       tags:
         - dns
 
-    # DHCP gives IP address, gateway, DNS server, and domain automatically.
-    # If removed: clients must use manual IP/DNS settings or another DHCP server.
     - name: Install DHCP package when enabled
       ansible.builtin.apt:
         name: isc-dhcp-server
@@ -176,9 +156,7 @@
       tags:
         - dhcp
 
-    # Local mail server for lab testing using Postfix, Dovecot, and Mutt.
-    # If removed: SprintLog can still run, but local SMTP/IMAP testing is unavailable.
-    - name: Preseed Postfix as internet site when mail is enabled
+    - name: Preseed Postfix when mail is enabled
       ansible.builtin.debconf:
         name: postfix
         question: "{{ item.question }}"
@@ -230,17 +208,6 @@
       tags:
         - mail
 
-    - name: Configure Dovecot Maildir storage
-      ansible.builtin.lineinfile:
-        path: /etc/dovecot/conf.d/10-mail.conf
-        regexp: '^mail_location\s*='
-        line: 'mail_location = maildir:~/Maildir'
-        create: false
-      when: enable_mail | bool
-      notify: Restart dovecot
-      tags:
-        - mail
-
     - name: Enable Dovecot IMAP protocol
       ansible.builtin.lineinfile:
         path: /etc/dovecot/dovecot.conf
@@ -252,83 +219,15 @@
       tags:
         - mail
 
-    - name: Configure default Mutt profile for new users
-      ansible.builtin.template:
-        src: templates/muttrc.j2
-        dest: /etc/skel/.muttrc
-        mode: "0644"
-      when: enable_mail | bool
-      tags:
-        - mail
-
-    - name: Create lab mail users
-      ansible.builtin.user:
-        name: "{{ item.name }}"
-        shell: /bin/bash
-        create_home: true
-        state: present
-      loop: "{{ mail_test_users }}"
-      when: enable_mail | bool
-      tags:
-        - mail
-
-    - name: Set lab mail user passwords
-      ansible.builtin.shell: "echo '{{ item.name }}:{{ item.password }}' | chpasswd"
-      loop: "{{ mail_test_users }}"
-      no_log: true
-      when: enable_mail | bool
-      tags:
-        - mail
-
-    - name: Create Maildir folders for lab mail users
-      ansible.builtin.file:
-        path: "/home/{{ item.0.name }}/Maildir/{{ item.1 }}"
-        state: directory
-        owner: "{{ item.0.name }}"
-        group: "{{ item.0.name }}"
-        mode: "0700"
-      loop: "{{ mail_test_users | product(['cur', 'new', 'tmp', 'Sent', 'Drafts']) | list }}"
-      when: enable_mail | bool
-      tags:
-        - mail
-
-    - name: Configure Mutt profile for lab mail users
-      ansible.builtin.template:
-        src: templates/muttrc.j2
-        dest: "/home/{{ item.name }}/.muttrc"
-        owner: "{{ item.name }}"
-        group: "{{ item.name }}"
-        mode: "0644"
-      loop: "{{ mail_test_users }}"
-      when: enable_mail | bool
-      tags:
-        - mail
-
-    - name: Enable mail server service
+    - name: Enable mail services
       ansible.builtin.service:
-        name: postfix
+        name: "{{ item }}"
         enabled: true
         state: started
+      loop:
+        - postfix
+        - dovecot
       when: enable_mail | bool
-      tags:
-        - mail
-
-    - name: Enable Dovecot service
-      ansible.builtin.service:
-        name: dovecot
-        enabled: true
-        state: started
-      when: enable_mail | bool
-      tags:
-        - mail
-
-    - name: Send optional test mail from user2 to user1
-      ansible.builtin.shell: |
-        echo "Halo, email ini dikirim dari user2" | mail -s "Uji Coba" user1
-      become_user: user2
-      when:
-        - enable_mail | bool
-        - mail_send_test_message | bool
       tags:
         - mail
 
@@ -353,8 +252,6 @@
         name: dovecot
         state: restarted
 
-# Purpose: install Docker on both VMs and configure the local insecure registry.
-# If removed: Docker Swarm and all containerized services cannot run.
 - name: Install Docker on both VMs
   hosts: docker_hosts
   become: true
@@ -414,8 +311,6 @@
         name: docker
         state: restarted
 
-# Purpose: turn VM1 into the Swarm manager and create the local image registry.
-# If removed: docker stack deploy cannot run and VM2 cannot pull the local image.
 - name: Initialize Docker Swarm on VM 1
   hosts: swarm_manager
   become: true
@@ -453,12 +348,9 @@
 
     - name: Create local Docker registry on VM 1
       ansible.builtin.command: >
-        docker run -d
-        --restart=always
-        -p 5000:5000
+        docker run -d --restart=always -p 5000:5000
         -v sprintlog_registry:/var/lib/registry
-        --name {{ docker_registry_container_name }}
-        registry:2
+        --name {{ docker_registry_container_name }} registry:2
       when: registry_state.rc != 0
 
     - name: Wait until local registry responds
@@ -470,9 +362,6 @@
       delay: 3
       until: registry_health.status == 200
 
-# Purpose: join VM2 into the Swarm cluster as worker.
-# If removed: the application can still run on VM1, but there is no two-node
-# deployment and no app replica on VM2.
 - name: Join VM 2 as Docker Swarm worker
   hosts: swarm_workers
   become: true
@@ -493,9 +382,6 @@
         {{ controller_ip }}:2377
       when: worker_swarm_state.stdout != "active"
 
-# Purpose: build and deploy SprintLog through Docker Swarm.
-# If removed: infrastructure services may exist, but the Laravel app, MySQL,
-# Nginx load balancer, migration, seed accounts, and worker will not be deployed.
 - name: Deploy SprintLog stack from VM 1
   hosts: swarm_manager
   become: true
@@ -533,8 +419,6 @@
       ansible.builtin.set_fact:
         sprintlog_runtime_app_key: "{{ generated_app_key.stdout if (sprintlog_generate_app_key | bool) else app_key }}"
 
-    # Self-signed HTTPS certificate for lab/demo.
-    # If removed: HTTP still works, but HTTPS on port 443 will fail because Nginx has no certificate.
     - name: Ensure SprintLog TLS certificate directory exists
       ansible.builtin.file:
         path: "{{ tls_cert_dir }}"
@@ -559,7 +443,6 @@
       ansible.builtin.file:
         path: "{{ tls_key_file }}"
         mode: "0600"
-      when: sprintlog_tls_cert.stat.exists or not sprintlog_tls_cert.stat.exists
 
     - name: Write stack environment file
       ansible.builtin.template:
@@ -567,11 +450,14 @@
         dest: "{{ app_deploy_path }}/infra/docker/.env"
         mode: "0600"
 
-    - name: Deploy Docker stack
+    - name: Deploy Docker stack with configurable resource names
       ansible.builtin.shell: |
         set -a
         . ./.env
         set +a
+        export DOCKER_NETWORK_NAME='{{ docker_network_name }}'
+        export DOCKER_DB_VOLUME_NAME='{{ docker_db_volume_name }}'
+        export DOCKER_STORAGE_VOLUME_NAME='{{ docker_storage_volume_name }}'
         docker stack deploy -c docker-stack.two-vm.yml {{ stack_name }}
       args:
         chdir: "{{ app_deploy_path }}/infra/docker"
@@ -617,7 +503,7 @@
     - name: Restore SQL dump into SprintLog database when enabled
       ansible.builtin.shell: |
         docker run --rm \
-          --network {{ stack_name }}_sprintlog_net \
+          --network {{ docker_network_name }} \
           --env-file ./.env \
           -v {{ database_restore_file }}:/restore.sql:ro \
           mysql:8.4 \
@@ -626,15 +512,12 @@
         chdir: "{{ app_deploy_path }}/infra/docker"
       when: database_restore_enabled | bool
 
-    # Migration creates DB tables; storage:link exposes public uploads;
-    # optimize caches Laravel config/routes/views for production-like mode.
-    # If removed: the app may start, but login/database features can fail.
     - name: Run Laravel migration, storage link, and optimize automatically
       ansible.builtin.shell: |
         docker run --rm \
-          --network {{ stack_name }}_sprintlog_net \
+          --network {{ docker_network_name }} \
           --env-file ./.env \
-          -v {{ stack_name }}_sprintlog_storage:/var/www/html/storage \
+          -v {{ docker_storage_volume_name }}:/var/www/html/storage \
           {{ sprintlog_image }} \
           sh -lc 'php artisan migrate --force && (php artisan storage:link || true) && php artisan optimize'
       args:
@@ -651,7 +534,7 @@
     - name: Seed deploy login accounts when enabled
       ansible.builtin.shell: |
         docker run --rm \
-          --network {{ stack_name }}_sprintlog_net \
+          --network {{ docker_network_name }} \
           --env-file ./.env \
           {{ sprintlog_image }} \
           php artisan db:seed --class=Database\\Seeders\\DeploymentAccountSeeder --force
@@ -662,7 +545,7 @@
     - name: Seed full demo data when enabled
       ansible.builtin.shell: |
         docker run --rm \
-          --network {{ stack_name }}_sprintlog_net \
+          --network {{ docker_network_name }} \
           --env-file ./.env \
           {{ sprintlog_image }} \
           php artisan db:seed --force
@@ -670,8 +553,6 @@
         chdir: "{{ app_deploy_path }}/infra/docker"
       when: database_seed_mode == "demo"
 
-    # Worker is started last so queue/cache tables already exist.
-    # If started before migration, it can crash with missing cache/jobs tables.
     - name: Start Sprintlog worker after database bootstrap
       ansible.builtin.command: docker service scale {{ stack_name }}_worker=1
       changed_when: true
