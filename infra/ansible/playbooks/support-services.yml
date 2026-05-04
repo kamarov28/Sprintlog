@@ -1,0 +1,221 @@
+---
+- name: Install Ansible support services on VM 1 controller
+  hosts: controller
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+  tags:
+    - support
+  tasks:
+    - name: Install Ansible on controller
+      ansible.builtin.apt:
+        name: ansible
+        state: present
+        update_cache: true
+      tags:
+        - ansible
+
+    - name: Install DNS packages when enabled
+      ansible.builtin.apt:
+        name:
+          - bind9
+          - bind9utils
+        state: present
+      when: enable_dns | bool
+      tags:
+        - dns
+
+    - name: Configure DNS zone
+      ansible.builtin.template:
+        src: ../templates/named.conf.local.j2
+        dest: /etc/bind/named.conf.local
+        mode: "0644"
+      when: enable_dns | bool
+      notify: Restart bind9
+      tags:
+        - dns
+
+    - name: Configure SprintLog DNS records
+      ansible.builtin.template:
+        src: ../templates/db.sprintlog.local.j2
+        dest: "{{ dns_zone_file }}"
+        mode: "0644"
+      when: enable_dns | bool
+      notify: Restart bind9
+      tags:
+        - dns
+
+    - name: Configure SprintLog reverse DNS records
+      ansible.builtin.template:
+        src: ../templates/db.reverse.j2
+        dest: "{{ dns_reverse_zone_file }}"
+        mode: "0644"
+      when:
+        - enable_dns | bool
+        - dns_reverse_enabled | bool
+      notify: Restart bind9
+      tags:
+        - dns
+
+    - name: Validate Bind9 main configuration
+      ansible.builtin.command: named-checkconf
+      changed_when: false
+      when: enable_dns | bool
+      tags:
+        - dns
+
+    - name: Validate SprintLog forward DNS zone
+      ansible.builtin.command: named-checkzone {{ lab_domain }} {{ dns_zone_file }}
+      changed_when: false
+      when: enable_dns | bool
+      tags:
+        - dns
+
+    - name: Validate SprintLog reverse DNS zone
+      ansible.builtin.command: named-checkzone {{ dns_reverse_zone }} {{ dns_reverse_zone_file }}
+      changed_when: false
+      when:
+        - enable_dns | bool
+        - dns_reverse_enabled | bool
+      tags:
+        - dns
+
+    - name: Enable DNS service
+      ansible.builtin.service:
+        name: bind9
+        enabled: true
+        state: started
+      when: enable_dns | bool
+      tags:
+        - dns
+
+    - name: Install DHCP package when enabled
+      ansible.builtin.apt:
+        name: isc-dhcp-server
+        state: present
+      when: enable_dhcp | bool
+      tags:
+        - dhcp
+
+    - name: Configure DHCP defaults
+      ansible.builtin.template:
+        src: ../templates/isc-dhcp-server.j2
+        dest: /etc/default/isc-dhcp-server
+        mode: "0644"
+      when: enable_dhcp | bool
+      notify: Restart isc-dhcp-server
+      tags:
+        - dhcp
+
+    - name: Configure DHCP scope
+      ansible.builtin.template:
+        src: ../templates/dhcpd.conf.j2
+        dest: /etc/dhcp/dhcpd.conf
+        mode: "0644"
+      when: enable_dhcp | bool
+      notify: Restart isc-dhcp-server
+      tags:
+        - dhcp
+
+    - name: Validate DHCP configuration
+      ansible.builtin.command: dhcpd -t -cf /etc/dhcp/dhcpd.conf
+      changed_when: false
+      when: enable_dhcp | bool
+      tags:
+        - dhcp
+
+    - name: Preseed Postfix when mail is enabled
+      ansible.builtin.debconf:
+        name: postfix
+        question: "{{ item.question }}"
+        value: "{{ item.value }}"
+        vtype: "{{ item.vtype }}"
+      loop:
+        - question: postfix/mailname
+          value: "{{ mail_domain }}"
+          vtype: string
+        - question: postfix/main_mailer_type
+          value: Internet Site
+          vtype: select
+      when: enable_mail | bool
+      tags:
+        - mail
+
+    - name: Install mail server packages when enabled
+      ansible.builtin.apt:
+        name:
+          - postfix
+          - mailutils
+          - dovecot-core
+          - dovecot-imapd
+          - mutt
+        state: present
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      when: enable_mail | bool
+      tags:
+        - mail
+
+    - name: Configure mailname
+      ansible.builtin.template:
+        src: ../templates/mailname.j2
+        dest: /etc/mailname
+        mode: "0644"
+      when: enable_mail | bool
+      notify: Restart postfix
+      tags:
+        - mail
+
+    - name: Configure Postfix main.cf for lab mail
+      ansible.builtin.template:
+        src: ../templates/postfix-main.cf.j2
+        dest: /etc/postfix/main.cf
+        mode: "0644"
+      when: enable_mail | bool
+      notify: Restart postfix
+      tags:
+        - mail
+
+    - name: Enable Dovecot IMAP protocol
+      ansible.builtin.lineinfile:
+        path: /etc/dovecot/dovecot.conf
+        regexp: '^protocols\s*='
+        line: 'protocols = imap'
+        insertafter: EOF
+      when: enable_mail | bool
+      notify: Restart dovecot
+      tags:
+        - mail
+
+    - name: Enable mail services
+      ansible.builtin.service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - postfix
+        - dovecot
+      when: enable_mail | bool
+      tags:
+        - mail
+
+  handlers:
+    - name: Restart bind9
+      ansible.builtin.service:
+        name: bind9
+        state: restarted
+
+    - name: Restart isc-dhcp-server
+      ansible.builtin.service:
+        name: isc-dhcp-server
+        state: restarted
+
+    - name: Restart postfix
+      ansible.builtin.service:
+        name: postfix
+        state: restarted
+
+    - name: Restart dovecot
+      ansible.builtin.service:
+        name: dovecot
+        state: restarted
