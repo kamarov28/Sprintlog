@@ -104,6 +104,31 @@
       delay: 6
       until: "'2/2' in app_replicas.stdout"
 
+    - name: Check database restore file when enabled
+      ansible.builtin.stat:
+        path: "{{ database_restore_file }}"
+      register: database_restore_stat
+      when: database_restore_enabled | bool
+
+    - name: Fail when database restore file is missing
+      ansible.builtin.fail:
+        msg: "Database restore file not found: {{ database_restore_file }}"
+      when:
+        - database_restore_enabled | bool
+        - not database_restore_stat.stat.exists
+
+    - name: Restore SQL dump into SprintLog database when enabled
+      ansible.builtin.shell: |
+        docker run --rm \
+          --network {{ docker_network_name }} \
+          --env-file ./.env \
+          -v {{ database_restore_file }}:/restore.sql:ro \
+          mysql:8.4 \
+          sh -lc 'export MYSQL_PWD="$DB_PASSWORD"; mysql -h db -u sprintlog sprintlog < /restore.sql'
+      args:
+        chdir: "{{ app_deploy_path }}/infra/docker"
+      when: database_restore_enabled | bool
+
     - name: Run Laravel migration, storage link, and optimize automatically
       ansible.builtin.shell: |
         docker run --rm \
