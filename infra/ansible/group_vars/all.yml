@@ -124,3 +124,5 @@ dhcp_dns_servers:
 dhcp_default_lease_time: 600
 dhcp_max_lease_time: 7200
 dhcp_reservations: []
+
+app_timezone: Asia/Jakarta
