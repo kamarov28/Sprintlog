@@ -812,8 +812,8 @@ class ShipmentController extends Controller
     {
         $this->assertCanAccessShipment($shipment);
 
-        if (auth()->user()->role !== 'manager') {
-            abort(403, 'Delivery assignment hanya bisa dilakukan Manager Hub.');
+        if (! in_array(auth()->user()->role, ['manager', 'cashier'], true)) {
+            abort(403, 'Delivery assignment hanya bisa dilakukan Manager Hub atau Kasir Hub.');
         }
 
         $branchId = $this->hubBranchId();

@@ -204,7 +204,7 @@
                     </div>
                 </div>
 
-                @if(auth()->user()->role === 'manager')
+                @if(in_array(auth()->user()->role, ['manager', 'cashier'], true))
                 <div class="hud-panel mb-4" style="border-color: var(--color-primary);">
                     <h3 class="font-bank text-primary mb-4">DELIVERY ASSIGNMENT</h3>
                     <div class="font-ui text-gray" style="font-size: 0.78rem; margin-bottom: 0.8rem;">
