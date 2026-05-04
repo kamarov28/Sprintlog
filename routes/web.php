@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -23,9 +23,6 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/track', [TrackingController::class, 'show'])
     ->middleware('throttle:tracking')
     ->name('track.show');
-Route::post('/pickup-request', [PickupController::class, 'store'])
-    ->middleware('throttle:10,1')
-    ->name('pickup.store');
 
 // Public Auth
 Route::middleware('guest')->group(function () {
@@ -121,3 +118,4 @@ Route::group(['prefix' => 'be', 'middleware' => ['auth', 'be.staff'], 'as' => 'b
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 });
+

@@ -1,4 +1,4 @@
-@extends('fe.layouts.main')
+﻿@extends('fe.layouts.main')
 
 @section('body_class', 'landing-macaron-page')
 
@@ -186,81 +186,6 @@
 
         </div>
     </div>
-
-    <!-- Pickup Module -->
-    <x-fe.panel id="pickup" title="Request Pickup" subtitle="Jadwalkan penjemputan paket" variant="accent" class="section-animate" style="margin-top: 4rem;">
-        @if(session('pickup_success'))
-            <div class="toy-success-box">
-                Pickup berhasil dibuat. Kurir kami akan menghubungi Anda.
-            </div>
-        @endif
-
-        <form action="{{ route('pickup.store') }}" method="POST">
-            @csrf
-            <div class="grid-3">
-                <x-fe.input label="Nama Kontak" name="customer_name" required />
-                <x-fe.input label="Nomor Telepon" name="customer_phone" required />
-                <x-fe.input type="date" label="Tanggal Pickup" name="pickup_date" required />
-            </div>
-
-            <div class="toy-field-band">
-                <div class="text-gray" style="font-size: 0.78rem; margin-bottom: 0.8rem;">
-                    Titik Pickup
-                </div>
-                @auth
-                    <div style="display: flex; gap: 1.5rem; margin-bottom: 0.8rem;">
-                        <label style="font-size: 0.8rem;">
-                            <input type="radio" name="pickup_source" value="profile" onchange="syncPickupSource()">
-                            Gunakan alamat profil
-                        </label>
-                        <label style="font-size: 0.8rem;">
-                            <input type="radio" name="pickup_source" value="custom" checked onchange="syncPickupSource()">
-                            Input manual
-                        </label>
-                    </div>
-                @else
-                    <input type="hidden" name="pickup_source" value="custom">
-                @endauth
-            </div>
-
-            <div style="margin-top: 2rem;">
-                <x-fe.map-picker 
-                    id="hp_origin" 
-                    addressName="pickup_address" 
-                    latName="latitude" 
-                    lngName="longitude" 
-                        defaultLat="-6.2088" 
-                        defaultLng="106.8456" 
-                    labelText="Alamat Pickup" 
-                    buttonText="Pilih di Map" 
-                    infoText="Map ini untuk titik pickup, bukan tujuan paket."></x-fe.map-picker>
-            </div>
-
-            <div class="toy-field-band">
-                <div class="text-gray" style="font-size: 0.78rem; margin-bottom: 0.8rem;">
-                    Tujuan Paket
-                </div>
-                <div class="grid-2" style="gap: 1rem;">
-                    <x-fe.input label="Nama Penerima" name="receiver_name" required />
-                    <x-fe.input label="Telepon Penerima" name="receiver_phone" required />
-                </div>
-                <div style="margin-top: 1rem;">
-                    <x-fe.map-picker 
-                        id="hp_dest" 
-                        addressName="receiver_address" 
-                        latName="receiver_latitude" 
-                        lngName="receiver_longitude" 
-                        defaultLat="-6.2088" 
-                        defaultLng="106.8456" 
-                        labelText="Alamat Tujuan" 
-                        buttonText="Pilih di Map" 
-                        infoText="Map ini untuk lokasi tepat pengantaran paket."></x-fe.map-picker>
-                </div>
-            </div>
-
-            <x-fe.button type="submit" variant="primary" style="width: 100%; margin-top: 2rem;">Buat Pickup</x-fe.button>
-        </form>
-    </x-fe.panel>
 
     <!-- Active Protocols / Services -->
 
@@ -754,3 +679,4 @@ function calculateOngkir() {
 }
 </script>
 @endpush
+
