@@ -1,0 +1,56 @@
+---
+- name: Prepare SprintLog NFS export on controller
+  hosts: controller
+  become: true
+  vars_files:
+    - group_vars/all.yml
+  tasks:
+    - name: Install NFS server package
+      ansible.builtin.apt:
+        name:
+          - nfs-kernel-server
+          - nfs-common
+        state: present
+        update_cache: true
+
+    - name: Create shared storage directory
+      ansible.builtin.file:
+        path: "{{ nfs_export_path }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: "0775"
+
+    - name: Create NFS exports directory
+      ansible.builtin.file:
+        path: /etc/exports.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Write SprintLog NFS export file
+      ansible.builtin.template:
+        src: templates/sprintlog-nfs-exports.j2
+        dest: /etc/exports.d/sprintlog.exports
+        mode: "0644"
+
+    - name: Reload exported directories
+      ansible.builtin.command: exportfs -ra
+      changed_when: false
+
+    - name: Start NFS server service
+      ansible.builtin.service:
+        name: nfs-server
+        enabled: true
+        state: started
+
+- name: Prepare SprintLog NFS clients on Docker hosts
+  hosts: docker_hosts
+  become: true
+  tasks:
+    - name: Install NFS client package
+      ansible.builtin.apt:
+        name: nfs-common
+        state: present
+        update_cache: true
