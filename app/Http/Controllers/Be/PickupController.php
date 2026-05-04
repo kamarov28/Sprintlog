@@ -246,8 +246,8 @@ class PickupController extends Controller
 
     public function assign(Request $request, PickupRequest $pickup)
     {
-        if (auth()->user()->role !== 'manager') {
-            abort(403, 'Pickup assignment hanya bisa dilakukan Manager Hub.');
+        if (! in_array(auth()->user()->role, ['manager', 'cashier'], true)) {
+            abort(403, 'Pickup assignment hanya bisa dilakukan Manager Hub atau Kasir Hub.');
         }
 
         $branchId = auth()->user()->branch_id;
