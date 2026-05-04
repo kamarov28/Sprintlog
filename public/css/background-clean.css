@@ -1,0 +1,44 @@
+/* Clean shared page background override.
+   Keeps SprintLog pages simple like the landing page and removes the busy grid/diagonal wallpaper. */
+
+body,
+body.app-shell,
+body.app-shell--fe,
+body.theme-toy {
+    background-color: #fbf2df;
+    background-image: none !important;
+    background-attachment: scroll;
+}
+
+body::before,
+body::after,
+body.app-shell::before,
+body.app-shell::after,
+body.app-shell--fe::before,
+body.app-shell--fe::after,
+body.theme-toy::before,
+body.theme-toy::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+}
+
+.app-shell {
+    background:
+        radial-gradient(circle at 12% 18%, rgba(166, 216, 0, 0.10), transparent 24rem),
+        radial-gradient(circle at 88% 10%, rgba(244, 128, 189, 0.12), transparent 26rem),
+        linear-gradient(135deg, #fbf2df 0%, #fff8e8 55%, #f7efd9 100%) !important;
+    min-height: 100vh;
+}
+
+.cyber-container {
+    position: relative;
+    z-index: 1;
+}
+
+.fe-header,
+header.fe-header {
+    background: rgba(255, 255, 255, 0.90) !important;
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
