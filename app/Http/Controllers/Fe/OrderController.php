@@ -69,7 +69,26 @@ class OrderController extends Controller
                 ->withInput();
         }
 
-        $data = $request->all();
+        $data = $request->only([
+            'sender_name',
+            'sender_phone',
+            'sender_address',
+            'sender_city_id',
+            'sender_latitude',
+            'sender_longitude',
+
+            'receiver_name',
+            'receiver_phone',
+            'receiver_address',
+            'receiver_city_id',
+            'receiver_latitude',
+            'receiver_longitude',
+
+            'weight',
+            'service_type',
+            'payment_method',
+            'pickup_date',
+        ]);
         $data['user_id'] = Auth::id();
         $data['customer_name'] = $request->sender_name;
         $data['customer_phone'] = $request->sender_phone;
