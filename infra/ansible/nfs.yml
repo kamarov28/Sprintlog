@@ -1,0 +1,75 @@
+---
+# SprintLog NFS shared storage automation.
+# Run before deploy when Docker Swarm app replicas run on multiple nodes.
+
+- name: Configure SprintLog NFS server on controller
+  hosts: controller
+  become: true
+  vars_files:
+    - group_vars/all.yml
+  tasks:
+    - name: Install NFS server packages
+      ansible.builtin.apt:
+        name:
+          - nfs-kernel-server
+          - nfs-common
+        state: present
+        update_cache: true
+
+    - name: Create SprintLog shared storage directory
+      ansible.builtin.file:
+        path: "{{ nfs_export_path }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: "0777"
+
+    - name: Add SprintLog NFS export block
+      ansible.builtin.blockinfile:
+        path: /etc/exports
+        create: true
+        mode: "0644"
+        marker: "# {mark} SPRINTLOG NFS STORAGE"
+        block: |
+          {{ nfs_export_path }} {{ nfs_export_cidr }}(rw,sync,no_subtree_check)
+      notify: Reload NFS exports
+
+    - name: Enable and start NFS server
+      ansible.builtin.service:
+        name: nfs-server
+        enabled: true
+        state: started
+
+    - name: Show exported NFS directories
+      ansible.builtin.command: exportfs -v
+      register: nfs_exports
+      changed_when: false
+
+    - name: Print exported NFS directories
+      ansible.builtin.debug:
+        var: nfs_exports.stdout_lines
+
+  handlers:
+    - name: Reload NFS exports
+      ansible.builtin.command: exportfs -ra
+
+- name: Configure SprintLog NFS clients on Docker nodes
+  hosts: docker_hosts
+  become: true
+  vars_files:
+    - group_vars/all.yml
+  tasks:
+    - name: Install NFS client package
+      ansible.builtin.apt:
+        name: nfs-common
+        state: present
+        update_cache: true
+
+    - name: Check NFS export from each Docker node
+      ansible.builtin.command: showmount -e {{ nfs_server }}
+      register: nfs_showmount
+      changed_when: false
+
+    - name: Print NFS exports visible from each node
+      ansible.builtin.debug:
+        var: nfs_showmount.stdout_lines
