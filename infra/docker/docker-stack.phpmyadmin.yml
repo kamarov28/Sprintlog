@@ -6,6 +6,8 @@ services:
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
+      PMA_USER: ${DB_USERNAME:-sprintlog}
+      PMA_PASSWORD: ${DB_PASSWORD}
       UPLOAD_LIMIT: 64M
     ports:
       - "8080:80"
@@ -22,4 +24,4 @@ services:
 networks:
   sprintlog_net:
     external: true
-    name: sprintlog_sprintlog_net
+    name: ${DOCKER_NETWORK_NAME:-sprintlog_net}
