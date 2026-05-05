@@ -127,13 +127,13 @@
             </div>
 
             <!-- Payment Section -->
-            <div class="quote-display" style="text-align: left;">
+            <div class="pos-payment-panel">
                 <h4 class="font-bank text-primary mb-3">Pembayaran</h4>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: end;">
                     <div>
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">TOTAL TAGIHAN</label><br>
-                        <div class="font-bank text-primary" style="font-size: 2.5rem;" id="display-total-price">Rp 0</div>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Total Tagihan</label><br>
+                        <div class="font-bank pos-payment-total" id="display-total-price">Rp 0</div>
                     </div>
                     <div>
                         <label class="font-ui text-gray" style="font-size: 0.8rem;">Metode Pembayaran</label><br>
@@ -145,14 +145,14 @@
                     </div>
                 </div>
 
-                <div id="cash-panel" style="margin-top: 1.5rem; border-top: 1px dashed var(--color-primary); padding-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div id="cash-panel" class="pos-payment-row">
                     <div>
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">NOMINAL DITERIMA (Rp)</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Nominal Diterima (Rp)</label><br>
                         <input type="number" name="amount_received" id="amount_received" min="0" step="1000" style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.5rem; outline: none;">
                     </div>
                     <div>
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">KEMBALIAN</label><br>
-                        <div class="font-bank text-accent" style="font-size: 2rem;" id="display-change">Rp 0</div>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Kembalian</label><br>
+                        <div class="font-bank pos-payment-change" id="display-change">Rp 0</div>
                     </div>
                 </div>
 
@@ -244,10 +244,10 @@
             
             if (received < currentTotal && currentTotal > 0) {
                 btnSubmit.disabled = true;
-                displayChange.style.color = 'red';
+                displayChange.style.color = '#b91c1c';
             } else {
                 btnSubmit.disabled = false;
-                displayChange.style.color = 'var(--color-accent)';
+                displayChange.style.color = '#b0005a';
             }
         } else if (paymentMethod.value === 'transfer') {
             cashPanel.style.display = 'none';

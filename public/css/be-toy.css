@@ -756,3 +756,67 @@ body.theme-toy-be.app-shell--be textarea::placeholder {
     color: #3d3d43 !important;
     opacity: 1 !important;
 }
+
+/* Legacy class compatibility: several Blade templates still use old HUD/cyber
+   class names, but the backend should read as a soft toy UI, not a terminal. */
+body.theme-toy-be.app-shell--be .hud-panel__gsap-scan,
+body.theme-toy-be.app-shell--be .scanline,
+body.theme-toy-be.app-shell--be [class*="scanline"] {
+    display: none !important;
+}
+
+body.theme-toy-be.app-shell--be .app-table tbody tr:hover,
+body.theme-toy-be.app-shell--be .personnel-table tbody tr:hover,
+body.theme-toy-be.app-shell--be .hud-panel table tbody tr:hover {
+    background: #fff6df !important;
+}
+
+body.theme-toy-be.app-shell--be .app-table td,
+body.theme-toy-be.app-shell--be .personnel-table td,
+body.theme-toy-be.app-shell--be .hud-panel table td {
+    color: #18181d !important;
+}
+
+body.theme-toy-be.app-shell--be .pos-payment-panel {
+    position: relative;
+    margin-bottom: 2rem;
+    padding: clamp(1.1rem, 2vw, 1.5rem);
+    border: 3px solid var(--color-panel-border);
+    border-radius: 8px;
+    background: #fffaf2;
+    box-shadow: 5px 5px 0 var(--color-panel-border);
+    overflow: hidden;
+}
+
+body.theme-toy-be.app-shell--be .pos-payment-panel h4 {
+    margin-top: 0;
+}
+
+body.theme-toy-be.app-shell--be .pos-payment-total,
+body.theme-toy-be.app-shell--be .pos-payment-change {
+    color: #176b3b !important;
+    font-size: clamp(2rem, 4vw, 2.7rem);
+    line-height: 1;
+    overflow-wrap: anywhere;
+}
+
+body.theme-toy-be.app-shell--be .pos-payment-change {
+    color: #b0005a !important;
+    font-size: clamp(1.65rem, 3vw, 2.25rem);
+}
+
+body.theme-toy-be.app-shell--be .pos-payment-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px dashed rgba(24, 24, 29, 0.22);
+}
+
+@media (max-width: 760px) {
+    body.theme-toy-be.app-shell--be .pos-payment-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}

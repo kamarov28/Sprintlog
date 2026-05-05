@@ -1,6 +1,6 @@
 @extends('be.layouts.main')
 
-@section('header_title', 'DEPLOY NEW HUB')
+@section('header_title', 'Tambah Hub Baru')
 
 @push('head_assets')
     <link rel="preconnect" href="https://unpkg.com">
@@ -10,18 +10,18 @@
 @section('content')
 
     <div class="hud-panel" style="max-width: 600px; margin: 0 auto;">
-        <h3 class="font-bank text-accent mb-4">HUB CONFIGURATION</h3>
+        <h3 class="font-bank text-accent mb-4">Data Hub</h3>
 
         <form action="{{ route('be.branches.store') }}" method="POST">
             @csrf
 
             <div style="margin-bottom: 2rem;">
-                <label class="font-ui text-gray" style="font-size: 0.8rem;">HUB_NAME</label><br>
+                <label class="font-ui text-gray" style="font-size: 0.8rem;">Nama Hub</label><br>
                 <input type="text" name="name" required style="width: 100%; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; padding: 0.5rem 0; outline: none;">
             </div>
 
             <div style="margin-bottom: 2rem;">
-                <label class="font-ui text-gray" style="font-size: 0.8rem;">PROVINCE</label><br>
+                <label class="font-ui text-gray" style="font-size: 0.8rem;">Provinsi</label><br>
                 <select name="province_id" id="province_id" required onchange="loadKota('province_id', 'city_id')" style="width: 100%; padding: 0.5rem; background: transparent; border: none; border-bottom: 2px solid var(--color-gray); font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     <option value="" disabled selected>Pilih Provinsi...</option>
                     @foreach($provinces as $prov)
@@ -31,22 +31,22 @@
             </div>
 
             <div style="margin-bottom: 2rem;">
-                <label class="font-ui text-gray" style="font-size: 0.8rem;">CITY / LOCATION</label><br>
+                <label class="font-ui text-gray" style="font-size: 0.8rem;">Kota / Lokasi</label><br>
                 <select name="city" id="city_id" required style="width: 100%; padding: 0.5rem; background: transparent; border: none; border-bottom: 2px solid var(--color-gray); font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     <option value="">Pilih Provinsi dahulu...</option>
                 </select>
             </div>
 
             <div style="margin-bottom: 2rem;">
-                <label class="font-ui text-gray" style="font-size: 0.8rem;">CONTACT_PHONE</label><br>
+                <label class="font-ui text-gray" style="font-size: 0.8rem;">Telepon Hub</label><br>
                 <input type="text" name="phone" required style="width: 100%; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; padding: 0.5rem 0; outline: none;">
             </div>
 
             <div style="margin-bottom: 3rem;">
-                <label class="font-ui text-gray" style="font-size: 0.8rem;">FULL ADDRESS PROTOCOL</label><br>
+                <label class="font-ui text-gray" style="font-size: 0.8rem;">Alamat Lengkap</label><br>
                 <div style="display: flex; gap: 1rem; align-items: flex-start;">
                     <textarea name="address" id="address" required rows="2" style="flex-grow: 1; border: none; border-bottom: 2px solid var(--color-primary); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; padding: 0.5rem 0; outline: none; resize: none;"></textarea>
-                    <button type="button" onclick="toggleMap()" class="btn-neon" style="font-size: 0.7rem; white-space: nowrap;">PICK ON MAP</button>
+                    <button type="button" onclick="toggleMap()" class="btn-neon" style="font-size: 0.7rem; white-space: nowrap;">Pilih di Map</button>
                 </div>
             </div>
 
@@ -57,12 +57,12 @@
             <!-- Map Container -->
             <div id="map-container" style="display: none; margin-bottom: 3rem;">
                 <div id="map" style="height: 300px; border: 1px solid var(--color-panel-border); background: var(--color-bg);"></div>
-                <p class="font-ui text-gray" style="font-size: 0.7rem; margin-top: 0.5rem;">> LEFT CLICK TO SET COORDINATES | DRAG MARKER TO REFINE</p>
+                <p class="font-ui text-gray" style="font-size: 0.7rem; margin-top: 0.5rem;">Klik map untuk set koordinat, lalu geser marker kalau perlu.</p>
             </div>
 
             <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                <a href="{{ route('be.branches.index') }}" class="btn-neon" style="color: var(--color-gray); border-color: var(--color-gray);">ABORT</a>
-                <button type="submit" class="btn-neon" style="padding: 10px 40px;">INITIALIZE HUB</button>
+                <a href="{{ route('be.branches.index') }}" class="btn-neon" style="color: var(--color-gray); border-color: var(--color-gray);">Batal</a>
+                <button type="submit" class="btn-neon" style="padding: 10px 40px;">Simpan Hub</button>
             </div>
 
         </form>
@@ -121,7 +121,7 @@ function updateInputs(lat, lng) {
 function reverseGeocode(lat, lng) {
     const addressInput = document.getElementById('address');
     const oldVal = addressInput.value;
-    addressInput.value = "🔍 AUTO-LOCATING ADDRESS PROTOCOL...";
+    addressInput.value = "Mencari alamat dari titik map...";
 
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
         .then(r => r.json())

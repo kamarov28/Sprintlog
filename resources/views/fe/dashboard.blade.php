@@ -10,7 +10,7 @@
     @if(session('success'))
         <x-fe.alert tone="success" title="Berhasil">
             <p>{{ session('success') }}</p>
-            <p style="margin-top: 0.55rem;">Your dashboard will show pickup, payment, and shipment activation updates here.</p>
+            <p style="margin-top: 0.55rem;">Dashboard ini akan menampilkan update pickup, pembayaran, dan aktivasi shipment.</p>
         </x-fe.alert>
     @endif
 
@@ -129,7 +129,7 @@
                             <p class="data-value">{{ strtoupper($order['latest_tracking']->status) }} / {{ $order['latest_tracking']->location }} / {{ $order['latest_tracking']->tracked_at->format('d M H:i') }}</p>
                         @else
                             <span class="data-label">Update Terakhir</span>
-                            <p class="data-value">{{ $order['has_shipment'] ? 'Shipment active, waiting next tracking pulse.' : 'Hub will activate shipment after pickup and payment verification.' }}</p>
+                            <p class="data-value">{{ $order['has_shipment'] ? 'Shipment aktif, menunggu update tracking berikutnya.' : 'Hub akan mengaktifkan shipment setelah pickup dan payment diverifikasi.' }}</p>
                         @endif
                     </div>
 

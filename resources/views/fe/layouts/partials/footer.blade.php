@@ -26,7 +26,7 @@
                 </ul>
             </div>
 
-            <!-- Data Protocols Section -->
+        <!-- Data section -->
             <div class="footer-section">
                 <h4 class="text-accent mb-4">Akun</h4>
                 <ul class="footer-links">

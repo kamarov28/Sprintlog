@@ -85,7 +85,7 @@
                                     </x-be.badge>
                                 </td>
                                 <td>
-                                    <a href="{{ route('be.financial-reports.index', ['branch_id' => $row['branch']->id]) }}" class="be-btn be-btn--sm be-btn--neutral">Report</a>
+                                    <a href="{{ route('be.financial-reports.index', ['branch_id' => $row['branch']->id]) }}" class="be-btn be-btn--sm be-btn--neutral">Laporan</a>
                                 </td>
                             </tr>
                         @empty
@@ -124,7 +124,7 @@
                 <h3 class="font-bank text-main">Operasi Hari Ini</h3>
                 <div class="font-ui text-gray" style="font-size: 0.78rem; margin-top: 0.35rem;">Snapshot kerja harian hub.</div>
             </div>
-            <a href="{{ route('be.shipments.index', ['preset' => 'exception_open']) }}" class="be-btn be-btn--danger be-btn--sm">Issues</a>
+            <a href="{{ route('be.shipments.index', ['preset' => 'exception_open']) }}" class="be-btn be-btn--danger be-btn--sm">Kendala</a>
         </div>
 
         <div class="qol-stat-grid">
@@ -144,14 +144,14 @@
                 <thead>
                     <tr style="border-bottom: 2px solid var(--color-panel-border); font-size: 0.9rem;">
                         @if ($isCashier)
-                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">REQUEST ID</th>
-                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">CUSTOMER</th>
-                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">SCHEDULE</th>
+                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">Request ID</th>
+                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">Customer</th>
+                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">Jadwal</th>
                             <th style="padding: 1rem 0.5rem; color: var(--color-gray);">STATUS</th>
                         @else
-                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">TRACKING NO</th>
-                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">ORIGIN</th>
-                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">DESTINATION</th>
+                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">No Tracking</th>
+                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">Asal</th>
+                            <th style="padding: 1rem 0.5rem; color: var(--color-gray);">Tujuan</th>
                             <th style="padding: 1rem 0.5rem; color: var(--color-gray);">STATUS</th>
                         @endif
                     </tr>
@@ -167,8 +167,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" style="text-align: center; padding: 2rem; color: var(--color-gray);">NO RECENT
-                                    PICKUP DATA</td>
+                                <td colspan="4" style="text-align: center; padding: 2rem; color: var(--color-gray);">Belum ada data pickup terbaru</td>
                             </tr>
                         @endforelse
                     @else
@@ -195,8 +194,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" style="text-align: center; padding: 2rem; color: var(--color-gray);">NO RECENT
-                                    DATA</td>
+                                <td colspan="4" style="text-align: center; padding: 2rem; color: var(--color-gray);">Belum ada data terbaru</td>
                             </tr>
                         @endforelse
                     @endif

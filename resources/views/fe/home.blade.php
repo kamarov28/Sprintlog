@@ -187,7 +187,7 @@
         </div>
     </div>
 
-    <!-- Active Protocols / Services -->
+        <!-- Services -->
 
     <div id="services" class="section-animate" style="margin-top: 6rem;">
         <div class="section-title">

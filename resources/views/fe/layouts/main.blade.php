@@ -19,7 +19,7 @@
     
     @auth
         @if(auth()->user()->role === 'customer' && (!auth()->user()->address || !auth()->user()->latitude))
-            <div class="protocol-alert" id="setup-alert" style="display: none;">
+            <div class="toy-alert toy-alert--info" id="setup-alert" style="display: none;">
                 <h4>Profile belum lengkap</h4>
                 <p>Lengkapi alamat untuk mengaktifkan pengiriman.</p>
                 <p style="margin-top: 0.5rem;">Lengkapi profil supaya pickup dan pengiriman bisa diproses.</p>
@@ -63,7 +63,7 @@
     <!-- Main Content -->
     <main class="cyber-container">
         @if (session('success'))
-            <div class="protocol-alert-static toy-alert toy-alert--success" style="margin-top: 1.5rem;">
+            <div class="toy-alert toy-alert--success" style="margin-top: 1.5rem;">
                 <h4>Berhasil</h4>
                 <p>{{ session('success') }}</p>
             </div>

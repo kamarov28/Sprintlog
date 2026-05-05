@@ -1,6 +1,6 @@
 @extends('be.layouts.main')
 
-@section('header_title', 'PICKUP_DETAIL: SPL-' . str_pad($pickup->id, 6, '0', STR_PAD_LEFT))
+@section('header_title', 'Detail Pickup: SPL-' . str_pad($pickup->id, 6, '0', STR_PAD_LEFT))
 
 @section('content')
     @php
@@ -38,10 +38,10 @@
             <div class="font-bank text-primary" style="font-size: 1.35rem;">SPL-{{ str_pad($pickup->id, 6, '0', STR_PAD_LEFT) }}</div>
         </div>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <a href="{{ route('be.pickups.index') }}" class="btn-neon" style="text-decoration: none;">BACK QUEUE</a>
-            <a href="{{ route('be.pickups.receipt', $pickup) }}" target="_blank" class="btn-neon" style="text-decoration: none; border-color: #00ff00; color: #00ff00;">PRINT RECEIPT</a>
+            <a href="{{ route('be.pickups.index') }}" class="btn-neon" style="text-decoration: none;">Kembali</a>
+            <a href="{{ route('be.pickups.receipt', $pickup) }}" target="_blank" class="btn-neon" style="text-decoration: none; border-color: #00ff00; color: #00ff00;">Cetak Resi</a>
             @if($pickup->shipment)
-                <a href="{{ route('be.shipments.show', $pickup->shipment) }}" class="btn-neon" style="text-decoration: none; border-color: var(--color-accent); color: var(--color-accent);">OPEN SHIPMENT</a>
+                <a href="{{ route('be.shipments.show', $pickup->shipment) }}" class="btn-neon" style="text-decoration: none; border-color: var(--color-accent); color: var(--color-accent);">Buka Shipment</a>
             @endif
         </div>
     </div>
@@ -67,87 +67,87 @@
             <div class="hud-panel mb-4">
                 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem;">
                     <div class="ops-card">
-                        <div class="data-label">PICKUP_STATUS</div>
+                        <div class="data-label">Status Pickup</div>
                         <div class="status-chip" style="color: {{ $statusColors[$pickup->status] ?? 'var(--color-text-main)' }};">{{ strtoupper($pickup->status) }}</div>
                     </div>
                     <div class="ops-card">
-                        <div class="data-label">PAYMENT_STATE</div>
+                        <div class="data-label">Status Payment</div>
                         <div class="status-chip" style="color: {{ $paymentColors[$pickup->payment_status] ?? 'var(--color-text-main)' }};">{{ strtoupper((string) $pickup->payment_status ?: 'UNSET') }}</div>
                     </div>
                     <div class="ops-card">
-                        <div class="data-label">TOTAL_FEE</div>
+                        <div class="data-label">Total Ongkir</div>
                         <div class="font-bank text-accent" style="font-size: 1.2rem;">Rp {{ number_format((float) $pickup->total_price, 0, ',', '.') }}</div>
                     </div>
                 </div>
             </div>
 
             <div class="hud-panel mb-4">
-                <h3 class="font-bank text-primary mb-3" style="font-size: 1.15rem;">ROUTE MANIFEST</h3>
+                <h3 class="font-bank text-primary mb-3" style="font-size: 1.15rem;">Rute Pickup</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                     <div class="form-cluster">
-                        <div class="data-label">SENDER</div>
+                        <div class="data-label">Pengirim</div>
                         <div class="font-ui text-main" style="font-size: 1.05rem;">{{ $pickup->sender_name ?: $pickup->customer_name }}</div>
                         <div class="font-ui text-gray">{{ $pickup->sender_phone ?: $pickup->customer_phone }}</div>
-                        <div class="font-ui text-accent" style="font-size: 0.82rem; margin-top: 0.75rem;">{{ $pickup->senderCity->name ?? 'CITY_UNSET' }}</div>
+                        <div class="font-ui text-accent" style="font-size: 0.82rem; margin-top: 0.75rem;">{{ $pickup->senderCity->name ?? 'Kota belum lengkap' }}</div>
                         <div class="font-ui text-gray" style="font-size: 0.82rem; margin-top: 0.35rem;">{{ $pickup->sender_address ?: $pickup->pickup_address }}</div>
                     </div>
                     <div class="form-cluster form-cluster--accent">
-                        <div class="data-label">RECEIVER</div>
+                        <div class="data-label">Penerima</div>
                         <div class="font-ui text-main" style="font-size: 1.05rem;">{{ $pickup->receiver_name ?: '-' }}</div>
                         <div class="font-ui text-gray">{{ $pickup->receiver_phone ?: '-' }}</div>
-                        <div class="font-ui text-accent" style="font-size: 0.82rem; margin-top: 0.75rem;">{{ $pickup->receiverCity->name ?? 'CITY_UNSET' }}</div>
+                        <div class="font-ui text-accent" style="font-size: 0.82rem; margin-top: 0.75rem;">{{ $pickup->receiverCity->name ?? 'Kota belum lengkap' }}</div>
                         <div class="font-ui text-gray" style="font-size: 0.82rem; margin-top: 0.35rem;">{{ $pickup->receiver_address ?: '-' }}</div>
                     </div>
                 </div>
             </div>
 
             <div class="hud-panel mb-4">
-                <h3 class="font-bank text-accent mb-3" style="font-size: 1.15rem;">CARGO AND PAYMENT</h3>
+                <h3 class="font-bank text-accent mb-3" style="font-size: 1.15rem;">Paket dan Payment</h3>
                 <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem;">
                     <div>
-                        <div class="data-label">SERVICE</div>
+                        <div class="data-label">Layanan</div>
                         <div class="font-ui text-main">{{ $pickup->service_type ?: '-' }}</div>
                     </div>
                     <div>
-                        <div class="data-label">WEIGHT</div>
+                        <div class="data-label">Berat</div>
                         <div class="font-ui text-main">{{ $pickup->weight ?: '0' }} KG</div>
                     </div>
                     <div>
-                        <div class="data-label">PAYMENT_METHOD</div>
+                        <div class="data-label">Metode Payment</div>
                         <div class="font-ui text-main">{{ strtoupper((string) $pickup->payment_method ?: '-') }}</div>
                     </div>
                     <div>
                         <div class="data-label">HUB</div>
-                        <div class="font-ui text-main">{{ $pickup->branch->name ?? 'UNASSIGNED' }}</div>
+                        <div class="font-ui text-main">{{ $pickup->branch->name ?? 'Belum ditugaskan' }}</div>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
                     <div class="form-cluster">
-                        <div class="data-label">PICKUP_PROOF</div>
+                        <div class="data-label">Bukti Pickup</div>
                         @if($pickup->proof_of_pickup)
-                            <a href="{{ Storage::url($pickup->proof_of_pickup) }}" target="_blank" class="btn-neon" style="display: inline-block; text-decoration: none; margin-top: 0.5rem;">VIEW PHOTO</a>
+                            <a href="{{ Storage::url($pickup->proof_of_pickup) }}" target="_blank" class="btn-neon" style="display: inline-block; text-decoration: none; margin-top: 0.5rem;">Lihat Foto</a>
                         @else
-                            <div class="font-ui text-gray">NO_PROOF_YET</div>
+                            <div class="font-ui text-gray">Belum ada bukti pickup</div>
                         @endif
                     </div>
                     <div class="form-cluster form-cluster--accent">
-                        <div class="data-label">PAYMENT_PROOF / CASH</div>
+                        <div class="data-label">Bukti Payment / Tunai</div>
                         @if($pickup->payment_method === 'transfer' && $pickup->payment_proof)
-                            <a href="{{ Storage::url($pickup->payment_proof) }}" target="_blank" class="btn-neon" style="display: inline-block; text-decoration: none; margin-top: 0.5rem; border-color: #00ccff; color: #00ccff;">VIEW TRANSFER</a>
+                            <a href="{{ Storage::url($pickup->payment_proof) }}" target="_blank" class="btn-neon" style="display: inline-block; text-decoration: none; margin-top: 0.5rem; border-color: #00ccff; color: #00ccff;">Lihat Transfer</a>
                         @elseif($pickup->payment_method === 'cash_on_pickup')
                             <div class="font-bank text-accent" style="font-size: 1.2rem;">Rp {{ number_format((float) $pickup->cash_received_amount, 0, ',', '.') }}</div>
                             <div class="font-ui text-gray" style="font-size: 0.75rem;">Collector: {{ $pickup->cashCollector->name ?? '-' }}</div>
                             <div class="font-ui text-gray" style="font-size: 0.75rem;">Verifier: {{ $pickup->cashVerifier->name ?? '-' }}</div>
                         @else
-                            <div class="font-ui text-gray">NO_PAYMENT_PROOF</div>
+                            <div class="font-ui text-gray">Belum ada bukti payment</div>
                         @endif
                     </div>
                 </div>
             </div>
 
             <div class="hud-panel">
-                <h3 class="font-bank text-main mb-4" style="font-size: 1.15rem;">PICKUP AUDIT TIMELINE</h3>
+                <h3 class="font-bank text-main mb-4" style="font-size: 1.15rem;">Riwayat Pickup</h3>
                 <div style="border-left: 2px dashed var(--color-panel-border); padding-left: 1.5rem;">
                     @forelse($pickup->statusAudits as $audit)
                         <div style="margin-bottom: 1.4rem; position: relative;">
@@ -165,7 +165,7 @@
                             @endif
                         </div>
                     @empty
-                        <div class="table-empty">NO AUDIT EVENTS RECORDED</div>
+                        <div class="table-empty">Belum ada riwayat audit</div>
                     @endforelse
                 </div>
             </div>
@@ -178,14 +178,14 @@
                 @if($canManage && !$pickup->courier)
                     <form action="{{ route('be.pickups.assign', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
-                        <div class="data-label">Assign courier</div>
+                        <div class="data-label">Assign Kurir Pickup</div>
                         <select name="courier_id" required style="width: 100%; padding: 0.55rem; font-family: var(--font-ui); margin: 0.5rem 0;">
-                            <option value="" disabled selected>Select Courier...</option>
+                            <option value="" disabled selected>Pilih kurir...</option>
                             @foreach($couriers as $courier)
                                 <option value="{{ $courier->id }}">{{ $courier->name }}</option>
                             @endforeach
                         </select>
-                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent;">ASSIGN UNIT</button>
+                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent;">Assign Kurir</button>
                     </form>
                 @endif
 
@@ -193,37 +193,37 @@
                     <form action="{{ route('be.pickups.status', $pickup) }}" method="POST" enctype="multipart/form-data" class="form-cluster mb-3">
                         @csrf
                         <input type="hidden" name="status" value="picked_up">
-                        <div class="data-label">Confirm pickup</div>
+                        <div class="data-label">Konfirmasi Pickup</div>
                         <input type="file" name="proof_image" accept="image/*" capture="environment" required style="width: 100%; margin: 0.75rem 0;">
                         @if($pickup->payment_method === 'cash_on_pickup')
                             <input type="number" name="cash_received_amount" min="0" step="0.01" required placeholder="Nominal tunai diterima" style="width: 100%; padding: 0.55rem; margin-bottom: 0.75rem;">
                         @endif
-                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: #ffaa00; color: #ffaa00;">CONFIRM PICKED UP</button>
+                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: #ffaa00; color: #ffaa00;">Konfirmasi Diambil</button>
                     </form>
                 @endif
 
                 @if($canManage && $pickup->payment_method === 'cash_on_pickup' && $pickup->payment_status === 'cash_collected_by_courier')
                     <form action="{{ route('be.pickups.payment', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
-                        <div class="data-label">Verify courier cash</div>
+                        <div class="data-label">Verifikasi Setoran Kurir</div>
                         <input type="number" name="verified_cash_amount" min="0" step="0.01" required value="{{ $pickup->cash_received_amount }}" style="width: 100%; padding: 0.55rem; margin: 0.75rem 0;">
-                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: #00ff00; color: #00ff00;">VERIFY CASH</button>
+                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: #00ff00; color: #00ff00;">Verifikasi Tunai</button>
                     </form>
                 @endif
 
                 @if($canManage && $pickup->payment_method === 'transfer' && $pickup->payment_status === 'pending_transfer_verification' && $pickup->payment_proof)
                     <div class="form-cluster mb-3">
-                        <div class="data-label">Verify transfer</div>
+                        <div class="data-label">Verifikasi Transfer</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
                             <form action="{{ route('be.pickups.transfer', $pickup) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="decision" value="approve">
-                                <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: #00ff00; color: #00ff00;">APPROVE</button>
+                                <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: #00ff00; color: #00ff00;">Approve</button>
                             </form>
                             <form action="{{ route('be.pickups.transfer', $pickup) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="decision" value="reject">
-                                <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: red; color: red;">REJECT</button>
+                                <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: red; color: red;">Reject</button>
                             </form>
                         </div>
                     </div>
@@ -233,16 +233,16 @@
                     <form action="{{ route('be.pickups.status', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
                         <input type="hidden" name="status" value="hub_received">
-                        <div class="data-label">Hub inbound</div>
-                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent; margin-top: 0.75rem; border-color: #00ccff; color: #00ccff;">MARK HUB RECEIVED</button>
+                        <div class="data-label">Terima di Hub</div>
+                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent; margin-top: 0.75rem; border-color: #00ccff; color: #00ccff;">Tandai Diterima Hub</button>
                     </form>
                 @endif
 
                 @if($canActivate)
                     <form action="{{ route('be.pickups.activate-shipment', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
-                        <div class="data-label">Shipment activation</div>
-                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent; margin-top: 0.75rem; border-color: #00ff00; color: #00ff00;">ACTIVATE SHIPMENT</button>
+                        <div class="data-label">Aktivasi Shipment</div>
+                        <button type="submit" class="btn-neon" style="width: 100%; background: transparent; margin-top: 0.75rem; border-color: #00ff00; color: #00ff00;">Aktifkan Shipment</button>
                     </form>
                 @elseif($canManage && $pickup->status === 'hub_received' && !$pickup->shipment)
                     <div class="inline-alert">
@@ -251,14 +251,14 @@
                 @endif
 
                 @if(!$canManage && !(auth()->user()->role === 'courier' && $pickup->status === 'assigned'))
-                    <div class="table-empty">NO AVAILABLE ACTIONS FOR CURRENT STATE</div>
+                    <div class="table-empty">Belum ada aksi untuk status ini</div>
                 @endif
             </div>
 
             <x-be.route-card :estimate="$routeEstimate" />
 
             <div class="hud-panel">
-                <h3 class="font-bank text-accent mb-3" style="font-size: 1.15rem;">LOCATION LINKS</h3>
+                <h3 class="font-bank text-accent mb-3" style="font-size: 1.15rem;">Link Lokasi</h3>
                 <div style="display: grid; gap: 0.75rem;">
                     @php
                         $pickupMapDestination = ($pickup->latitude && $pickup->longitude)
@@ -272,15 +272,15 @@
                                 : trim($hub->address ?: ($hub->name . ' ' . $hub->city));
                         }
                     @endphp
-                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($pickupMapDestination) }}&travelmode=driving" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: #4285F4; color: #4285F4;">ROUTE TO PICKUP</a>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($pickupMapDestination) }}&travelmode=driving" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: #4285F4; color: #4285F4;">Rute ke Pickup</a>
                     @if($hubMapDestination)
-                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($hubMapDestination) }}&travelmode=driving" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: #4285F4; color: #4285F4;">ROUTE TO HUB</a>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($hubMapDestination) }}&travelmode=driving" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: #4285F4; color: #4285F4;">Rute ke Hub</a>
                     @endif
 
                     @if($pickup->receiver_latitude && $pickup->receiver_longitude)
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ $pickup->receiver_latitude }},{{ $pickup->receiver_longitude }}" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: var(--color-accent); color: var(--color-accent);">OPEN RECEIVER MAP</a>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ $pickup->receiver_latitude }},{{ $pickup->receiver_longitude }}" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: var(--color-accent); color: var(--color-accent);">Buka Map Penerima</a>
                     @else
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($pickup->receiver_address) }}" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: var(--color-accent); color: var(--color-accent);">SEARCH RECEIVER MAP</a>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($pickup->receiver_address) }}" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: var(--color-accent); color: var(--color-accent);">Cari Map Penerima</a>
                     @endif
                 </div>
             </div>
