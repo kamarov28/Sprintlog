@@ -1,0 +1,73 @@
+---
+- name: Deploy simple Apache web and Docker on VM2
+  hosts: managed
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Apache web server
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+
+    - name: Start and enable Apache
+      ansible.builtin.service:
+        name: apache2
+        state: started
+        enabled: true
+
+    - name: Create simple web page
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>VM2 Web Server</title>
+          </head>
+          <body>
+              <h1>Berhasil Deploy Web ke VM2</h1>
+              <p>Apache berhasil diinstall menggunakan Ansible dari VM1.</p>
+              <p>Docker juga diinstall di VM2.</p>
+          </body>
+          </html>
+        mode: "0644"
+
+    - name: Install Docker
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+
+    - name: Start and enable Docker
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add SSH user to docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+      when: ansible_user is defined
+
+    - name: Check Apache response
+      ansible.builtin.command: curl -s localhost
+      register: apache_result
+      changed_when: false
+
+    - name: Show Apache response
+      ansible.builtin.debug:
+        var: apache_result.stdout_lines
+
+    - name: Check Docker version
+      ansible.builtin.command: docker --version
+      register: docker_result
+      changed_when: false
+
+    - name: Show Docker version
+      ansible.builtin.debug:
+        var: docker_result.stdout
