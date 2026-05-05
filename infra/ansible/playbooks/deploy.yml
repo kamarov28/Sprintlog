@@ -27,7 +27,7 @@
         sprintlog_generate_app_key: "{{ (app_key | default('') | trim) == '' or 'CHANGE_THIS' in (app_key | default('')) }}"
 
     - name: Generate Laravel APP_KEY automatically for lab deployment
-      ansible.builtin.command: docker run --rm --entrypoint php {{ sprintlog_image }} artisan key:generate --show
+      ansible.builtin.shell: "printf 'base64:%s\n' \"$(openssl rand -base64 32)\""
       register: generated_app_key
       changed_when: sprintlog_generate_app_key | bool
       when: sprintlog_generate_app_key | bool
