@@ -89,10 +89,10 @@ class DashboardController extends Controller
             $assignedPickups = (clone $pickupBase)->where('status', 'assigned')->count();
             $recentPickups = (clone $pickupBase)->latest()->limit(5)->get();
 
-            $stat1Label = $isCashier ? 'PENDING PICKUPS // HUB QUEUE' : 'ACTIVE SHIPMENTS // HUB SCOPE';
+            $stat1Label = $isCashier ? 'Pickup pending di hub' : 'Shipment aktif di area hub';
             $stat1Value = $isCashier ? $pendingPickups : $activeShipments;
 
-            $stat2Label = $isCashier ? 'ASSIGNED PICKUPS' : 'DEPLOYED COURIERS';
+            $stat2Label = $isCashier ? 'Pickup sudah di-assign' : 'Kurir aktif';
             $stat2Value = $isCashier ? $assignedPickups : $couriersCount;
 
             $todayOps = [

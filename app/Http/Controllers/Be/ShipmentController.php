@@ -537,6 +537,7 @@ class ShipmentController extends Controller
             ->with('branch')
             ->where('shipment_id', $shipment->id)
             ->first();
+        $useCourierCurrentLocation = auth()->user()->role === 'courier';
 
         $routeEstimate = $linkedPickup
             ? RouteEstimate::make([
@@ -561,7 +562,10 @@ class ShipmentController extends Controller
             ], [
                 'label' => 'Courier delivery route',
                 'speed_kmh' => 28,
-                'note' => 'Estimasi rute berdasarkan titik pickup dan alamat penerima dari request pelanggan.',
+                'use_current_location_origin' => $useCourierCurrentLocation,
+                'note' => $useCourierCurrentLocation
+                    ? 'Google Maps memakai posisi kurir saat ini sebagai titik awal. Jarak estimasi di kartu ini tetap perkiraan sistem dari titik pickup/hub ke alamat penerima.'
+                    : 'Estimasi rute berdasarkan titik pickup dan alamat penerima dari request pelanggan.',
             ])
             : RouteEstimate::make([
                 [
@@ -579,7 +583,10 @@ class ShipmentController extends Controller
             ], [
                 'label' => 'Hub to hub route',
                 'speed_kmh' => 42,
-                'note' => 'Estimasi rute antar hub. Lengkapi koordinat pickup/penerima untuk navigasi kurir yang lebih detail.',
+                'use_current_location_origin' => $useCourierCurrentLocation,
+                'note' => $useCourierCurrentLocation
+                    ? 'Google Maps memakai posisi kurir saat ini sebagai titik awal. Jarak estimasi di kartu ini tetap perkiraan sistem antar hub.'
+                    : 'Estimasi rute antar hub. Lengkapi koordinat pickup/penerima untuk navigasi kurir yang lebih detail.',
             ]);
 
         return view('be.shipments.show', compact('shipment', 'deliveryCouriers', 'routeEstimate', 'linkedPickup'));
@@ -692,12 +699,20 @@ class ShipmentController extends Controller
 
     private function scanDepartHub(Request $request, Shipment $shipment, int $branchId)
     {
+        $allLegs = $shipment->legs()
+            ->get(['id', 'sequence', 'status']);
+
         $leg = $shipment->legs()
             ->with(['originBranch', 'destinationBranch'])
             ->where('origin_branch_id', $branchId)
             ->where('status', 'pending')
             ->orderBy('sequence')
-            ->first();
+            ->get()
+            ->first(function ($candidate) use ($allLegs) {
+                $previousLeg = $allLegs->firstWhere('sequence', $candidate->sequence - 1);
+
+                return ! $previousLeg || $previousLeg->status === 'arrived';
+            });
 
         if (! $leg) {
             return back()->withErrors(['scan_type' => 'Tidak ada leg yang siap diberangkatkan dari hub ini.']);
@@ -753,8 +768,7 @@ class ShipmentController extends Controller
         $leg = $shipment->legs()
             ->with(['originBranch', 'destinationBranch'])
             ->where('destination_branch_id', $branchId)
-            ->whereIn('status', ['departed', 'pending'])
-            ->orderByRaw("CASE WHEN status = 'departed' THEN 0 ELSE 1 END")
+            ->where('status', 'departed')
             ->orderBy('sequence')
             ->first();
 
@@ -817,21 +831,26 @@ class ShipmentController extends Controller
         }
 
         $branchId = $this->hubBranchId();
-        if (! $branchId || (int) $shipment->destination_branch_id !== $branchId) {
-            abort(403, 'Assignment delivery hanya bisa dilakukan oleh hub tujuan.');
+        if (! $branchId) {
+            abort(403, 'Akun staff belum terhubung ke hub.');
         }
 
-        if ($shipment->status !== 'arrived_at_branch') {
-            return back()->withErrors(['courier_id' => 'Paket harus diterima di hub tujuan sebelum delivery courier di-assign.']);
-        }
+        $canAssignOutbound = (int) $shipment->origin_branch_id === $branchId
+            && in_array($shipment->status, ['pending', 'in_transit'], true)
+            && $shipment->legs()
+                ->where('origin_branch_id', $branchId)
+                ->whereIn('status', ['pending', 'departed'])
+                ->exists();
 
-        $finalLegArrived = $shipment->legs()
+        $canAssignLastMile = (int) $shipment->destination_branch_id === $branchId
+            && $shipment->status === 'arrived_at_branch'
+            && $shipment->legs()
             ->where('destination_branch_id', $branchId)
             ->where('status', 'arrived')
             ->exists();
 
-        if (! $finalLegArrived) {
-            return back()->withErrors(['courier_id' => 'Leg tujuan belum tercatat arrived. Lakukan RECEIVE HUB dulu.']);
+        if (! $canAssignOutbound && ! $canAssignLastMile) {
+            return back()->withErrors(['courier_id' => 'Shipment belum berada di state yang bisa di-assign dari hub ini.']);
         }
 
         $request->validate([
@@ -861,11 +880,11 @@ class ShipmentController extends Controller
         app(ShipmentNotifier::class)->record(
             $shipment,
             'delivery_assigned',
-            'Kurir delivery ditugaskan',
+            $canAssignOutbound ? 'Kurir outbound ditugaskan' : 'Kurir delivery ditugaskan',
             'Paket ditugaskan ke kurir '.$courier->name.'.'
         );
 
-        return back()->with('success', 'Delivery courier assigned.');
+        return back()->with('success', $canAssignOutbound ? 'Outbound courier assigned.' : 'Delivery courier assigned.');
     }
 
     public function manifestDispatch(Request $request)

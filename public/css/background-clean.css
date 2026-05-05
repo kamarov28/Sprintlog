@@ -6,7 +6,8 @@ body,
 body.app-shell,
 body.app-shell--fe,
 body.theme-toy {
-    background-color: #fff1dc !important;
+    background: #fff3df !important;
+    background-color: #fff3df !important;
     background-image: none !important;
     background-attachment: scroll !important;
 }
@@ -27,12 +28,66 @@ body.theme-toy::after {
 body.app-shell,
 body.app-shell--fe,
 body.theme-toy {
-    background:
-        radial-gradient(circle at 10% 16%, rgba(255, 234, 117, 0.34) 0, rgba(255, 234, 117, 0.18) 17rem, transparent 32rem),
-        radial-gradient(circle at 86% 12%, rgba(255, 128, 189, 0.24) 0, rgba(255, 128, 189, 0.12) 18rem, transparent 34rem),
-        radial-gradient(circle at 72% 76%, rgba(174, 242, 204, 0.28) 0, rgba(174, 242, 204, 0.12) 19rem, transparent 36rem),
-        linear-gradient(180deg, #fff4df 0%, #fff0dc 45%, #fdf5e8 100%) !important;
     min-height: 100vh;
+}
+
+body.theme-toy.app-shell--fe {
+    --macaron-page-width: min(calc(100% - clamp(2rem, 7vw, 8rem)), 1476px);
+    --color-gray: #2d2d33;
+    --font-title: 'SyneLocal', 'BricolageLocal', sans-serif;
+    --font-sub: 'EpilogueLocal', 'SoraLocal', sans-serif;
+    --font-body: 'PlusJakartaLocal', 'SoraLocal', sans-serif;
+    --font-ui: 'SoraLocal', 'PlusJakartaLocal', sans-serif;
+}
+
+body.theme-toy.app-shell--fe,
+body.theme-toy.app-shell--fe *,
+body.theme-toy.app-shell--fe .font-ui,
+body.theme-toy.app-shell--fe .font-bank,
+body.theme-toy.app-shell--fe .font-modula {
+    font-family: var(--font-body) !important;
+}
+
+body.theme-toy.app-shell--fe .logo-text,
+body.theme-toy.app-shell--fe h1,
+body.theme-toy.app-shell--fe h2,
+body.theme-toy.app-shell--fe h3,
+body.theme-toy.app-shell--fe h4,
+body.theme-toy.app-shell--fe .footer-section h4 {
+    font-family: var(--font-title) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+}
+
+body.theme-toy.app-shell--fe .toy-page-title,
+body.theme-toy.app-shell--fe .ui-surface__title,
+body.theme-toy.app-shell--fe .hud-panel h2 {
+    color: var(--color-text-main) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0.02em !important;
+}
+
+body.theme-toy.app-shell--fe .summary-total {
+    border: 3px solid var(--color-panel-border) !important;
+    border-radius: 8px !important;
+    background: #fffaf2 !important;
+    box-shadow: 4px 4px 0 var(--color-panel-border) !important;
+    color: var(--color-text-main) !important;
+}
+
+body.theme-toy.app-shell--fe .summary-total .text-primary,
+body.theme-toy.app-shell--fe .summary-total [class*="text-primary"] {
+    color: var(--color-text-main) !important;
+}
+
+body.theme-toy.app-shell--fe .fe-nav a,
+body.theme-toy.app-shell--fe .ui-button,
+body.theme-toy.app-shell--fe .data-label,
+body.theme-toy.app-shell--fe .field-label,
+body.theme-toy.app-shell--fe .tech-badge,
+body.theme-toy.app-shell--fe .footer-links a {
+    font-family: var(--font-ui) !important;
 }
 
 .cyber-container {
@@ -45,4 +100,194 @@ header.fe-header {
     background: rgba(255, 255, 255, 0.90) !important;
     backdrop-filter: blur(14px) saturate(150%);
     -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+body.theme-toy.app-shell--fe .cyber-footer {
+    width: var(--macaron-page-width) !important;
+    max-width: var(--macaron-page-width) !important;
+    margin: clamp(4rem, 8vw, 6rem) auto 1.4rem !important;
+    padding: clamp(1.1rem, 2vw, 1.6rem) !important;
+    border: 3px solid var(--color-panel-border) !important;
+    border-radius: 8px !important;
+    background: var(--color-sky) !important;
+    box-shadow: 8px 8px 0 var(--color-panel-border) !important;
+    color: var(--color-text-main) !important;
+}
+
+body.theme-toy.app-shell--fe .cyber-footer > .cyber-container {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+}
+
+body.theme-toy.app-shell--fe .footer-grid {
+    display: grid !important;
+    grid-template-columns: minmax(260px, 1.4fr) repeat(3, minmax(150px, 1fr)) !important;
+    gap: 1rem !important;
+}
+
+body.theme-toy.app-shell--fe .footer-section {
+    min-width: 0;
+    border: 3px solid var(--color-panel-border);
+    border-radius: 8px;
+    background: var(--color-panel);
+    box-shadow: 5px 5px 0 var(--color-panel-border);
+    padding: 1.1rem;
+}
+
+body.theme-toy.app-shell--fe .footer-section:nth-child(2) {
+    background: var(--color-lilac);
+}
+
+body.theme-toy.app-shell--fe .footer-section:nth-child(3) {
+    background: var(--color-primary);
+}
+
+body.theme-toy.app-shell--fe .footer-section:nth-child(4) {
+    background: var(--color-sun);
+}
+
+body.theme-toy.app-shell--fe .footer-section h4 {
+    color: var(--color-text-main) !important;
+    font-size: 1.55rem !important;
+    line-height: 0.95;
+    margin-bottom: 1rem !important;
+}
+
+body.theme-toy.app-shell--fe .footer-links a,
+body.theme-toy.app-shell--fe .footer-section p {
+    color: var(--color-text-main) !important;
+    font-weight: 800 !important;
+}
+
+body.theme-toy.app-shell--fe .footer-links li {
+    margin-bottom: 0.55rem;
+}
+
+body.theme-toy.app-shell--fe .tech-badge {
+    border: 2px solid var(--color-panel-border);
+    border-radius: 8px;
+    background: var(--color-accent);
+    color: var(--color-text-main);
+    font-weight: 800;
+}
+
+/* Readability guardrail: old terminal/glass styles used light gray text and
+   reveal opacity. Keep every customer-facing page legible on the pastel shell. */
+body.theme-toy.app-shell--fe,
+body.theme-toy.app-shell--fe p,
+body.theme-toy.app-shell--fe li,
+body.theme-toy.app-shell--fe td,
+body.theme-toy.app-shell--fe .text-gray,
+body.theme-toy.app-shell--fe .field-label,
+body.theme-toy.app-shell--fe .data-label,
+body.theme-toy.app-shell--fe .summary-row span,
+body.theme-toy.app-shell--fe .toy-page-subtitle,
+body.theme-toy.app-shell--fe .ui-surface__subtitle,
+body.theme-toy.app-shell--fe .map-lock-status,
+body.theme-toy.app-shell--fe .status-chip--neutral,
+body.theme-toy.app-shell--fe .flow-step__text,
+body.theme-toy.app-shell--fe .footer-section p,
+body.theme-toy.app-shell--fe .footer-links a {
+    color: #25252b !important;
+    opacity: 1 !important;
+}
+
+body.theme-toy.app-shell--fe label,
+body.theme-toy.app-shell--fe .field-label,
+body.theme-toy.app-shell--fe .data-label,
+body.theme-toy.app-shell--fe .summary-row span,
+body.theme-toy.app-shell--fe .flow-step__label,
+body.theme-toy.app-shell--fe .status-chip,
+body.theme-toy.app-shell--fe .tech-badge {
+    font-weight: 850 !important;
+}
+
+body.theme-toy.app-shell--fe strong,
+body.theme-toy.app-shell--fe b,
+body.theme-toy.app-shell--fe .summary-row strong,
+body.theme-toy.app-shell--fe .metric-value,
+body.theme-toy.app-shell--fe .quote-display__value,
+body.theme-toy.app-shell--fe #display-price,
+body.theme-toy.app-shell--fe #summary-total {
+    color: #0a0a0a !important;
+    opacity: 1 !important;
+    font-weight: 900 !important;
+}
+
+body.theme-toy.app-shell--fe .flow-step__code,
+body.theme-toy.app-shell--fe .flow-step .text-primary {
+    color: #c41470 !important;
+    opacity: 1 !important;
+    font-weight: 900 !important;
+}
+
+body.theme-toy.app-shell--fe .text-primary {
+    color: #176b3b !important;
+}
+
+body.theme-toy.app-shell--fe .text-accent {
+    color: #b0005a !important;
+}
+
+body.theme-toy.app-shell--fe .logo-text .accent {
+    color: var(--color-accent) !important;
+}
+
+body.theme-toy.app-shell--fe input:not(:disabled),
+body.theme-toy.app-shell--fe select:not(:disabled),
+body.theme-toy.app-shell--fe textarea:not(:disabled),
+body.theme-toy.app-shell--fe .ui-control:not(:disabled) {
+    color: #0a0a0a !important;
+    background: #fffaf2 !important;
+    opacity: 1 !important;
+}
+
+body.theme-toy.app-shell--fe input::placeholder,
+body.theme-toy.app-shell--fe textarea::placeholder {
+    color: #3d3d43 !important;
+    opacity: 1 !important;
+}
+
+body.theme-toy.app-shell--fe .section-animate,
+body.theme-toy.app-shell--fe .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+}
+
+@media (max-width: 700px) {
+    body.theme-toy.app-shell--fe {
+        --mobile-gutter: 1rem;
+        --mobile-shadow: 4px;
+        --macaron-page-width: calc(100% - (var(--mobile-gutter) * 2));
+        overflow-x: hidden;
+    }
+
+    body.theme-toy.app-shell--fe .cyber-footer {
+        width: var(--macaron-page-width) !important;
+        max-width: var(--macaron-page-width) !important;
+        margin-top: 2.5rem !important;
+        padding: 1rem !important;
+        box-shadow: var(--mobile-shadow) var(--mobile-shadow) 0 var(--color-panel-border) !important;
+    }
+
+    body.theme-toy.app-shell--fe .footer-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    body.theme-toy.app-shell--fe .footer-section {
+        padding: 1rem !important;
+        box-shadow: var(--mobile-shadow) var(--mobile-shadow) 0 var(--color-panel-border) !important;
+    }
+
+    body.theme-toy.app-shell--fe .footer-section h4 {
+        margin-bottom: 0.55rem !important;
+    }
+
+    body.theme-toy.app-shell--fe .footer-links li {
+        margin-bottom: 0.35rem !important;
+    }
 }

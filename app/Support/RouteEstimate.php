@@ -42,8 +42,13 @@ class RouteEstimate
             'distance_km' => $distanceKm,
             'duration_minutes' => $durationMinutes,
             'duration_label' => self::durationLabel($durationMinutes),
-            'google_url' => self::googleDirectionsUrl($points->all(), (string) ($options['mode'] ?? 'driving')),
+            'google_url' => self::googleDirectionsUrl(
+                $points->all(),
+                (string) ($options['mode'] ?? 'driving'),
+                (bool) ($options['use_current_location_origin'] ?? false)
+            ),
             'note' => (string) ($options['note'] ?? 'Estimasi sistem. Google Maps dapat memberi durasi real-time.'),
+            'uses_current_location_origin' => (bool) ($options['use_current_location_origin'] ?? false),
         ];
     }
 
@@ -76,19 +81,23 @@ class RouteEstimate
         return trim($hours.' jam'.($remaining ? ' '.$remaining.' menit' : ''));
     }
 
-    private static function googleDirectionsUrl(array $points, string $mode): string
+    private static function googleDirectionsUrl(array $points, string $mode, bool $useCurrentLocationOrigin = false): string
     {
-        $origin = $points[0]['lat'].','.$points[0]['lng'];
         $destinationPoint = $points[count($points) - 1];
         $destination = $destinationPoint['lat'].','.$destinationPoint['lng'];
-        $waypoints = array_slice($points, 1, -1);
+        $waypoints = $useCurrentLocationOrigin
+            ? array_slice($points, 0, -1)
+            : array_slice($points, 1, -1);
 
         $query = [
             'api' => '1',
-            'origin' => $origin,
             'destination' => $destination,
             'travelmode' => $mode,
         ];
+
+        if (! $useCurrentLocationOrigin) {
+            $query['origin'] = $points[0]['lat'].','.$points[0]['lng'];
+        }
 
         if ($waypoints !== []) {
             $query['waypoints'] = implode('|', array_map(fn ($point) => $point['lat'].','.$point['lng'], $waypoints));

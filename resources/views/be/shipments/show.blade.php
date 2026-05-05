@@ -1,6 +1,6 @@
 @extends('be.layouts.main')
 
-@section('header_title', 'SHIPMENT_DETAILS: ' . $shipment->tracking_number)
+@section('header_title', 'Detail Shipment: ' . $shipment->tracking_number)
 
 @section('content')
 
@@ -9,15 +9,15 @@
         <!-- Left: Static Details -->
         <div>
             <div class="hud-panel mb-4">
-                <h3 class="font-bank text-primary mb-3" style="font-size: 1.2rem;">[ SENDER & RECEIVER ]</h3>
+                <h3 class="font-bank text-primary mb-3" style="font-size: 1.2rem;">Pengirim & Penerima</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div>
-                        <div class="font-ui text-gray" style="font-size: 0.75rem;">SENDER</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Pengirim</div>
                         <div class="font-ui" style="font-size: 1rem; color: var(--color-text-main);">{{ $shipment->sender->name }}</div>
                         <div class="font-ui text-gray" style="font-size: 0.8rem;">{{ $shipment->sender->phone }}</div>
                     </div>
                     <div>
-                        <div class="font-ui text-gray" style="font-size: 0.75rem;">RECEIVER</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Penerima</div>
                         <div class="font-ui" style="font-size: 1rem; color: var(--color-text-main);">{{ $shipment->receiver->name }}</div>
                         <div class="font-ui text-gray" style="font-size: 0.8rem;">{{ $shipment->receiver->phone }}</div>
                         @if($shipment->receiver->address)
@@ -28,20 +28,20 @@
             </div>
 
             <div class="hud-panel mb-4">
-                <h3 class="font-bank text-accent mb-3" style="font-size: 1.2rem;">CARGO INFO</h3>
+                <h3 class="font-bank text-accent mb-3" style="font-size: 1.2rem;">Info Paket</h3>
                 <div style="margin-bottom: 1.5rem;">
-                    <div class="font-ui text-gray" style="font-size: 0.75rem;">ITEMS</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Item</div>
                     @foreach($shipment->items as $item)
                         <div class="font-ui" style="font-size: 1rem; color: var(--color-text-main);">{{ $item->item_name }} ({{ $item->quantity }}x)</div>
                     @endforeach
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div>
-                        <div class="font-ui text-gray" style="font-size: 0.75rem;">WEIGHT</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Berat</div>
                         <div class="font-ui" style="font-size: 1.2rem; color: var(--color-text-main);">{{ $shipment->total_weight }} KG</div>
                     </div>
                     <div>
-                        <div class="font-ui text-gray" style="font-size: 0.75rem;">TOTAL SHIPMENT COST</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Total Ongkir</div>
                         <div class="font-ui" style="font-size: 1.2rem; color: var(--color-accent); font-weight: bold;">Rp {{ number_format($shipment->total_price, 0, ',', '.') }}</div>
                     </div>
                 </div>
@@ -50,29 +50,29 @@
             @if($shipment->payment)
             <div class="hud-panel mb-4">
                 <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <h3 class="font-bank text-primary mb-3" style="font-size: 1.2rem;">PAYMENT DATA</h3>
+                    <h3 class="font-bank text-primary mb-3" style="font-size: 1.2rem;">Data Pembayaran</h3>
                     @if($shipment->payment->payment_method === 'cash')
                         <a href="{{ route('be.shipments.receipt', $shipment) }}" target="_blank" class="btn-neon" style="font-size: 0.7rem; padding: 5px 15px;">PRINT RESI KASIR</a>
                     @endif
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div>
-                        <div class="font-ui text-gray" style="font-size: 0.75rem;">METHOD</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Metode</div>
                         <div class="font-ui" style="font-size: 1.2rem; color: var(--color-text-main);">{{ strtoupper($shipment->payment->payment_method) }}</div>
                     </div>
                     <div>
-                        <div class="font-ui text-gray" style="font-size: 0.75rem;">STATUS</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Status</div>
                         <div class="font-ui flex items-center" style="font-size: 1.2rem; color: {{ $shipment->payment->payment_status == 'paid' ? 'var(--color-primary)' : 'var(--color-accent)' }}; font-weight: bold;">{{ strtoupper($shipment->payment->payment_status) }}</div>
                     </div>
                 </div>
                 @if($shipment->payment->payment_method === 'cash')
                 <div style="border-top: 1px dashed var(--color-panel-border); padding-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div>
-                        <div class="font-ui text-gray" style="font-size: 0.75rem;">AMOUNT RECEIVED (TUNAI)</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Tunai Diterima</div>
                         <div class="font-ui" style="font-size: 1.2rem; color: var(--color-text-main);">Rp {{ number_format($shipment->payment->amount_received, 0, ',', '.') }}</div>
                     </div>
                     <div>
-                        <div class="font-ui text-gray" style="font-size: 0.75rem;">CHANGE (KEMBALIAN)</div>
+                        <div class="font-ui text-gray" style="font-size: 0.75rem;">Kembalian</div>
                         <div class="font-ui" style="font-size: 1.2rem; color: var(--color-accent);">Rp {{ number_format($shipment->payment->change_amount, 0, ',', '.') }}</div>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
 
             @if($shipment->legs->isNotEmpty())
             <div class="hud-panel mb-4">
-                <h3 class="font-bank text-main mb-3" style="font-size: 1.2rem;">ROUTE LEGS</h3>
+                <h3 class="font-bank text-main mb-3" style="font-size: 1.2rem;">Rute Antar Hub</h3>
                 <div style="display: grid; gap: 0.85rem;">
                     @foreach($shipment->legs as $leg)
                         <div style="display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 0.8rem; align-items: center; border-bottom: 1px solid var(--color-panel-border); padding-bottom: 0.85rem;">
@@ -151,8 +151,11 @@
                 $nextAction = $shipment->nextActionHint(auth()->user()->branch_id, auth()->user()->role);
             @endphp
             <div class="hud-panel mb-4" style="border-color: var(--color-primary);">
-                <div class="font-ui text-gray" style="font-size: 0.76rem;">NEXT_ACTION</div>
+                <div class="font-ui text-gray" style="font-size: 0.76rem;">Langkah berikutnya</div>
                 <div class="font-bank text-main" style="font-size: 1.4rem; margin-top: 0.35rem;">{{ $nextAction['label'] }}</div>
+                <div class="font-ui text-gray" style="font-size: 0.78rem; line-height: 1.55; margin-top: 0.65rem;">
+                    Ikuti panel aksi yang aktif di bawah. Tombol abu-abu berarti shipment belum berada di state/hub yang tepat.
+                </div>
                 <div class="be-badge-row" style="margin-top: 0.85rem;">
                     <x-be.badge :variant="$nextAction['tone']">{{ strtoupper($shipment->status) }}</x-be.badge>
                     <x-be.badge :variant="$shipment->healthStatus() === 'exception' ? 'danger' : ($shipment->healthStatus() === 'on_time' ? 'success' : 'accent')">{{ $shipment->healthLabel() }}</x-be.badge>
@@ -164,15 +167,28 @@
             @if(in_array(auth()->user()->role, ['manager', 'cashier'], true))
                 @php
                     $hubBranchId = auth()->user()->branch_id;
-                    $departableLeg = $shipment->legs->first(fn ($leg) => (int) $leg->origin_branch_id === (int) $hubBranchId && $leg->status === 'pending');
-                    $receivableLeg = $shipment->legs->first(fn ($leg) => (int) $leg->destination_branch_id === (int) $hubBranchId && in_array($leg->status, ['departed', 'pending'], true));
+                    $receivableLeg = $shipment->legs->first(fn ($leg) => (int) $leg->destination_branch_id === (int) $hubBranchId && $leg->status === 'departed');
+                    $departableLeg = $shipment->legs
+                        ->filter(fn ($leg) => (int) $leg->origin_branch_id === (int) $hubBranchId && $leg->status === 'pending')
+                        ->sortBy('sequence')
+                        ->first(function ($leg) use ($shipment) {
+                            $previousLeg = $shipment->legs->firstWhere('sequence', $leg->sequence - 1);
+
+                            return ! $previousLeg || $previousLeg->status === 'arrived';
+                        });
+                    $isDestinationHub = (int) $shipment->destination_branch_id === (int) $hubBranchId;
+                    $canAssignOutbound = (int) $shipment->origin_branch_id === (int) $hubBranchId
+                        && in_array($shipment->status, ['pending', 'in_transit'], true)
+                        && $shipment->legs->contains(fn ($leg) => (int) $leg->origin_branch_id === (int) $hubBranchId && in_array($leg->status, ['pending', 'departed'], true));
                     $canAssignDelivery = (int) $shipment->destination_branch_id === (int) $hubBranchId
                         && $shipment->status === 'arrived_at_branch'
                         && $shipment->legs->contains(fn ($leg) => (int) $leg->destination_branch_id === (int) $hubBranchId && $leg->status === 'arrived');
+                    $canAssignCourier = $canAssignOutbound || $canAssignDelivery;
                 @endphp
 
+                @if($receivableLeg || $departableLeg)
                 <div class="hud-panel mb-4" style="border-color: var(--color-accent);">
-                    <h3 class="font-bank text-accent mb-4">HUB SCAN</h3>
+                    <h3 class="font-bank text-accent mb-4">Scan Hub</h3>
                     @if ($errors->any())
                         <div class="inline-alert">
                             @foreach ($errors->all() as $error)
@@ -182,51 +198,62 @@
                     @endif
 
                     <div style="display: grid; gap: 1rem;">
+                        @if($receivableLeg)
                         <form action="{{ route('be.shipments.hub-scan', $shipment) }}" method="POST">
                             @csrf
                             <input type="hidden" name="scan_type" value="receive">
                             <div class="font-ui text-gray" style="font-size: 0.76rem; margin-bottom: 0.45rem;">
-                                RECEIVE: {{ $receivableLeg ? optional($receivableLeg->originBranch)->name.' -> '.optional($receivableLeg->destinationBranch)->name : 'NO INBOUND LEG READY' }}
+                                Terima inbound: {{ optional($receivableLeg->originBranch)->name.' -> '.optional($receivableLeg->destinationBranch)->name }}
                             </div>
                             <input type="text" name="note" placeholder="catatan inbound scan..." style="width: 100%; margin-bottom: 0.7rem;">
-                            <x-be.button type="submit" variant="neutral" style="width: 100%;" :disabled="! $receivableLeg">RECEIVE HUB</x-be.button>
+                            <x-be.button type="submit" variant="neutral" style="width: 100%;">Terima di Hub</x-be.button>
                         </form>
+                        @endif
 
+                        @if($departableLeg)
                         <form action="{{ route('be.shipments.hub-scan', $shipment) }}" method="POST">
                             @csrf
                             <input type="hidden" name="scan_type" value="depart">
                             <div class="font-ui text-gray" style="font-size: 0.76rem; margin-bottom: 0.45rem;">
-                                DEPART: {{ $departableLeg ? optional($departableLeg->originBranch)->name.' -> '.optional($departableLeg->destinationBranch)->name : 'NO OUTBOUND LEG READY' }}
+                                Berangkatkan outbound: {{ optional($departableLeg->originBranch)->name.' -> '.optional($departableLeg->destinationBranch)->name }}
                             </div>
                             <input type="text" name="note" placeholder="catatan outbound scan..." style="width: 100%; margin-bottom: 0.7rem;">
-                            <x-be.button type="submit" style="width: 100%;" :disabled="! $departableLeg">DEPART HUB</x-be.button>
+                            <x-be.button type="submit" style="width: 100%;">Berangkatkan dari Hub</x-be.button>
                         </form>
+                        @endif
                     </div>
                 </div>
+                @endif
 
                 @if(in_array(auth()->user()->role, ['manager', 'cashier'], true))
                 <div class="hud-panel mb-4" style="border-color: var(--color-primary);">
-                    <h3 class="font-bank text-primary mb-4">DELIVERY ASSIGNMENT</h3>
+                    <h3 class="font-bank text-primary mb-4">Assignment Kurir</h3>
                     <div class="font-ui text-gray" style="font-size: 0.78rem; margin-bottom: 0.8rem;">
-                        CURRENT COURIER: {{ $shipment->courier ? $shipment->courier->name : 'UNASSIGNED' }}
+                        Kurir saat ini: {{ $shipment->courier ? $shipment->courier->name : 'belum ditugaskan' }}
                     </div>
 
                     <form action="{{ route('be.shipments.assign-delivery', $shipment) }}" method="POST">
                         @csrf
-                        <select name="courier_id" required style="width: 100%; margin-bottom: 0.8rem;" {{ ! $canAssignDelivery ? 'disabled' : '' }}>
-                            <option value="">SELECT DESTINATION COURIER...</option>
+                        <select name="courier_id" required style="width: 100%; margin-bottom: 0.8rem;" {{ ! $canAssignCourier ? 'disabled' : '' }}>
+                            <option value="">PILIH KURIR HUB...</option>
                             @foreach($deliveryCouriers as $courier)
                                 <option value="{{ $courier->id }}" @selected((int) $shipment->courier_id === (int) $courier->id)>
                                     {{ $courier->name }} / {{ $courier->email }}
                                 </option>
                             @endforeach
                         </select>
-                        <x-be.button type="submit" style="width: 100%;" :disabled="! $canAssignDelivery">ASSIGN DELIVERY</x-be.button>
+                        <x-be.button type="submit" style="width: 100%;" :disabled="! $canAssignCourier">
+                            {{ $canAssignOutbound ? 'Assign Kurir Outbound' : 'Assign Delivery' }}
+                        </x-be.button>
                     </form>
 
-                    @unless($canAssignDelivery)
+                    @unless($canAssignCourier)
                         <div class="font-ui text-gray" style="font-size: 0.72rem; line-height: 1.55; margin-top: 0.8rem;">
-                            Paket harus sudah RECEIVE HUB di hub tujuan sebelum kurir delivery bisa di-assign.
+                            @if(! $isDestinationHub)
+                                Shipment belum punya leg outbound yang siap di hub ini.
+                            @else
+                                Paket harus sudah RECEIVE HUB di hub tujuan sebelum kurir delivery bisa di-assign.
+                            @endif
                         </div>
                     @endunless
                 </div>
@@ -235,7 +262,7 @@
 
             @if(in_array(auth()->user()->role, ['manager', 'cashier', 'courier'], true))
                 <div class="hud-panel mb-4" style="border-color: #ff4444;">
-                    <h3 class="font-bank mb-4" style="color: #ff4444;">EXCEPTION LOG</h3>
+                    <h3 class="font-bank mb-4" style="color: #ff4444;">Catat Kendala</h3>
 
                     <form action="{{ route('be.shipments.exception', $shipment) }}" method="POST" style="display: grid; gap: 0.85rem;">
                         @csrf
@@ -323,7 +350,7 @@
                 ][$shipment->status] ?? [];
             @endphp
             <div class="hud-panel mb-4" style="border-color: var(--color-primary);">
-                <h3 class="font-bank text-primary mb-4">UPDATE STATUS</h3>
+                <h3 class="font-bank text-primary mb-4">Update Status</h3>
                 @if ($errors->any())
                     <div class="inline-alert">
                         @foreach ($errors->all() as $error)
@@ -334,34 +361,34 @@
                 <form action="{{ route('be.shipments.status', $shipment) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">NEW STATUS</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Status Baru</label><br>
                         <select name="status" required style="width: 100%; padding: 0.5rem; font-family: var(--font-ui);" {{ empty($nextShipmentStatuses) ? 'disabled' : '' }}>
                             @forelse($nextShipmentStatuses as $statusValue => $statusLabel)
                                 <option value="{{ $statusValue }}">{{ $statusLabel }}</option>
                             @empty
-                                <option value="">NO_NEXT_STATUS_AVAILABLE</option>
+                                <option value="">Tidak ada status lanjutan</option>
                             @endforelse
                         </select>
                     </div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">CURRENT LOCATION</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Lokasi Saat Ini</label><br>
                         <input type="text" name="location" required placeholder="example: Jakarta Hub / Destination Hub" style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); outline: none;">
                     </div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">LOG DESCRIPTION</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Catatan Status</label><br>
                         <input type="text" name="description" required placeholder="example: Paket dalam perjalanan ke Medan" style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); outline: none;">
                     </div>
                     <div style="margin-bottom: 2rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">ATTACH PHOTO (FOR POD/PROOF)</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Foto Bukti</label><br>
                         <input type="file" name="photo" style="color: var(--color-gray); font-family: var(--font-ui); font-size: 0.8rem;">
                     </div>
-                    <button type="submit" class="btn-neon" style="width: 100%;" {{ empty($nextShipmentStatuses) ? 'disabled' : '' }}>BROADCAST UPDATE</button>
+                    <button type="submit" class="btn-neon" style="width: 100%;" {{ empty($nextShipmentStatuses) ? 'disabled' : '' }}>Simpan Update</button>
                 </form>
             </div>
             @endif
 
             <div class="hud-panel">
-                <h3 class="font-bank text-main mb-4">TIMELINE LOGS</h3>
+                <h3 class="font-bank text-main mb-4">Timeline Status</h3>
                 @php
                     $timelineGroups = $shipment->trackings->groupBy(function ($track) {
                         return match ($track->status) {

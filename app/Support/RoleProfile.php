@@ -26,10 +26,10 @@ class RoleProfile
                     'Pantau revenue, payment mix, dan performa ekonomi per hub.',
                 ],
                 'quick_actions' => [
-                    ['label' => 'ECONOMY WATCH', 'route' => 'be.financial-reports.index', 'tone' => 'primary'],
+                    ['label' => 'Laporan Ekonomi', 'route' => 'be.financial-reports.index', 'tone' => 'primary'],
                     ['label' => 'LANDING CMS', 'route' => 'be.landing-sections.index', 'tone' => 'accent'],
-                    ['label' => 'HUB NETWORK', 'route' => 'be.branches.index', 'tone' => 'primary'],
-                    ['label' => 'MANAGER ROSTER', 'route' => 'be.users.index', 'tone' => 'neutral'],
+                    ['label' => 'Jaringan Hub', 'route' => 'be.branches.index', 'tone' => 'primary'],
+                    ['label' => 'Roster Manager', 'route' => 'be.users.index', 'tone' => 'neutral'],
                 ],
             ],
             'manager' => [
@@ -46,10 +46,10 @@ class RoleProfile
                     'Kelola kasir/kurir hub serta finance recap.',
                 ],
                 'quick_actions' => [
-                    ['label' => 'READY DISPATCH', 'route' => 'be.shipments.index', 'params' => ['preset' => 'ready_dispatch'], 'tone' => 'primary'],
-                    ['label' => 'PICKUP QUEUE', 'route' => 'be.pickups.index', 'tone' => 'accent'],
-                    ['label' => 'FINANCE RECAP', 'route' => 'be.finance.index', 'tone' => 'neutral'],
-                    ['label' => 'HUB CREW', 'route' => 'be.users.index', 'tone' => 'neutral'],
+                    ['label' => 'Siap Dispatch', 'route' => 'be.shipments.index', 'params' => ['preset' => 'ready_dispatch'], 'tone' => 'primary'],
+                    ['label' => 'Antrean Pickup', 'route' => 'be.pickups.index', 'tone' => 'accent'],
+                    ['label' => 'Rekap Finance', 'route' => 'be.finance.index', 'tone' => 'neutral'],
+                    ['label' => 'Crew Hub', 'route' => 'be.users.index', 'tone' => 'neutral'],
                 ],
             ],
             'cashier' => [
@@ -66,10 +66,10 @@ class RoleProfile
                     'Cetak resi dan bantu customer cek status.',
                 ],
                 'quick_actions' => [
-                    ['label' => 'KASIR POS', 'route' => 'be.shipments.create', 'tone' => 'accent'],
-                    ['label' => 'PAYMENT QUEUE', 'route' => 'be.pickups.index', 'tone' => 'primary'],
+                    ['label' => 'Input Counter', 'route' => 'be.shipments.create', 'tone' => 'accent'],
+                    ['label' => 'Queue Payment', 'route' => 'be.pickups.index', 'tone' => 'primary'],
                     ['label' => 'SHIPMENTS', 'route' => 'be.shipments.index', 'tone' => 'neutral'],
-                    ['label' => 'COURIER DIRECTORY', 'route' => 'be.users.index', 'tone' => 'neutral'],
+                    ['label' => 'Direktori Kurir', 'route' => 'be.users.index', 'tone' => 'neutral'],
                 ],
             ],
             'courier' => [
@@ -86,8 +86,8 @@ class RoleProfile
                     'Konfirmasi delivered atau failed delivery di lapangan.',
                 ],
                 'quick_actions' => [
-                    ['label' => 'MY PICKUPS', 'route' => 'be.pickups.index', 'tone' => 'primary'],
-                    ['label' => 'MY SHIPMENTS', 'route' => 'be.shipments.index', 'tone' => 'accent'],
+                    ['label' => 'Pickup Saya', 'route' => 'be.pickups.index', 'tone' => 'primary'],
+                    ['label' => 'Shipment Saya', 'route' => 'be.shipments.index', 'tone' => 'accent'],
                 ],
             ],
             default => [

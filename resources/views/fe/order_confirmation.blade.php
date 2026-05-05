@@ -29,7 +29,7 @@
                 <div class="summary-row"><span>Pembayaran</span><strong>{{ strtoupper((string) $pickup->payment_method) }}</strong></div>
                 <div class="summary-total">
                     <span class="data-label">Estimasi Total</span>
-                    <div class="text-primary" style="font-size: 2rem; font-weight: 900;">Rp {{ number_format((float) $pickup->total_price, 0, ',', '.') }}</div>
+                    <div class="text-main" style="font-size: 2rem; font-weight: 900;">Rp {{ number_format((float) $pickup->total_price, 0, ',', '.') }}</div>
                 </div>
             </div>
         </x-fe.panel>

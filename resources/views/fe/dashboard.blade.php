@@ -67,16 +67,16 @@
                     'delivered' => 'DELIVERED',
                 ];
                 $nextAction = match (true) {
-                    !$order['has_shipment'] && $order['payment_status'] === 'awaiting_pickup_cash' => 'Prepare cash for courier pickup. Cashier will verify after courier handover.',
-                    !$order['has_shipment'] && in_array($order['payment_status'], ['pending_transfer_verification', 'pending_verification'], true) => 'Transfer proof is waiting for hub cashier verification.',
-                    !$order['has_shipment'] && $order['payment_status'] === 'cash_collected_by_courier' => 'Courier has collected cash. Waiting for cashier handover verification.',
-                    !$order['has_shipment'] => 'Waiting for courier pickup and hub activation.',
-                    $order['shipment_status'] === 'pending' => 'Shipment is active and waiting for first courier movement.',
-                    in_array($order['shipment_status'], ['picked_up', 'in_transit'], true) => 'Package is moving through the hub route. Track for the next scan.',
-                    $order['shipment_status'] === 'arrived_at_branch' => 'Package reached destination hub and is waiting for last-mile dispatch.',
-                    $order['shipment_status'] === 'out_for_delivery' => 'Courier is heading to receiver. Keep phone reachable.',
-                    $order['shipment_status'] === 'delivered' => 'Delivery completed. Receipt and timeline are available from tracking.',
-                    default => 'Hub is processing the next operational signal.',
+                    !$order['has_shipment'] && $order['payment_status'] === 'awaiting_pickup_cash' => 'Siapkan uang tunai untuk pickup. Kasir hub akan verifikasi setelah kurir menyetor cash.',
+                    !$order['has_shipment'] && in_array($order['payment_status'], ['pending_transfer_verification', 'pending_verification'], true) => 'Bukti transfer sedang menunggu review kasir hub.',
+                    !$order['has_shipment'] && $order['payment_status'] === 'cash_collected_by_courier' => 'Kurir sudah menerima cash. Menunggu kasir hub verifikasi setoran.',
+                    !$order['has_shipment'] => 'Menunggu pickup kurir dan aktivasi shipment dari hub.',
+                    $order['shipment_status'] === 'pending' => 'Shipment sudah aktif dan menunggu pergerakan pertama.',
+                    in_array($order['shipment_status'], ['picked_up', 'in_transit'], true) => 'Paket sedang bergerak di jalur hub. Cek tracking untuk scan berikutnya.',
+                    $order['shipment_status'] === 'arrived_at_branch' => 'Paket sudah tiba di hub tujuan dan menunggu delivery terakhir.',
+                    $order['shipment_status'] === 'out_for_delivery' => 'Kurir sedang menuju penerima. Pastikan nomor penerima aktif.',
+                    $order['shipment_status'] === 'delivered' => 'Pengiriman selesai. Timeline tersedia di halaman tracking.',
+                    default => 'Hub sedang memproses langkah operasional berikutnya.',
                 };
             @endphp
 

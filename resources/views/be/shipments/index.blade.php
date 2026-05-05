@@ -1,6 +1,6 @@
 @extends('be.layouts.main')
 
-@section('header_title', 'SHIPMENT MANIFEST')
+@section('header_title', 'Daftar Shipment')
 
 @section('content')
 
@@ -10,13 +10,16 @@
     @endphp
 
     <div class="hud-panel surface-toolbar mb-4">
-        <div class="font-ui text-gray">TOTAL SHIPMENTS: {{ $shipments->total() }}</div>
+        <div>
+            <div class="font-ui text-gray" style="font-size: 0.78rem;">{{ $shipments->total() }} shipment</div>
+            <div class="font-bank text-main" style="font-size: clamp(1.3rem, 2.4vw, 1.85rem); margin-top: 0.35rem;">Pantau dan kerjakan shipment aktif</div>
+        </div>
         <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
             @if (session('manifest_print_url'))
-                <a href="{{ session('manifest_print_url') }}" target="_blank" class="be-btn be-btn--neutral">PRINT MANIFEST</a>
+                <a href="{{ session('manifest_print_url') }}" target="_blank" class="be-btn be-btn--neutral">Print Manifest</a>
             @endif
             @if (in_array(auth()->user()->role, ['manager', 'cashier']))
-                <a href="{{ route('be.shipments.create') }}" class="btn-neon" style="padding: 5px 20px;">ADD NEW SHIPMENT</a>
+                <a href="{{ route('be.shipments.create') }}" class="btn-neon" style="padding: 5px 20px;">Tambah Shipment</a>
             @endif
         </div>
     </div>
@@ -24,22 +27,22 @@
     <div class="hud-panel">
         <form action="{{ route('be.shipments.index') }}" method="GET" class="shipment-filter mb-4">
             <div>
-                <label class="font-ui text-gray" style="font-size: 0.78rem;">SEARCH_SHIPMENT</label>
+                <label class="font-ui text-gray" style="font-size: 0.78rem;">Cari shipment</label>
                 <input type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="resi, sender, receiver, hub...">
             </div>
             <div>
                 <label class="font-ui text-gray" style="font-size: 0.78rem;">PRESET</label>
                 <select name="preset">
-                    <option value="">ALL SHIPMENTS</option>
-                    <option value="need_payment" @selected(($filters['preset'] ?? '') === 'need_payment')>NEED PAYMENT</option>
-                    <option value="ready_dispatch" @selected(($filters['preset'] ?? '') === 'ready_dispatch')>READY DISPATCH</option>
-                    <option value="inbound_today" @selected(($filters['preset'] ?? '') === 'inbound_today')>INBOUND TODAY</option>
-                    <option value="failed_delivery" @selected(($filters['preset'] ?? '') === 'failed_delivery')>FAILED DELIVERY</option>
-                    <option value="exception_open" @selected(($filters['preset'] ?? '') === 'exception_open')>EXCEPTION OPEN</option>
+                    <option value="">Semua shipment</option>
+                    <option value="need_payment" @selected(($filters['preset'] ?? '') === 'need_payment')>Perlu payment</option>
+                    <option value="ready_dispatch" @selected(($filters['preset'] ?? '') === 'ready_dispatch')>Siap dispatch</option>
+                    <option value="inbound_today" @selected(($filters['preset'] ?? '') === 'inbound_today')>Inbound hari ini</option>
+                    <option value="failed_delivery" @selected(($filters['preset'] ?? '') === 'failed_delivery')>Gagal antar</option>
+                    <option value="exception_open" @selected(($filters['preset'] ?? '') === 'exception_open')>Kendala terbuka</option>
                 </select>
             </div>
             <div style="display: flex; gap: 0.65rem; align-items: end;">
-                <x-be.button type="submit">FILTER</x-be.button>
+                <x-be.button type="submit">Filter</x-be.button>
                 <x-be.button href="{{ route('be.shipments.index') }}" variant="neutral">RESET</x-be.button>
             </div>
         </form>
@@ -49,26 +52,27 @@
                 @csrf
                 <div class="surface-toolbar mb-3" style="align-items: end;">
                     <div style="min-width: min(100%, 360px);">
-                        <div class="font-ui text-gray" style="font-size: 0.76rem; margin-bottom: 0.35rem;">MANIFEST_NOTE</div>
+                        <div class="font-ui text-gray" style="font-size: 0.76rem; margin-bottom: 0.35rem;">Catatan manifest</div>
                         <input type="text" name="notes" placeholder="catatan batch departure..." style="width: 100%;">
                     </div>
-                    <x-be.button type="submit" style="padding: 5px 20px;">DISPATCH SELECTED</x-be.button>
+                    <x-be.button type="submit" style="padding: 5px 20px;">Dispatch Terpilih</x-be.button>
                 </div>
         @endif
 
         <div class="table-responsive">
-            <table style="min-width: 800px;" class="app-table">
+            <table style="min-width: 980px;" class="app-table">
             <thead>
                 <tr style="border-bottom: 2px solid var(--color-panel-border); font-size: 0.85rem; color: var(--color-gray);">
                     @if($canBatchDispatch)
                         <th style="padding: 1rem 0.5rem;">LOAD</th>
                     @endif
-                    <th style="padding: 1rem 0.5rem;">TRACKING ID</th>
-                    <th style="padding: 1rem 0.5rem;">SENDER</th>
-                    <th style="padding: 1rem 0.5rem;">ROUTE</th>
+                    <th style="padding: 1rem 0.5rem;">Resi</th>
+                    <th style="padding: 1rem 0.5rem;">Pengirim</th>
+                    <th style="padding: 1rem 0.5rem;">Rute</th>
                     <th style="padding: 1rem 0.5rem;">STATUS</th>
-                    <th style="padding: 1rem 0.5rem;">DATE</th>
-                    <th style="padding: 1rem 0.5rem; text-align: center;">ACTIONS</th>
+                    <th style="padding: 1rem 0.5rem;">Next</th>
+                    <th style="padding: 1rem 0.5rem;">Tanggal</th>
+                    <th style="padding: 1rem 0.5rem; text-align: center;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -79,6 +83,7 @@
                         ->where('status', 'pending')
                         ->sortBy('sequence')
                         ->first();
+                    $nextAction = $shipment->nextActionHint($hubBranchId, auth()->user()->role);
                 @endphp
                 <tr style="border-bottom: 1px solid var(--color-panel-border); font-size: 0.95rem;">
                     @if($canBatchDispatch)
@@ -89,7 +94,7 @@
                             @if(! $lockReason)
                                 <input type="checkbox" name="shipment_ids[]" value="{{ $shipment->id }}" title="Load to manifest">
                             @else
-                                <span class="font-ui text-gray" style="font-size: 0.72rem;" title="{{ $lockReason }}">LOCKED</span>
+                                <span class="font-ui text-gray" style="font-size: 0.72rem;" title="{{ $lockReason }}">Terkunci</span>
                                 <div class="font-ui text-gray" style="font-size: 0.65rem; margin-top: 0.25rem;">{{ $lockReason }}</div>
                             @endif
                         </td>
@@ -98,7 +103,7 @@
                         <span class="text-accent" style="font-weight: bold;">{{ $shipment->tracking_number }}</span>
                         @if($departableLeg)
                             <div class="font-ui text-gray" style="font-size: 0.72rem; margin-top: 0.35rem;">
-                                NEXT: {{ optional($departableLeg->destinationBranch)->name ?? '-' }}
+                                Berikutnya: {{ optional($departableLeg->destinationBranch)->name ?? '-' }}
                             </div>
                         @endif
                     </td>
@@ -138,16 +143,19 @@
                             </x-be.badge>
                         </div>
                     </td>
+                    <td style="padding: 1.2rem 0.5rem;">
+                        <x-be.badge :variant="$nextAction['tone']">{{ $nextAction['label'] }}</x-be.badge>
+                    </td>
                     <td style="padding: 1.2rem 0.5rem; font-size: 0.85rem; color: var(--color-gray);">
                         {{ $shipment->shipment_date->format('d/m/Y H:i') }}
                     </td>
                     <td style="padding: 1.2rem 0.5rem; text-align: center;">
-                        <a href="{{ route('be.shipments.show', $shipment) }}" class="btn-neon" style="font-size: 0.75rem; padding: 2px 10px;">VIEW / UPDATE</a>
+                        <a href="{{ route('be.shipments.show', $shipment) }}" class="btn-neon" style="font-size: 0.75rem; padding: 2px 10px;">Buka Detail</a>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="{{ $canBatchDispatch ? 7 : 6 }}" class="table-empty">NO SHIPMENTS FOUND</td>
+                    <td colspan="{{ $canBatchDispatch ? 8 : 7 }}" class="table-empty">Belum ada shipment</td>
                 </tr>
                 @endforelse
             </tbody>

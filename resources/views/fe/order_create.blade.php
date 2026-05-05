@@ -1,12 +1,14 @@
 @extends('fe.layouts.main')
 
+@section('body_class', 'order-create-page')
+
 @push('head_assets')
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 @endpush
 
 @section('content')
-<div style="margin-top: 5rem;">
+<div class="order-create-wrapper">
     <x-fe.page-header title="Buat Order" subtitle="Isi pickup, tujuan, paket, dan pembayaran dalam satu alur.">
         <x-fe.button href="{{ route('dashboard') }}" variant="secondary" style="font-size: 0.8rem;">Dashboard</x-fe.button>
     </x-fe.page-header>

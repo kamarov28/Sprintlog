@@ -1,13 +1,21 @@
 /* Backend Toy Standard: dense admin surfaces with the shared pastel neo-brutalist language. */
 body.theme-toy-be.app-shell--be {
-    background:
-        linear-gradient(90deg, rgba(20, 20, 20, 0.045) 1px, transparent 1px),
-        linear-gradient(rgba(20, 20, 20, 0.045) 1px, transparent 1px),
-        var(--color-bg) !important;
-    background-size: 26px 26px !important;
+    background: #fff3df !important;
+    background-color: #fff3df !important;
+    background-image: none !important;
+    background-size: auto !important;
+    background-attachment: scroll !important;
+    --color-gray: #2d2d33;
     color: var(--color-text-main);
     font-family: var(--font-body) !important;
     overflow-x: hidden;
+}
+
+body.theme-toy-be.app-shell--be::before,
+body.theme-toy-be.app-shell--be::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
 }
 
 body.theme-toy-be.app-shell--be,
@@ -675,4 +683,76 @@ body.theme-toy-be.app-shell--be .be-empty {
     transform: none !important;
     clip-path: none !important;
     animation: none !important;
+}
+
+/* Backend readability pass: admin pages are dense, so captions, table labels,
+   badges, and muted helper text need stronger contrast than the old HUD look. */
+body.theme-toy-be.app-shell--be,
+body.theme-toy-be.app-shell--be p,
+body.theme-toy-be.app-shell--be li,
+body.theme-toy-be.app-shell--be td,
+body.theme-toy-be.app-shell--be .text-gray,
+body.theme-toy-be.app-shell--be .top-nav__description,
+body.theme-toy-be.app-shell--be .top-nav__date,
+body.theme-toy-be.app-shell--be .sidebar-section-label,
+body.theme-toy-be.app-shell--be .be-stat__label,
+body.theme-toy-be.app-shell--be .data-label,
+body.theme-toy-be.app-shell--be .table-empty,
+body.theme-toy-be.app-shell--be .meta,
+body.theme-toy-be.app-shell--be small {
+    color: #25252b !important;
+    opacity: 1 !important;
+}
+
+body.theme-toy-be.app-shell--be label,
+body.theme-toy-be.app-shell--be th,
+body.theme-toy-be.app-shell--be .be-stat__label,
+body.theme-toy-be.app-shell--be .data-label,
+body.theme-toy-be.app-shell--be .sidebar-section-label,
+body.theme-toy-be.app-shell--be .be-badge,
+body.theme-toy-be.app-shell--be .status-chip {
+    color: #18181d !important;
+    opacity: 1 !important;
+    font-weight: 850 !important;
+}
+
+body.theme-toy-be.app-shell--be strong,
+body.theme-toy-be.app-shell--be b,
+body.theme-toy-be.app-shell--be .be-stat__value,
+body.theme-toy-be.app-shell--be .metric-value,
+body.theme-toy-be.app-shell--be .font-bank,
+body.theme-toy-be.app-shell--be .font-modula {
+    color: #0a0a0a !important;
+    opacity: 1 !important;
+    font-weight: 900 !important;
+}
+
+body.theme-toy-be.app-shell--be .text-primary {
+    color: #176b3b !important;
+    opacity: 1 !important;
+    font-weight: 850 !important;
+}
+
+body.theme-toy-be.app-shell--be .text-accent,
+body.theme-toy-be.app-shell--be a.text-accent,
+body.theme-toy-be.app-shell--be td .text-accent,
+body.theme-toy-be.app-shell--be td a {
+    color: #b0005a !important;
+    opacity: 1 !important;
+    font-weight: 850 !important;
+}
+
+body.theme-toy-be.app-shell--be input:not(:disabled),
+body.theme-toy-be.app-shell--be select:not(:disabled),
+body.theme-toy-be.app-shell--be textarea:not(:disabled),
+body.theme-toy-be.app-shell--be .ui-control:not(:disabled) {
+    color: #0a0a0a !important;
+    background: #fffaf2 !important;
+    opacity: 1 !important;
+}
+
+body.theme-toy-be.app-shell--be input::placeholder,
+body.theme-toy-be.app-shell--be textarea::placeholder {
+    color: #3d3d43 !important;
+    opacity: 1 !important;
 }

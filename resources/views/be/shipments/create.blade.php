@@ -1,15 +1,18 @@
 @extends('be.layouts.main')
 
-@section('header_title', 'ADD NEW SHIPMENT')
+@section('header_title', 'Tambah Shipment')
 
 @section('content')
 
     <div class="hud-panel" style="max-width: 800px; margin: 0 auto;">
-        <h3 class="font-bank text-accent mb-4">INPUT SHIPMENT DATA</h3>
+        <h3 class="font-bank text-accent mb-4">Input Shipment Counter</h3>
+        <p class="font-ui text-gray" style="font-size: 0.86rem; line-height: 1.65; margin: -0.5rem 0 1.5rem;">
+            Dipakai kasir untuk paket walk-in. Untuk order customer dari website, gunakan flow pickup sampai shipment aktif.
+        </p>
 
         @if ($errors->any())
         <div class="inline-alert">
-            <div class="font-ui text-gray" style="font-size: 0.8rem; margin-bottom: 0.5rem;">⚠ VALIDATION ERRORS:</div>
+            <div class="font-ui text-gray" style="font-size: 0.8rem; margin-bottom: 0.5rem;">Data belum lengkap:</div>
             <ul style="margin: 0; padding-left: 1.5rem;">
                 @foreach ($errors->all() as $error)
                 <li class="font-ui text-gray" style="font-size: 0.85rem;">{{ $error }}</li>
@@ -24,30 +27,30 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
                 <!-- Sender Info -->
                 <div class="form-cluster">
-                    <div class="font-ui text-primary mb-3" style="font-size: 0.8rem;">SENDER DETAILS</div>
+                    <div class="font-ui text-primary mb-3" style="font-size: 0.8rem;">Data Pengirim</div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">NAME</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Nama</label><br>
                         <input type="text" name="sender_name" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     </div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">PHONE NUMBER</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Nomor Telepon</label><br>
                         <input type="text" name="sender_phone" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     </div>
                 </div>
 
                 <!-- Receiver Info -->
                 <div class="form-cluster form-cluster--accent">
-                    <div class="font-ui text-accent mb-3" style="font-size: 0.8rem;">RECEIVER DETAILS</div>
+                    <div class="font-ui text-accent mb-3" style="font-size: 0.8rem;">Data Penerima</div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">NAME</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Nama</label><br>
                         <input type="text" name="receiver_name" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     </div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">PHONE NUMBER</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Nomor Telepon</label><br>
                         <input type="text" name="receiver_phone" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     </div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">DELIVERY ADDRESS</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Alamat Tujuan</label><br>
                         <textarea name="receiver_address" rows="2" placeholder="Alamat lengkap tujuan pengiriman" style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 0.95rem; outline: none; resize: none;"></textarea>
                     </div>
                 </div>
@@ -58,9 +61,9 @@
                 
                 <!-- Routine & Destination -->
                 <div class="form-cluster">
-                    <div class="font-ui text-primary mb-3" style="font-size: 0.8rem;">ROUTING DETAILS</div>
+                    <div class="font-ui text-primary mb-3" style="font-size: 0.8rem;">Rute</div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">ORIGIN BRANCH</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Hub Asal</label><br>
                         @php $myBranch = $branches->firstWhere('id', auth()->user()->branch_id); @endphp
                         @if($myBranch)
                             <input type="hidden" name="origin_branch_id" value="{{ $myBranch->id }}">
@@ -74,7 +77,7 @@
                         @endif
                     </div>
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">TARGET DESTINATION HUB</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Hub Tujuan</label><br>
                         <select name="destination_branch_id" required style="width: 100%; padding: 0.5rem; font-family: var(--font-ui);">
                             <option value="{{ auth()->user()->branch_id }}" data-zone="{{ $branchZones[auth()->user()->branch_id] ?? '' }}" style="color: var(--color-primary); font-weight: bold;">-- PENGIRIMAN LOKAL (DIRECT) --</option>
                             @foreach($branches as $branch)
@@ -88,15 +91,15 @@
 
                 <!-- Package & Handlers -->
                 <div class="form-cluster form-cluster--accent">
-                    <div class="font-ui text-accent mb-3" style="font-size: 0.8rem;">PACKAGE CONFIG</div>
+                    <div class="font-ui text-accent mb-3" style="font-size: 0.8rem;">Paket</div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; margin-bottom: 1rem;">
                         <div>
-                            <label class="font-ui text-gray" style="font-size: 0.8rem;">WEIGHT (KG)</label><br>
+                            <label class="font-ui text-gray" style="font-size: 0.8rem;">Berat (KG)</label><br>
                             <input type="number" name="weight" min="0.1" step="0.1" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-panel-border); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); outline: none;">
                         </div>
                         <div>
-                            <label class="font-ui text-gray" style="font-size: 0.8rem;">SERVICE PACKAGE</label><br>
+                            <label class="font-ui text-gray" style="font-size: 0.8rem;">Layanan</label><br>
                             <select name="service_type" id="service_type" required style="width: 100%; padding: 0.5rem; font-family: var(--font-ui);">
                                 <option value="REGULAR" data-multiplier="1.0">REGULER (Standar)</option>
                                 <option value="BEST" data-multiplier="1.3">BEST (Same Day)</option>
@@ -106,7 +109,7 @@
                     </div>
                     
                     <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">ASSIGN COURIER (OPTIONAL)</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Assign Kurir (opsional)</label><br>
                         <select name="courier_id" style="width: 100%; padding: 0.5rem; font-family: var(--font-ui);">
                             <option value="">-- BIARKAN PENDING (AUTO) --</option>
                             @foreach($couriers as $courier)
@@ -119,13 +122,13 @@
 
             <!-- Item Description -->
             <div style="margin-bottom: 3rem;">
-                <label class="font-ui text-gray" style="font-size: 0.8rem;">ITEM DESCRIPTION</label><br>
-                <input type="text" name="item_name" required placeholder="example: ELECTRONICS / CLOTHES / FOOD" style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-primary); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.2rem; outline: none;">
+                <label class="font-ui text-gray" style="font-size: 0.8rem;">Deskripsi Item</label><br>
+                <input type="text" name="item_name" required placeholder="contoh: elektronik / pakaian / makanan" style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-primary); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.2rem; outline: none;">
             </div>
 
             <!-- Payment Section -->
             <div class="quote-display" style="text-align: left;">
-                <h4 class="font-bank text-primary mb-3">PAYMENT SECTION</h4>
+                <h4 class="font-bank text-primary mb-3">Pembayaran</h4>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: end;">
                     <div>
@@ -133,7 +136,7 @@
                         <div class="font-bank text-primary" style="font-size: 2.5rem;" id="display-total-price">Rp 0</div>
                     </div>
                     <div>
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">PAYMENT METHOD</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Metode Pembayaran</label><br>
                         <select name="payment_method" id="payment_method" required style="width: 100%; padding: 0.5rem; font-family: var(--font-ui); margin-bottom: 10px;">
                             <option value="cash">TUNAI (CASH)</option>
                             <option value="transfer">TRANSFER BANK</option>
@@ -155,7 +158,7 @@
 
                 <div id="transfer-panel" style="margin-top: 1.5rem; border-top: 1px dashed var(--color-accent); padding-top: 1.5rem; display: none; gap: 1.5rem;">
                     <div>
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">PILIH REKENING BANK</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Rekening Tujuan</label><br>
                         <select name="bank_id" id="bank_id" style="width: 100%; padding: 0.5rem; font-family: var(--font-ui);">
                             <option value="">-- Pilih Bank --</option>
                             @foreach($bankAccounts as $account)
@@ -164,15 +167,15 @@
                         </select>
                     </div>
                     <div>
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">UPLOAD BUKTI TRANSFER</label><br>
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Bukti Transfer</label><br>
                         <input type="file" name="proof_file" id="proof_file" accept="image/*" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;">
                     </div>
                 </div>
             </div>
 
             <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                <a href="{{ route('be.shipments.index') }}" class="btn-neon" style="color: red; border-color: red;">ABORT</a>
-                <button type="submit" id="btn-submit" class="btn-neon" style="padding: 10px 40px;">CREATE SHIPMENT</button>
+                <a href="{{ route('be.shipments.index') }}" class="btn-neon" style="color: red; border-color: red;">Batal</a>
+                <button type="submit" id="btn-submit" class="btn-neon" style="padding: 10px 40px;">Buat Shipment</button>
             </div>
 
         </form>
@@ -224,7 +227,6 @@
             currentTotal = 0;
             displayTotal.innerText = 'Rate belum tersedia';
             btnSubmit.disabled = true;
-            btnSubmit.style.opacity = '0.5';
             return;
         }
 
@@ -242,24 +244,20 @@
             
             if (received < currentTotal && currentTotal > 0) {
                 btnSubmit.disabled = true;
-                btnSubmit.style.opacity = '0.5';
                 displayChange.style.color = 'red';
             } else {
                 btnSubmit.disabled = false;
-                btnSubmit.style.opacity = '1';
                 displayChange.style.color = 'var(--color-accent)';
             }
         } else if (paymentMethod.value === 'transfer') {
             cashPanel.style.display = 'none';
             transferPanel.style.display = 'grid';
             btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
             amountReceived.value = '';
         } else {
             cashPanel.style.display = 'none';
             transferPanel.style.display = 'none';
             btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
             amountReceived.value = '';
         }
     }

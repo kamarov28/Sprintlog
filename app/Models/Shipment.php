@@ -164,56 +164,48 @@ class Shipment extends Model
     public function nextActionHint(?int $branchId, ?string $role): array
     {
         if ($this->relationLoaded('payment') && $this->payment && $this->payment->payment_status !== 'paid') {
-            return ['label' => 'VERIFY PAYMENT', 'tone' => 'danger'];
+            return ['label' => 'Verifikasi pembayaran', 'tone' => 'danger'];
         }
 
         if (in_array($this->status, ['delivered', 'cancelled'], true)) {
-            return ['label' => 'NO ACTION', 'tone' => 'neutral'];
+            return ['label' => 'Tidak ada aksi', 'tone' => 'neutral'];
         }
 
         if (in_array($this->status, ['delivery_failed', 'rescheduled', 'returned_to_hub', 'held', 'damaged', 'lost', 'exception'], true)) {
-            return ['label' => 'REVIEW EXCEPTION', 'tone' => 'danger'];
+            return ['label' => 'Review kendala', 'tone' => 'danger'];
         }
 
         if (in_array($role, ['manager', 'cashier'], true) && $branchId && $this->relationLoaded('legs')) {
             $receivableLeg = $this->legs
                 ->where('destination_branch_id', $branchId)
-                ->whereIn('status', ['departed', 'pending'])
+                ->where('status', 'departed')
                 ->sortBy('sequence')
                 ->first();
 
             if ($receivableLeg) {
-                return ['label' => 'RECEIVE HUB', 'tone' => 'primary'];
+                return ['label' => 'Terima di hub', 'tone' => 'primary'];
             }
 
-            if ($this->nextPendingLegFrom($branchId) && $role === 'manager') {
-                return ['label' => 'DEPART HUB', 'tone' => 'accent'];
+            if ($this->nextPendingLegFrom($branchId)) {
+                return ['label' => 'Berangkatkan dari hub', 'tone' => 'accent'];
             }
 
             if ((int) $this->destination_branch_id === (int) $branchId && $this->status === 'arrived_at_branch') {
-                if ($role === 'cashier') {
-                    return ['label' => 'WAIT MANAGER ASSIGN', 'tone' => 'neutral'];
-                }
-
-                return ['label' => $this->courier_id ? 'START DELIVERY' : 'ASSIGN DELIVERY', 'tone' => 'primary'];
-            }
-
-            if ($this->nextPendingLegFrom($branchId) && $role === 'cashier') {
-                return ['label' => 'WAIT MANAGER DISPATCH', 'tone' => 'neutral'];
+                return ['label' => $this->courier_id ? 'Mulai delivery' : 'Assign delivery', 'tone' => 'primary'];
             }
         }
 
         if ($role === 'courier') {
             return ['label' => match ($this->status) {
-                'pending' => 'PICK UP',
-                'picked_up' => 'DEPART',
-                'in_transit' => 'ARRIVE HUB',
-                'arrived_at_branch' => 'OUT FOR DELIVERY',
-                'out_for_delivery' => 'COMPLETE DELIVERY',
-                default => 'UPDATE STATUS',
+                'pending' => 'Ambil paket',
+                'picked_up' => 'Berangkat',
+                'in_transit' => 'Tiba di hub',
+                'arrived_at_branch' => 'Mulai delivery',
+                'out_for_delivery' => 'Selesaikan delivery',
+                default => 'Update status',
             }, 'tone' => 'accent'];
         }
 
-        return ['label' => 'MONITOR', 'tone' => 'neutral'];
+        return ['label' => 'Monitor', 'tone' => 'neutral'];
     }
 }

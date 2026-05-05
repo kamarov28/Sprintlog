@@ -82,6 +82,15 @@
         <div id="{{ $mapId }}" style="display: none; height: 260px; border: 1px solid var(--color-panel-border); border-radius: var(--radius-sm); overflow: hidden; background: var(--color-bg);"></div>
 
         <div style="display: grid; gap: 0.65rem; margin-top: 1rem;">
+            @if($estimate['uses_current_location_origin'] ?? false)
+                <div style="display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0.75rem; align-items: start;">
+                    <div class="font-bank text-accent" style="border: 1px solid var(--color-accent); border-radius: 999px; width: 30px; height: 30px; display: grid; place-items: center;">GPS</div>
+                    <div>
+                        <div class="font-ui text-main" style="font-weight: bold;">Posisi kurir sekarang</div>
+                        <div class="font-ui text-gray" style="font-size: 0.76rem; line-height: 1.5;">Dipakai oleh Google Maps sebagai titik awal saat tombol dibuka.</div>
+                    </div>
+                </div>
+            @endif
             @foreach($points as $point)
                 <div style="display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0.75rem; align-items: start;">
                     <div class="font-bank text-primary" style="border: 1px solid var(--color-primary); border-radius: 999px; width: 30px; height: 30px; display: grid; place-items: center;">{{ $loop->iteration }}</div>

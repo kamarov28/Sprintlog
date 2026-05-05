@@ -1,16 +1,24 @@
 @extends('be.layouts.main')
 
-@section('header_title', 'PICKUP LOGISTICS QUEUE')
+@section('header_title', 'Antrean Pickup')
 
 @section('content')
 
     <div class="hud-panel mb-4">
-        <div class="font-ui text-gray">REMOTE COLLECTION REQUESTS: {{ $pickups->total() }}</div>
+        <div class="role-brief">
+            <div>
+                <div class="font-ui text-gray" style="font-size: 0.78rem;">{{ $pickups->total() }} request pickup</div>
+                <h3 class="font-bank text-main" style="font-size: clamp(1.45rem, 2.8vw, 2.1rem); margin-top: 0.35rem;">Kerjakan dari aksi berikutnya</h3>
+                <p class="font-ui text-gray" style="font-size: 0.86rem; line-height: 1.65; margin: 0.7rem 0 0;">
+                    Urutan normal: assign courier, pickup lapangan, terima di hub, verifikasi payment, lalu aktifkan shipment.
+                </p>
+            </div>
+        </div>
     </div>
 
     <div class="hud-panel">
         <div class="table-responsive">
-            <table style="min-width: 1080px;" class="app-table pickup-queue-table">
+            <table style="min-width: 1220px;" class="app-table pickup-queue-table">
             <thead>
                 <tr style="border-bottom: 2px solid var(--color-panel-border); font-size: 0.85rem; color: var(--color-gray);">
                     <th style="padding: 1rem 0.5rem;">CUSTOMER</th>
@@ -19,11 +27,15 @@
                     <th style="padding: 1rem 0.5rem;">STATUS</th>
                     <th style="padding: 1rem 0.5rem;">PAYMENT</th>
                     <th style="padding: 1rem 0.5rem;">ASSIGNED UNIT</th>
+                    <th style="padding: 1rem 0.5rem;">NEXT</th>
                     <th style="padding: 1rem 0.5rem; text-align: center;">ACTIONS</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($pickups as $pickup)
+                @php
+                    $nextAction = $pickup->nextActionHint(auth()->user()->role);
+                @endphp
                 <tr style="border-bottom: 1px solid var(--color-panel-border); font-size: 0.9rem;">
                     <td style="padding: 1.2rem 0.5rem;">
                         <div style="font-weight: bold;">{{ $pickup->customer_name }}</div>
@@ -81,6 +93,11 @@
                     <td style="padding: 1.2rem 0.5rem;">
                         @if(auth()->user()->role === 'courier')
                             <span class="font-ui text-primary">TUGAS ANDA</span>
+                        @elseif($pickup->shipment)
+                            <div class="font-ui text-gray" style="font-size: 0.68rem; line-height: 1.35;">Pickup: {{ $pickup->courier?->name ?? '-' }}</div>
+                            <div class="font-ui {{ $pickup->shipment->courier ? 'text-primary' : 'text-gray' }}" style="font-size: 0.78rem; line-height: 1.35; margin-top: 0.25rem;">
+                                Shipment: {{ $pickup->shipment->courier?->name ?? 'belum ditugaskan' }}
+                            </div>
                         @elseif($pickup->courier)
                             <span class="font-ui text-primary">{{ $pickup->courier->name }}</span>
                         @elseif(auth()->user()->role === 'manager')
@@ -95,8 +112,14 @@
                                 <button type="submit" class="btn-neon pickup-assign-button">ASSIGN</button>
                             </form>
                         @else
-                            <span class="font-ui text-gray" style="font-size: 0.72rem;">WAIT_MANAGER_ASSIGN</span>
+                            <span class="font-ui text-gray" style="font-size: 0.72rem;">Tunggu manager assign</span>
                         @endif
+                    </td>
+                    <td style="padding: 1.2rem 0.5rem;">
+                        <x-be.badge :variant="$nextAction['tone']">{{ $nextAction['label'] }}</x-be.badge>
+                        <div class="font-ui text-gray" style="font-size: 0.72rem; line-height: 1.45; margin-top: 0.45rem; max-width: 220px;">
+                            {{ $nextAction['description'] }}
+                        </div>
                     </td>
                     <td style="padding: 1.2rem 0.5rem; text-align: center;">
                         @if(auth()->user()->role === 'courier')
@@ -108,13 +131,12 @@
                                         if (str_starts_with($waNumber, '0')) {
                                             $waNumber = '62' . substr($waNumber, 1);
                                         }
+                                        $pickupMapDestination = ($pickup->latitude && $pickup->longitude)
+                                            ? $pickup->latitude . ',' . $pickup->longitude
+                                            : $pickup->pickup_address;
                                     @endphp
-                                    <a href="https://wa.me/{{ $waNumber }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #25D366; color: #25D366; text-decoration: none; width: 100%; text-align: center; font-family: monospace; letter-spacing: 1px;">CHAT WA PELANGGAN</a>
-                                    @if($pickup->latitude && $pickup->longitude)
-                                        <a href="https://www.google.com/maps/search/?api=1&query={{ $pickup->latitude }},{{ $pickup->longitude }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #4285F4; color: #4285F4; text-decoration: none; width: 100%; text-align: center; font-family: monospace; letter-spacing: 1px;">BUKA GOOGLE MAPS</a>
-                                    @else
-                                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($pickup->pickup_address) }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #4285F4; color: #4285F4; text-decoration: none; width: 100%; text-align: center; font-family: monospace; letter-spacing: 1px;">BUKA GOOGLE MAPS</a>
-                                    @endif
+                                    <a href="https://wa.me/{{ $waNumber }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #25D366; color: #25D366; text-decoration: none; width: 100%; text-align: center; letter-spacing: 0.04em;">CHAT WA PELANGGAN</a>
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($pickupMapDestination) }}&travelmode=driving" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #4285F4; color: #4285F4; text-decoration: none; width: 100%; text-align: center; letter-spacing: 0.04em;">RUTE KE PICKUP</a>
                                     {{-- Proof of pickup upload form --}}
                                     <form action="{{ route('be.pickups.status', $pickup) }}" method="POST" enctype="multipart/form-data" style="width: 100%; margin-top: 4px;">
                                         @csrf
@@ -128,22 +150,36 @@
                                                 style="font-size: 0.7rem; color: var(--color-text-main); background: transparent; border: 1px solid var(--color-panel-border); padding: 6px; width: 100%; box-sizing: border-box; margin-bottom: 6px;"
                                                 placeholder="Masukkan nominal tunai">
                                         @endif
-                                        <button type="submit" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #ffaa00; color: #ffaa00; width: 100%; text-align: center; font-family: monospace; letter-spacing: 1px; background: transparent; cursor: pointer;">KONFIRMASI DIAMBIL</button>
+                                        <button type="submit" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #ffaa00; color: #ffaa00; width: 100%; text-align: center; letter-spacing: 0.04em; background: transparent; cursor: pointer;">KONFIRMASI DIAMBIL</button>
                                     </form>
                                 </div>
                             @elseif($pickup->status === 'picked_up')
-                                <span class="text-accent" style="font-size: 0.75rem; text-align: center; display: block;">DIBAWA KE HUB</span>
+                                @php
+                                    $hub = $pickup->branch ?: auth()->user()->branch;
+                                    $hubMapDestination = null;
+                                    if ($hub) {
+                                        $hubMapDestination = ($hub->latitude && $hub->longitude)
+                                            ? $hub->latitude . ',' . $hub->longitude
+                                            : trim($hub->address ?: ($hub->name . ' ' . $hub->city));
+                                    }
+                                @endphp
+                                <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                                    @if($hubMapDestination)
+                                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($hubMapDestination) }}&travelmode=driving" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #4285F4; color: #4285F4; text-decoration: none; width: 100%; text-align: center; letter-spacing: 0.04em;">RUTE KE HUB</a>
+                                    @endif
+                                    <span class="text-accent" style="font-size: 0.75rem; text-align: center; display: block;">DIBAWA KE HUB</span>
+                                </div>
                             @elseif($pickup->status === 'hub_received')
                                 <span style="font-size: 0.75rem; color: #00ccff; display: block;">SUDAH DI HUB</span>
                             @endif
                         @else
                             {{-- Manager / Cashier actions --}}
                             <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
-                                <a href="{{ route('be.pickups.show', $pickup) }}" class="btn-neon" style="font-size: 0.65rem; padding: 4px 10px; border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; width: 100%; text-align: center; font-family: monospace;">DETAIL</a>
+                                <a href="{{ route('be.pickups.show', $pickup) }}" class="btn-neon" style="font-size: 0.65rem; padding: 4px 10px; border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; width: 100%; text-align: center;">DETAIL</a>
 
                                 {{-- Proof thumbnail --}}
                                 @if($pickup->proof_of_pickup)
-                                    <a href="{{ Storage::url($pickup->proof_of_pickup) }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 4px 10px; border-color: #aaa; color: #aaa; text-decoration: none; width: 100%; text-align: center; font-family: monospace;">LIHAT BUKTI FOTO</a>
+                                    <a href="{{ Storage::url($pickup->proof_of_pickup) }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 4px 10px; border-color: #aaa; color: #aaa; text-decoration: none; width: 100%; text-align: center;">LIHAT BUKTI FOTO</a>
                                 @endif
 
                                 @if($pickup->payment_method === 'cash_on_pickup' && $pickup->payment_status === 'cash_collected_by_courier')
@@ -153,23 +189,23 @@
                                         <input type="number" name="verified_cash_amount" min="0" step="0.01" required
                                             style="font-size: 0.7rem; color: var(--color-text-main); background: transparent; border: 1px solid var(--color-panel-border); padding: 6px; width: 100%; box-sizing: border-box; margin-bottom: 6px;"
                                             value="{{ $pickup->cash_received_amount }}">
-                                        <button type="submit" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ff00; color: #00ff00; width: 100%; background: transparent; cursor: pointer; font-family: monospace; letter-spacing: 1px;">VERIFIKASI SETOR</button>
+                                        <button type="submit" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ff00; color: #00ff00; width: 100%; background: transparent; cursor: pointer; letter-spacing: 0.04em;">VERIFIKASI SETOR</button>
                                     </form>
                                 @endif
 
                                 @if($pickup->payment_method === 'transfer' && $pickup->payment_proof)
-                                    <a href="{{ Storage::url($pickup->payment_proof) }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 4px 10px; border-color: #00ccff; color: #00ccff; text-decoration: none; width: 100%; text-align: center; font-family: monospace;">LIHAT BUKTI TRANSFER</a>
+                                    <a href="{{ Storage::url($pickup->payment_proof) }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 4px 10px; border-color: #00ccff; color: #00ccff; text-decoration: none; width: 100%; text-align: center;">LIHAT BUKTI TRANSFER</a>
                                     @if($pickup->payment_status === 'pending_transfer_verification')
                                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%;">
                                             <form action="{{ route('be.pickups.transfer', $pickup) }}" method="POST">
                                                 @csrf
                                                 <input type="hidden" name="decision" value="approve">
-                                                <button type="submit" class="btn-neon" style="font-size: 0.62rem; padding: 6px 8px; border-color: #00ff00; color: #00ff00; width: 100%; background: transparent; cursor: pointer; font-family: monospace;">OK</button>
+                                                <button type="submit" class="btn-neon" style="font-size: 0.62rem; padding: 6px 8px; border-color: #00ff00; color: #00ff00; width: 100%; background: transparent; cursor: pointer;">OK</button>
                                             </form>
                                             <form action="{{ route('be.pickups.transfer', $pickup) }}" method="POST">
                                                 @csrf
                                                 <input type="hidden" name="decision" value="reject">
-                                                <button type="submit" class="btn-neon" style="font-size: 0.62rem; padding: 6px 8px; border-color: red; color: red; width: 100%; background: transparent; cursor: pointer; font-family: monospace;">REJECT</button>
+                                                <button type="submit" class="btn-neon" style="font-size: 0.62rem; padding: 6px 8px; border-color: red; color: red; width: 100%; background: transparent; cursor: pointer;">REJECT</button>
                                             </form>
                                         </div>
                                     @endif
@@ -179,24 +215,24 @@
                                     <form action="{{ route('be.pickups.status', $pickup) }}" method="POST" style="width: 100%;">
                                         @csrf
                                         <input type="hidden" name="status" value="hub_received">
-                                        <button type="submit" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ccff; color: #00ccff; width: 100%; background: transparent; cursor: pointer; font-family: monospace; letter-spacing: 1px;">TERIMA DI HUB</button>
+                                        <button type="submit" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ccff; color: #00ccff; width: 100%; background: transparent; cursor: pointer; letter-spacing: 0.04em;">TERIMA DI HUB</button>
                                     </form>
                                 @elseif($pickup->status === 'hub_received')
                                     @if($pickup->shipment)
-                                        <a href="{{ route('be.shipments.show', $pickup->shipment) }}" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ff00; color: #00ff00; text-decoration: none; width: 100%; text-align: center; font-family: monospace; letter-spacing: 1px;">LIHAT SHIPMENT</a>
+                                        <a href="{{ route('be.shipments.show', $pickup->shipment) }}" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ff00; color: #00ff00; text-decoration: none; width: 100%; text-align: center; letter-spacing: 0.04em;">LIHAT SHIPMENT</a>
                                     @elseif($pickup->weight && $pickup->service_type && $pickup->total_price && $pickup->sender_city_id && $pickup->receiver_city_id && in_array($pickup->payment_status, ['paid']))
                                         <form action="{{ route('be.pickups.activate-shipment', $pickup) }}" method="POST" style="width: 100%;">
                                             @csrf
-                                            <button type="submit" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ff00; color: #00ff00; width: 100%; background: transparent; cursor: pointer; font-family: monospace; letter-spacing: 1px;">AKTIFKAN SHIPMENT</button>
+                                            <button type="submit" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ff00; color: #00ff00; width: 100%; background: transparent; cursor: pointer; letter-spacing: 0.04em;">AKTIFKAN SHIPMENT</button>
                                         </form>
                                     @else
                                         <span style="font-size: 0.68rem; color: var(--color-gray); display: block;">MENUNGGU DATA / PAYMENT CLEAR</span>
                                     @endif
-                                    <a href="{{ route('be.pickups.receipt', $pickup) }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ff00; color: #00ff00; text-decoration: none; width: 100%; text-align: center; font-family: monospace; letter-spacing: 1px;">CETAK RESI</a>
+                                    <a href="{{ route('be.pickups.receipt', $pickup) }}" target="_blank" class="btn-neon" style="font-size: 0.65rem; padding: 6px 12px; border-color: #00ff00; color: #00ff00; text-decoration: none; width: 100%; text-align: center; letter-spacing: 0.04em;">CETAK RESI</a>
                                 @elseif($pickup->status === 'pending')
-                                    <span class="text-gray" style="font-size: 0.7rem;">NO ACTIONS</span>
+                                    <span class="text-gray" style="font-size: 0.7rem;">Belum ada aksi lanjutan</span>
                                 @else
-                                    <span class="text-accent" style="font-size: 0.7rem;">IN_DEPLOYMENT</span>
+                                    <span class="text-accent" style="font-size: 0.7rem;">Sedang diproses</span>
                                 @endif
                             </div>
                         @endif
@@ -204,7 +240,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="table-empty">NO PENDING PICKUP REQUESTS</td>
+                    <td colspan="8" class="table-empty">Belum ada request pickup</td>
                 </tr>
                 @endforelse
             </tbody>

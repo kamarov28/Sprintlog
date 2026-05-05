@@ -29,6 +29,7 @@
             && $pickup->sender_city_id
             && $pickup->receiver_city_id
             && $pickup->payment_status === 'paid';
+        $nextAction = $pickup->nextActionHint(auth()->user()->role);
     @endphp
 
     <div class="hud-panel surface-toolbar mb-4">
@@ -42,6 +43,22 @@
             @if($pickup->shipment)
                 <a href="{{ route('be.shipments.show', $pickup->shipment) }}" class="btn-neon" style="text-decoration: none; border-color: var(--color-accent); color: var(--color-accent);">OPEN SHIPMENT</a>
             @endif
+        </div>
+    </div>
+
+    <div class="hud-panel mb-4">
+        <div class="role-brief">
+            <div>
+                <div class="font-ui text-gray" style="font-size: 0.78rem;">Langkah berikutnya</div>
+                <h3 class="font-bank text-main" style="font-size: clamp(1.35rem, 2.5vw, 1.9rem); margin-top: 0.35rem;">{{ $nextAction['label'] }}</h3>
+                <p class="font-ui text-gray" style="font-size: 0.86rem; line-height: 1.65; margin: 0.65rem 0 0;">{{ $nextAction['description'] }}</p>
+            </div>
+            <div class="role-brief__actions">
+                <x-be.badge :variant="$nextAction['tone']">{{ strtoupper(str_replace('_', ' ', $pickup->status)) }}</x-be.badge>
+                <x-be.badge :variant="$pickup->payment_status === 'paid' ? 'success' : ($pickup->payment_status === 'transfer_rejected' ? 'danger' : 'accent')">
+                    {{ strtoupper(str_replace('_', ' ', (string) $pickup->payment_status)) }}
+                </x-be.badge>
+            </div>
         </div>
     </div>
 
@@ -156,12 +173,12 @@
 
         <div>
             <div class="hud-panel mb-4">
-                <h3 class="font-bank text-primary mb-4" style="font-size: 1.15rem;">COMMAND CENTER</h3>
+                <h3 class="font-bank text-primary mb-4" style="font-size: 1.15rem;">AKSI PICKUP</h3>
 
                 @if($canManage && !$pickup->courier)
                     <form action="{{ route('be.pickups.assign', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
-                        <div class="data-label">ASSIGN_COURIER</div>
+                        <div class="data-label">Assign courier</div>
                         <select name="courier_id" required style="width: 100%; padding: 0.55rem; font-family: var(--font-ui); margin: 0.5rem 0;">
                             <option value="" disabled selected>Select Courier...</option>
                             @foreach($couriers as $courier)
@@ -176,7 +193,7 @@
                     <form action="{{ route('be.pickups.status', $pickup) }}" method="POST" enctype="multipart/form-data" class="form-cluster mb-3">
                         @csrf
                         <input type="hidden" name="status" value="picked_up">
-                        <div class="data-label">CONFIRM_PICKUP</div>
+                        <div class="data-label">Confirm pickup</div>
                         <input type="file" name="proof_image" accept="image/*" capture="environment" required style="width: 100%; margin: 0.75rem 0;">
                         @if($pickup->payment_method === 'cash_on_pickup')
                             <input type="number" name="cash_received_amount" min="0" step="0.01" required placeholder="Nominal tunai diterima" style="width: 100%; padding: 0.55rem; margin-bottom: 0.75rem;">
@@ -188,7 +205,7 @@
                 @if($canManage && $pickup->payment_method === 'cash_on_pickup' && $pickup->payment_status === 'cash_collected_by_courier')
                     <form action="{{ route('be.pickups.payment', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
-                        <div class="data-label">VERIFY_COURIER_CASH</div>
+                        <div class="data-label">Verify courier cash</div>
                         <input type="number" name="verified_cash_amount" min="0" step="0.01" required value="{{ $pickup->cash_received_amount }}" style="width: 100%; padding: 0.55rem; margin: 0.75rem 0;">
                         <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: #00ff00; color: #00ff00;">VERIFY CASH</button>
                     </form>
@@ -196,7 +213,7 @@
 
                 @if($canManage && $pickup->payment_method === 'transfer' && $pickup->payment_status === 'pending_transfer_verification' && $pickup->payment_proof)
                     <div class="form-cluster mb-3">
-                        <div class="data-label">VERIFY_TRANSFER</div>
+                        <div class="data-label">Verify transfer</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
                             <form action="{{ route('be.pickups.transfer', $pickup) }}" method="POST">
                                 @csrf
@@ -216,7 +233,7 @@
                     <form action="{{ route('be.pickups.status', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
                         <input type="hidden" name="status" value="hub_received">
-                        <div class="data-label">HUB_INBOUND</div>
+                        <div class="data-label">Hub inbound</div>
                         <button type="submit" class="btn-neon" style="width: 100%; background: transparent; margin-top: 0.75rem; border-color: #00ccff; color: #00ccff;">MARK HUB RECEIVED</button>
                     </form>
                 @endif
@@ -224,7 +241,7 @@
                 @if($canActivate)
                     <form action="{{ route('be.pickups.activate-shipment', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
-                        <div class="data-label">SHIPMENT_ACTIVATION</div>
+                        <div class="data-label">Shipment activation</div>
                         <button type="submit" class="btn-neon" style="width: 100%; background: transparent; margin-top: 0.75rem; border-color: #00ff00; color: #00ff00;">ACTIVATE SHIPMENT</button>
                     </form>
                 @elseif($canManage && $pickup->status === 'hub_received' && !$pickup->shipment)
@@ -243,10 +260,21 @@
             <div class="hud-panel">
                 <h3 class="font-bank text-accent mb-3" style="font-size: 1.15rem;">LOCATION LINKS</h3>
                 <div style="display: grid; gap: 0.75rem;">
-                    @if($pickup->latitude && $pickup->longitude)
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ $pickup->latitude }},{{ $pickup->longitude }}" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: #4285F4; color: #4285F4;">OPEN PICKUP MAP</a>
-                    @else
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($pickup->pickup_address) }}" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: #4285F4; color: #4285F4;">SEARCH PICKUP MAP</a>
+                    @php
+                        $pickupMapDestination = ($pickup->latitude && $pickup->longitude)
+                            ? $pickup->latitude . ',' . $pickup->longitude
+                            : $pickup->pickup_address;
+                        $hub = $pickup->branch ?: auth()->user()->branch;
+                        $hubMapDestination = null;
+                        if ($hub) {
+                            $hubMapDestination = ($hub->latitude && $hub->longitude)
+                                ? $hub->latitude . ',' . $hub->longitude
+                                : trim($hub->address ?: ($hub->name . ' ' . $hub->city));
+                        }
+                    @endphp
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($pickupMapDestination) }}&travelmode=driving" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: #4285F4; color: #4285F4;">ROUTE TO PICKUP</a>
+                    @if($hubMapDestination)
+                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($hubMapDestination) }}&travelmode=driving" target="_blank" class="btn-neon" style="text-decoration: none; text-align: center; border-color: #4285F4; color: #4285F4;">ROUTE TO HUB</a>
                     @endif
 
                     @if($pickup->receiver_latitude && $pickup->receiver_longitude)

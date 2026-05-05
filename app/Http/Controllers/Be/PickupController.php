@@ -160,7 +160,7 @@ class PickupController extends Controller
     /** Antrian pickup per cabang — hanya diakses manajer/kasir (lihat routes). */
     public function index()
     {
-        $query = PickupRequest::with('courier', 'user', 'branch', 'shipment', 'senderCity', 'receiverCity', 'cashCollector', 'cashVerifier', 'latestStatusAudit');
+        $query = PickupRequest::with('courier', 'user', 'branch', 'shipment.courier', 'senderCity', 'receiverCity', 'cashCollector', 'cashVerifier', 'latestStatusAudit');
         $hasBranchColumn = Schema::hasColumn('pickup_requests', 'branch_id');
 
         if (in_array(auth()->user()->role, ['manager', 'cashier'], true) && ! auth()->user()->branch_id) {
@@ -481,6 +481,17 @@ class PickupController extends Controller
                     'address' => $pickup->sender_address ?: $pickup->pickup_address,
                 ]
             );
+
+            $senderUpdates = [];
+            if (($pickup->sender_name ?: $pickup->customer_name) && $sender->name !== ($pickup->sender_name ?: $pickup->customer_name)) {
+                $senderUpdates['name'] = $pickup->sender_name ?: $pickup->customer_name;
+            }
+            if (($pickup->sender_address ?: $pickup->pickup_address) && $sender->address !== ($pickup->sender_address ?: $pickup->pickup_address)) {
+                $senderUpdates['address'] = $pickup->sender_address ?: $pickup->pickup_address;
+            }
+            if ($senderUpdates) {
+                $sender->update($senderUpdates);
+            }
 
             $receiver = Customer::firstOrCreate(
                 ['phone' => $pickup->receiver_phone],
