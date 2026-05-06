@@ -14,8 +14,8 @@
         version: "{{ app_repo_version }}"
         update: "{{ app_repo_update | default(true) | bool }}"
 
-    - name: Build SprintLog Apache image from cloned repository
-      ansible.builtin.command: docker build --network=host -t {{ sprintlog_image }} -f Dockerfile.apache .
+    - name: Build SprintLog image from the single Dockerfile
+      ansible.builtin.command: docker build --network=host -t {{ sprintlog_image }} -f Dockerfile .
       args:
         chdir: "{{ app_deploy_path }}"
 
@@ -35,31 +35,6 @@
     - name: Set runtime Laravel APP_KEY
       ansible.builtin.set_fact:
         sprintlog_runtime_app_key: "{{ generated_app_key.stdout if (sprintlog_generate_app_key | bool) else app_key }}"
-
-    - name: Ensure SprintLog TLS certificate directory exists
-      ansible.builtin.file:
-        path: "{{ tls_cert_dir }}"
-        state: directory
-        mode: "0755"
-
-    - name: Check SprintLog TLS certificate
-      ansible.builtin.stat:
-        path: "{{ tls_cert_file }}"
-      register: sprintlog_tls_cert
-
-    - name: Generate self-signed SprintLog TLS certificate
-      ansible.builtin.command: >
-        openssl req -x509 -nodes -days 3650 -newkey rsa:2048
-        -keyout {{ tls_key_file }}
-        -out {{ tls_cert_file }}
-        -subj "/CN={{ lab_domain }}"
-        -addext "subjectAltName=DNS:{{ lab_domain }},DNS:www.{{ lab_domain }},DNS:admin.{{ lab_domain }},IP:{{ dns_forward_ip }},IP:{{ controller_ip }}"
-      when: not sprintlog_tls_cert.stat.exists
-
-    - name: Secure SprintLog TLS private key
-      ansible.builtin.file:
-        path: "{{ tls_key_file }}"
-        mode: "0600"
 
     - name: Write stack environment file
       ansible.builtin.template:
@@ -116,31 +91,6 @@
       delay: 6
       until: "'{{ app_replicas }}/{{ app_replicas }}' in app_replicas_result.stdout"
 
-    - name: Check database restore file when enabled
-      ansible.builtin.stat:
-        path: "{{ database_restore_file }}"
-      register: database_restore_stat
-      when: database_restore_enabled | bool
-
-    - name: Fail when database restore file is missing
-      ansible.builtin.fail:
-        msg: "Database restore file not found: {{ database_restore_file }}"
-      when:
-        - database_restore_enabled | bool
-        - not database_restore_stat.stat.exists
-
-    - name: Restore SQL dump into SprintLog database when enabled
-      ansible.builtin.shell: |
-        docker run --rm \
-          --network {{ docker_network_name }} \
-          --env-file ./.env \
-          -v {{ database_restore_file }}:/restore.sql:ro \
-          {{ mysql_image }} \
-          sh -lc 'export MYSQL_PWD="$DB_PASSWORD"; mysql -h {{ db_host_internal }} -u sprintlog sprintlog < /restore.sql'
-      args:
-        chdir: "{{ app_deploy_path }}/infra/docker"
-      when: database_restore_enabled | bool
-
     - name: Run Laravel migration, storage link, and optimize automatically
       ansible.builtin.shell: |
         docker run --rm \
@@ -181,7 +131,3 @@
       args:
         chdir: "{{ app_deploy_path }}/infra/docker"
       when: database_seed_mode == "demo"
-
-    - name: Start SprintLog worker after database bootstrap
-      ansible.builtin.command: docker service scale {{ stack_name }}_{{ worker_service_name }}={{ worker_replicas }}
-      changed_when: true
