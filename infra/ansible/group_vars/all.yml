@@ -42,7 +42,10 @@ docker_storage_volume_name: "{{ stack_name }}_sprintlog_storage"
 nginx_lb_image: nginx:1.27-alpine
 mysql_image: mysql:8.4
 http_port: 80
+https_enabled: true
 https_port: 443
+web_lb_port: 8080
+web_lb_target_port: "{{ 443 if https_enabled | bool else 80 }}"
 app_replicas: 2
 worker_replicas: 1
 lb_replicas: 1
@@ -57,7 +60,7 @@ nfs_export_cidr: "{{ controller_ip | regex_replace('\\.[0-9]+$', '.0') }}/24"
 nfs_mount_options: "addr={{ nfs_server }},rw,nfsvers=4"
 
 # Laravel/runtime values. Replace before production or demo grading.
-app_url: "https://{{ lab_domain }}"
+app_url: "{{ 'https' if https_enabled | bool else 'http' }}://{{ lab_domain }}{{ ':' ~ web_lb_port if web_lb_port | int not in ([443] if https_enabled | bool else [80]) else '' }}"
 app_timezone: Asia/Jakarta
 # Leave empty for lab automation. The playbook will generate APP_KEY automatically.
 app_key: ""
@@ -67,7 +70,7 @@ db_root_password: "change_this_root_password"
 # Optional phpMyAdmin service. Set enable_phpmyadmin=false to keep it scaled to 0.
 enable_phpmyadmin: true
 phpmyadmin_image: phpmyadmin:5.2-apache
-phpmyadmin_port: 8080
+phpmyadmin_port: 8081
 phpmyadmin_upload_limit: 64M
 phpmyadmin_replicas: "{{ 1 if enable_phpmyadmin | bool else 0 }}"
 
