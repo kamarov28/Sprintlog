@@ -9,10 +9,7 @@ mkdir -p \
   storage/logs \
   bootstrap/cache
 
-# Keep Laravel public file uploads reachable from Apache in every Swarm replica.
-# The storage directory is mounted as a shared NFS-backed Docker volume, while
-# public/storage lives inside each container, so the symlink must be recreated
-# whenever a new app container starts.
+# Keep Laravel public uploads reachable from every app container.
 if [ -e public/storage ] && [ ! -L public/storage ]; then
   rm -rf public/storage
 fi
