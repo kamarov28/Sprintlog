@@ -20,7 +20,7 @@ sprintlog_image_name: sprintlog-apache
 sprintlog_image_tag: latest
 sprintlog_image: "{{ docker_registry_host }}/{{ sprintlog_image_name }}:{{ sprintlog_image_tag }}"
 stack_name: sprintlog
-swarm_manager_hostname: vm1
+swarm_manager_hostname: rajindra-sirhancontroller
 
 # Docker Swarm service names. Final service names become <stack_name>_<service_name>.
 lb_service_name: lb
