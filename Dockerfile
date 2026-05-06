@@ -14,12 +14,13 @@ WORKDIR /app
 COPY . .
 RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
-FROM php:8.4-fpm AS app
+FROM php:8.4-apache AS app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         git \
+        libonig-dev \
         libpng-dev \
         libxml2-dev \
         libzip-dev \
@@ -32,6 +33,7 @@ RUN apt-get update \
         pdo_mysql \
         xml \
         zip \
+    && a2enmod rewrite headers \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -40,6 +42,7 @@ WORKDIR /var/www/html
 COPY --chown=www-data:www-data . .
 COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor
 COPY --from=assets --chown=www-data:www-data /app/public/build ./public/build
+COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/entrypoint.sh /usr/local/bin/sprintlog-entrypoint
 
 RUN chmod +x /usr/local/bin/sprintlog-entrypoint \
@@ -47,4 +50,4 @@ RUN chmod +x /usr/local/bin/sprintlog-entrypoint \
     && chown -R www-data:www-data storage bootstrap/cache public/build
 
 ENTRYPOINT ["sprintlog-entrypoint"]
-CMD ["php-fpm"]
+CMD ["apache2-foreground"]
