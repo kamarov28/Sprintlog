@@ -16,6 +16,24 @@
         state: started
         enabled: true
 
+    - name: Verify Docker version
+      ansible.builtin.command: docker --version
+      register: docker_version_result
+      changed_when: false
+
+    - name: Show Docker version
+      ansible.builtin.debug:
+        var: docker_version_result.stdout
+
+    - name: Verify Docker service is usable
+      ansible.builtin.command: docker info --format 'Docker server is running on {{ "{{.Name}}" }} with {{ "{{.ServerVersion}}" }}'
+      register: docker_info_result
+      changed_when: false
+
+    - name: Show Docker service verification
+      ansible.builtin.debug:
+        var: docker_info_result.stdout
+
     - name: Create simple web directory
       ansible.builtin.file:
         path: /opt/simple-web-vm2
