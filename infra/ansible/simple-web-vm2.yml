@@ -1,45 +1,14 @@
 ---
-- name: Deploy simple Apache web and Docker on VM2
+- name: Deploy simple web container on VM2
   hosts: managed
   become: true
 
   tasks:
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-
-    - name: Install Apache web server
-      ansible.builtin.apt:
-        name: apache2
-        state: present
-
-    - name: Start and enable Apache
-      ansible.builtin.service:
-        name: apache2
-        state: started
-        enabled: true
-
-    - name: Create simple web page
-      ansible.builtin.copy:
-        dest: /var/www/html/index.html
-        content: |
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>VM2 Web Server</title>
-          </head>
-          <body>
-              <h1>Berhasil Deploy Web ke VM2</h1>
-              <p>Apache berhasil diinstall menggunakan Ansible dari VM1.</p>
-              <p>Docker juga diinstall di VM2.</p>
-          </body>
-          </html>
-        mode: "0644"
-
     - name: Install Docker
       ansible.builtin.apt:
         name: docker.io
         state: present
+        update_cache: true
 
     - name: Start and enable Docker
       ansible.builtin.service:
@@ -47,27 +16,57 @@
         state: started
         enabled: true
 
-    - name: Add SSH user to docker group
-      ansible.builtin.user:
-        name: "{{ ansible_user }}"
-        groups: docker
-        append: true
-      when: ansible_user is defined
+    - name: Create simple web directory
+      ansible.builtin.file:
+        path: /opt/simple-web-vm2
+        state: directory
+        mode: "0755"
 
-    - name: Check Apache response
+    - name: Create simple web page
+      ansible.builtin.copy:
+        dest: /opt/simple-web-vm2/index.html
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>VM2 Docker Web</title>
+          </head>
+          <body>
+              <h1>Berhasil Deploy Web Container ke VM2</h1>
+              <p>Web sederhana ini berjalan menggunakan container Docker nginx.</p>
+              <p>Deploy dilakukan menggunakan Ansible dari VM1.</p>
+          </body>
+          </html>
+        mode: "0644"
+
+    - name: Remove old simple web container if exists
+      ansible.builtin.command: docker rm -f simple-web-vm2
+      failed_when: false
+      changed_when: false
+
+    - name: Run simple web container
+      ansible.builtin.command: >
+        docker run -d
+        --name simple-web-vm2
+        --restart always
+        -p 80:80
+        -v /opt/simple-web-vm2:/usr/share/nginx/html:ro
+        nginx:alpine
+
+    - name: Check simple web container
+      ansible.builtin.command: docker ps --filter name=simple-web-vm2 --format 'table {{ "{{.Names}}" }}\t{{ "{{.Image}}" }}\t{{ "{{.Status}}" }}\t{{ "{{.Ports}}" }}'
+      register: container_result
+      changed_when: false
+
+    - name: Show simple web container
+      ansible.builtin.debug:
+        var: container_result.stdout_lines
+
+    - name: Check simple web response
       ansible.builtin.command: curl -s localhost
-      register: apache_result
+      register: web_result
       changed_when: false
 
-    - name: Show Apache response
+    - name: Show simple web response
       ansible.builtin.debug:
-        var: apache_result.stdout_lines
-
-    - name: Check Docker version
-      ansible.builtin.command: docker --version
-      register: docker_result
-      changed_when: false
-
-    - name: Show Docker version
-      ansible.builtin.debug:
-        var: docker_result.stdout
+        var: web_result.stdout_lines
