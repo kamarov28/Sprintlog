@@ -1,17 +1,16 @@
 ---
-# Copy inventory.example.ini to inventory.ini, then adjust these values for the lab.
-lab_domain: sprintlog.testing
+# SprintLog single-node Docker lab.
+# VM1 runs Docker Swarm manager, app replicas, database, registry, and load balancer.
 controller_ip: 172.20.3.133
-managed_ip: 172.20.3.134
 swarm_advertise_addr: "{{ controller_ip }}"
 
-# VCS source. Set this to the GitHub repo URL after the repository is pushed.
-app_repo_url: "https://github.com/USERNAME/Sprintlog.git"
+# VCS source.
+app_repo_url: "https://github.com/kamarov28/Sprintlog.git"
 app_repo_version: "main"
 app_deploy_path: /home/ujikom/sprintlog
 app_repo_update: false
 
-# Local registry and image. Ansible builds this image on VM 1 automatically.
+# Local registry and custom image.
 docker_registry_port: 5000
 docker_registry_host: "{{ controller_ip }}:{{ docker_registry_port }}"
 docker_registry_container_name: sprintlog-registry
@@ -21,68 +20,41 @@ sprintlog_image_name: sprintlog-apache
 sprintlog_image_tag: latest
 sprintlog_image: "{{ docker_registry_host }}/{{ sprintlog_image_name }}:{{ sprintlog_image_tag }}"
 stack_name: sprintlog
-swarm_manager_hostname: /home/ujikom/sprintlog
+swarm_manager_hostname: vm1
 
-# Docker Swarm service names. In Swarm the final names become <stack_name>_<service_name>.
+# Docker Swarm service names. Final service names become <stack_name>_<service_name>.
 lb_service_name: lb
 app_service_name: app
-worker_service_name: worker
 db_service_name: db
-phpmyadmin_service_name: phpmyadmin
 db_host_internal: "{{ db_service_name }}"
 app_upstream_host: "{{ app_service_name }}"
 
-# Docker Swarm resource names. Change these when a jobsheet asks for custom
-# network or volume names. Defaults match Docker stack's usual generated names.
-docker_network_name: "network_ujikom"
-docker_db_volume_name: "db_ujikom"
-docker_storage_volume_name: "volume_ujikom"
+# Docker resource names.
+docker_network_name: network_ujikom
+docker_db_volume_name: db_ujikom
+docker_storage_volume_name: volume_ujikom
 
-# Docker images, published ports, and replicas.
+# Docker images, ports, and replicas.
 nginx_lb_image: nginx:1.27-alpine
 mysql_image: mysql:8.4
 http_port: 8080
-https_enabled: false
-https_port: 443
 web_lb_port: 8080
-web_lb_target_port: "{{ 443 if https_enabled | bool else 80 }}"
+web_lb_target_port: 80
 app_replicas: 3
-worker_replicas: 1
 lb_replicas: 1
 mysql_replicas: 1
-app_max_replicas_per_node: 0
 nginx_client_max_body_size: 32m
 
-# Shared storage for Laravel uploads when app replicas run on multiple Docker nodes.
-nfs_server: "{{ controller_ip }}"
-nfs_export_path: /srv/sprintlog-storage
-nfs_export_cidr: "172.20.3.0/24"
-nfs_mount_options: "addr={{ nfs_server }},rw,nfsvers=4"
-
-# Laravel/runtime values. Replace before production or demo grading.
-app_url: "{{ 'https' if https_enabled | bool else 'http' }}://{{ lab_domain }}{{ ':' ~ web_lb_port if web_lb_port | int not in ([443] if https_enabled | bool else [80]) else '' }}"
+# Laravel/runtime values.
+app_url: "http://{{ controller_ip }}:{{ web_lb_port }}"
 app_timezone: Asia/Jakarta
 # Leave empty for lab automation. The playbook will generate APP_KEY automatically.
 app_key: ""
 db_password: "root"
 db_root_password: "root"
 
-# Optional phpMyAdmin service. Set enable_phpmyadmin=false to keep it scaled to 0.
-enable_phpmyadmin: false
-phpmyadmin_image: phpmyadmin:5.2-apache
-phpmyadmin_port: 8081
-phpmyadmin_upload_limit: 64M
-phpmyadmin_replicas: "{{ 1 if enable_phpmyadmin | bool else 0 }}"
-
-# Self-signed HTTPS for lab/demo. Browser will show a warning unless this cert is trusted by the client.
-tls_cert_dir: "{{ app_deploy_path }}/infra/docker/certs"
-tls_cert_file: "{{ tls_cert_dir }}/sprintlog.crt"
-tls_key_file: "{{ tls_cert_dir }}/sprintlog.key"
-
 # Data bootstrap. "accounts" creates login accounts only, "demo" runs full DatabaseSeeder, "none" skips seeding.
 database_seed_mode: demo
-database_restore_enabled: false
-database_restore_file: "{{ app_deploy_path }}/infra/database/restore.sql"
 deploy_branch_name: "SprintLog Hub DKI Jakarta"
 deploy_branch_city: "DKI Jakarta"
 deploy_branch_address: "Jl. Operasional SprintLog, DKI Jakarta"
@@ -99,18 +71,6 @@ deploy_manager_password: "password"
 deploy_courier_name: "Kurir Satria"
 deploy_courier_email: "kurir@sprintlog.com"
 deploy_courier_password: "password"
-
-# Optional lab mail server on VM 1. Keep off unless required by the jobsheet.
-enable_mail: false
-mail_hostname: "mail.{{ lab_domain }}"
-mail_domain: "{{ lab_domain }}"
-mail_networks: "127.0.0.0/8 {{ controller_ip }}/32 {{ managed_ip }}/32"
-mail_test_users:
-  - name: user1
-    password: password
-  - name: user2
-    password: password
-mail_send_test_message: false
 
 base_packages:
   - ca-certificates
@@ -132,31 +92,3 @@ docker_engine_packages:
 
 docker_compose_v2_package: docker-compose-v2
 docker_compose_fallback_package: docker-compose
-
-# DNS server. Keep dns_forward_ip equal to controller_ip for VM-only labs.
-# If the web must be reachable from another laptop, set dns_forward_ip to a bridged/LAN IP reachable by that laptop.
-enable_dns: false
-dns_zone_file: /etc/bind/db.sprintlog.local
-dns_forward_ip: "{{ controller_ip }}"
-dns_reverse_enabled: true
-dns_reverse_zone: "192.168.56.in-addr.arpa"
-dns_reverse_zone_file: /etc/bind/db.192.168.56
-dns_controller_ptr: "10"
-dns_managed_ptr: "20"
-
-# Keep DHCP off unless this VM is the only DHCP server on that lab network.
-# DHCP can distribute this VM as DNS server so clients can resolve lab_domain without editing hosts.
-enable_dhcp: false
-dhcp_interface: enp0s8
-dhcp_subnet: 192.168.56.0
-dhcp_netmask: 255.255.255.0
-dhcp_range_start: 192.168.56.100
-dhcp_range_end: 192.168.56.200
-dhcp_router: 192.168.56.1
-dhcp_broadcast: 192.168.56.255
-dhcp_domain_name: "{{ lab_domain }}"
-dhcp_dns_servers:
-  - "{{ dns_forward_ip }}"
-dhcp_default_lease_time: 600
-dhcp_max_lease_time: 7200
-dhcp_reservations: []
