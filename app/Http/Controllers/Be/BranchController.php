@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Location;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -129,6 +130,23 @@ class BranchController extends Controller
         $branch->update($request->except(['_token', '_method', 'province_id']));
 
         return redirect()->route('be.branches.index')->with('success', 'Branch updated successfully.');
+    }
+
+    public function destroy(Branch $branch)
+    {
+        try {
+            DB::transaction(function () use ($branch) {
+                $branch->users()->update(['branch_id' => null]);
+                $branch->bankAccounts()->delete();
+                $branch->delete();
+            });
+        } catch (QueryException $exception) {
+            return redirect()
+                ->route('be.branches.index')
+                ->with('error', 'Hub tidak bisa dihapus karena masih digunakan oleh data transaksi.');
+        }
+
+        return redirect()->route('be.branches.index')->with('success', 'Hub berhasil dihapus.');
     }
 
     /**
