@@ -1,10 +1,7 @@
 ---
-# SprintLog infrastructure entrypoint.
-# Keep this file short: each infrastructure layer lives in infra/ansible/playbooks/.
+# SprintLog infrastructure entrypoint for the simplified Docker lab.
 
 - import_playbook: playbooks/base.yml
-- import_playbook: playbooks/support-services.yml
 - import_playbook: playbooks/docker.yml
 - import_playbook: playbooks/swarm.yml
-- import_playbook: playbooks/nfs.yml
 - import_playbook: playbooks/deploy.yml
