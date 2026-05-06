@@ -17,11 +17,6 @@
       ansible.builtin.command: docker swarm init --advertise-addr {{ swarm_advertise_addr }}
       when: swarm_state.stdout != "active"
 
-    - name: Read Swarm worker join token
-      ansible.builtin.command: docker swarm join-token -q worker
-      register: worker_join_token
-      changed_when: false
-
     - name: Check local Docker registry container
       ansible.builtin.command: docker inspect -f '{{ "{{.State.Running}}" }}' {{ docker_registry_container_name }}
       register: registry_state
@@ -50,23 +45,3 @@
       retries: 10
       delay: 3
       until: registry_health.status == 200
-
-- name: Join VM 2 as Docker Swarm worker
-  hosts: swarm_workers
-  become: true
-  vars_files:
-    - ../group_vars/all.yml
-  tags:
-    - swarm
-  tasks:
-    - name: Check current Swarm state
-      ansible.builtin.command: docker info --format '{{ "{{.Swarm.LocalNodeState}}" }}'
-      register: worker_swarm_state
-      changed_when: false
-
-    - name: Join worker to Swarm
-      ansible.builtin.command: >
-        docker swarm join
-        --token {{ hostvars[groups['swarm_manager'][0]].worker_join_token.stdout }}
-        {{ controller_ip }}:2377
-      when: worker_swarm_state.stdout != "active"
