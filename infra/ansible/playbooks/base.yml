@@ -1,5 +1,5 @@
 ---
-- name: Prepare Ubuntu base packages on both VMs
+- name: Prepare Ubuntu base packages on VM1
   hosts: all
   become: true
   vars_files:
@@ -19,10 +19,9 @@
         enabled: true
         state: started
 
-    - name: Add lab host records
+    - name: Add VM1 host record
       ansible.builtin.blockinfile:
         path: /etc/hosts
         marker: "# {mark} SPRINTLOG LAB HOSTS"
         block: |
-          {{ controller_ip }} {{ lab_domain }} www.{{ lab_domain }} admin.{{ lab_domain }} controller.{{ lab_domain }} vm1
-          {{ managed_ip }} vm2 app2.{{ lab_domain }}
+          {{ controller_ip }} vm1
