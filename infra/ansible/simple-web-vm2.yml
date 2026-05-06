@@ -34,6 +34,10 @@
       ansible.builtin.debug:
         var: docker_info_result.stdout
 
+    - name: Remove old web containers if they exist
+      ansible.builtin.shell: docker rm -f simple-web-vm2 sirhan-web 2>/dev/null || true
+      changed_when: false
+
     - name: Create simple web directory
       ansible.builtin.file:
         path: /opt/simple-web-vm2
@@ -53,21 +57,17 @@
               <h1>Berhasil Deploy Web Container ke VM2</h1>
               <p>Web sederhana ini berjalan menggunakan container Docker nginx.</p>
               <p>Deploy dilakukan menggunakan Ansible dari VM1.</p>
+              <p>Akses web ini melalui port 90 di VM2.</p>
           </body>
           </html>
         mode: "0644"
 
-    - name: Remove old simple web container if exists
-      ansible.builtin.command: docker rm -f simple-web-vm2
-      failed_when: false
-      changed_when: false
-
-    - name: Run simple web container
+    - name: Run simple web container on port 90
       ansible.builtin.command: >
         docker run -d
         --name simple-web-vm2
         --restart always
-        -p 80:80
+        -p 90:80
         -v /opt/simple-web-vm2:/usr/share/nginx/html:ro
         nginx:alpine
 
@@ -80,8 +80,8 @@
       ansible.builtin.debug:
         var: container_result.stdout_lines
 
-    - name: Check simple web response
-      ansible.builtin.command: curl -s localhost
+    - name: Check simple web response on port 90
+      ansible.builtin.command: curl -s localhost:90
       register: web_result
       changed_when: false
 
