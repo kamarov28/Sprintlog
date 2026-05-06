@@ -5,51 +5,43 @@ x-app-env: &app-env
   APP_ENV: production
   APP_KEY: ${APP_KEY}
   APP_DEBUG: "false"
-  APP_URL: ${APP_URL:-https://sprintlog.local}
+  APP_URL: ${APP_URL:-http://172.20.3.133:8080}
   APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
   TZ: ${TZ:-Asia/Jakarta}
   DB_CONNECTION: mysql
-  DB_HOST: ${DB_HOST:-{{ db_host_internal }}}
+  DB_HOST: ${DB_HOST:-db}
   DB_PORT: "3306"
   DB_DATABASE: sprintlog
   DB_USERNAME: sprintlog
   DB_PASSWORD: ${DB_PASSWORD}
   SESSION_DRIVER: database
-  SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
-  SESSION_SECURE: ${SESSION_SECURE:-true}
-  SESSION_SAME_SITE: ${SESSION_SAME_SITE:-lax}
-  TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
+  SESSION_SECURE_COOKIE: "false"
+  SESSION_SECURE: "false"
+  SESSION_SAME_SITE: lax
+  TRUSTED_PROXIES: "*"
   CACHE_STORE: database
   QUEUE_CONNECTION: database
-  MAIL_MAILER: smtp
-  MAIL_HOST: ${MAIL_HOST:-mail.sprintlog.local}
-  MAIL_PORT: ${MAIL_PORT:-25}
-  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@sprintlog.local}
-  MAIL_FROM_NAME: SprintLog
 
 services:
   {{ lb_service_name }}:
     image: ${NGINX_LB_IMAGE:-{{ nginx_lb_image }}}
     ports:
       - "${HTTP_PORT:-{{ http_port }}}:80"
-      - "${HTTPS_PORT:-{{ https_port }}}:443"
     configs:
       - source: nginx_lb_config
         target: /etc/nginx/conf.d/default.conf
-    volumes:
-      - ${TLS_CERT_DIR:-/opt/sprintlog/infra/docker/certs}:/etc/nginx/certs:ro
     networks:
       - app_net
     deploy:
       replicas: ${LB_REPLICAS:-{{ lb_replicas }}}
       placement:
         constraints:
-          - node.role == manager
+          - node.hostname == ${SWARM_MANAGER_HOSTNAME:-vm1}
       restart_policy:
         condition: any
 
   {{ app_service_name }}:
-    image: ${SPRINTLOG_IMAGE:-USERNAME/sprintlog-apache:latest}
+    image: ${SPRINTLOG_IMAGE:-sprintlog-apache:latest}
     environment: *app-env
     networks:
       - app_net
@@ -58,41 +50,8 @@ services:
     deploy:
       replicas: ${APP_REPLICAS:-{{ app_replicas }}}
       placement:
-        max_replicas_per_node: {{ app_max_replicas_per_node }}
-      restart_policy:
-        condition: any
-
-  {{ worker_service_name }}:
-    image: ${SPRINTLOG_IMAGE:-USERNAME/sprintlog-apache:latest}
-    command: php artisan queue:work database --sleep=3 --tries=3 --max-time=3600
-    environment: *app-env
-    networks:
-      - app_net
-    volumes:
-      - app_storage:/var/www/html/storage
-    deploy:
-      replicas: 0
-      placement:
         constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-
-  {{ phpmyadmin_service_name }}:
-    image: ${PHPMYADMIN_IMAGE:-{{ phpmyadmin_image }}}
-    environment:
-      PMA_HOST: ${DB_HOST:-{{ db_host_internal }}}
-      PMA_PORT: 3306
-      UPLOAD_LIMIT: ${PHPMYADMIN_UPLOAD_LIMIT:-{{ phpmyadmin_upload_limit }}}
-    ports:
-      - "${PHPMYADMIN_PORT:-{{ phpmyadmin_port }}}:80"
-    networks:
-      - app_net
-    deploy:
-      replicas: ${PHPMYADMIN_REPLICAS:-{{ phpmyadmin_replicas }}}
-      placement:
-        constraints:
-          - node.role == manager
+          - node.hostname == ${SWARM_MANAGER_HOSTNAME:-vm1}
       restart_policy:
         condition: any
 
@@ -117,20 +76,15 @@ services:
 
 networks:
   app_net:
-    name: ${DOCKER_NETWORK_NAME:-sprintlog_net}
+    name: ${DOCKER_NETWORK_NAME:-network_ujikom}
     driver: overlay
     attachable: true
 
 volumes:
   db_data:
-    name: ${DOCKER_DB_VOLUME_NAME:-sprintlog_db}
+    name: ${DOCKER_DB_VOLUME_NAME:-db_ujikom}
   app_storage:
-    name: ${DOCKER_STORAGE_VOLUME_NAME:-sprintlog_storage}
-    driver: local
-    driver_opts:
-      type: nfs
-      o: ${NFS_MOUNT_OPTIONS:-addr=192.168.10.10,rw,nfsvers=4}
-      device: ":${NFS_EXPORT_PATH:-/srv/sprintlog-storage}"
+    name: ${DOCKER_STORAGE_VOLUME_NAME:-volume_ujikom}
 
 configs:
   nginx_lb_config:
