@@ -92,7 +92,14 @@
                                     </div>
                                 </td>
                                 <td class="centered">
-                                    <x-be.button :href="route('be.branches.edit', $branch)" variant="neutral" size="sm">Edit</x-be.button>
+                                    <div class="be-badge-row" style="justify-content: center;">
+                                        <x-be.button :href="route('be.branches.edit', $branch)" variant="neutral" size="sm">Edit</x-be.button>
+                                        <form action="{{ route('be.branches.destroy', $branch) }}" method="POST" onsubmit="return confirm('Hapus hub {{ addslashes($branch->name) }}? User di hub ini akan dilepas dari hub.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <x-be.button type="submit" variant="danger" size="sm">Delete</x-be.button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
