@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         $this->call(LocationSeeder::class);
         $this->call(NationalBranchSeeder::class);
         $this->call(HubCrewSeeder::class);
+        $this->call(LandingSectionSeeder::class);
 
         $rateMatrix = [
             [1, 1, 9000, 1], [1, 2, 18000, 2], [1, 3, 22000, 2], [1, 4, 28000, 3], [1, 5, 38000, 4], [1, 6, 55000, 5],

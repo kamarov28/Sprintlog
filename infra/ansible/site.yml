@@ -443,13 +443,13 @@
       ansible.builtin.debug:
         var: laravel_bootstrap.stdout_lines
 
-    - name: Seed national hub coverage and courier fleet
+    - name: Seed national hub coverage, courier fleet, and landing modules
       ansible.builtin.shell: |
         docker run --rm \
           --network {{ docker_network_name }} \
           --env-file ./.env \
           {{ sprintlog_image }} \
-          sh -lc 'php artisan db:seed --class=LocationSeeder --force && php artisan db:seed --class=NationalBranchSeeder --force && php artisan db:seed --class=HubCrewSeeder --force'
+          sh -lc 'php artisan db:seed --class=LocationSeeder --force && php artisan db:seed --class=NationalBranchSeeder --force && php artisan db:seed --class=HubCrewSeeder --force && php artisan db:seed --class=LandingSectionSeeder --force'
       args:
         chdir: "{{ app_deploy_path }}/infra/docker"
       when: database_seed_mode == "accounts"
