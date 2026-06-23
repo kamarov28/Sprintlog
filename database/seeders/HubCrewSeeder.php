@@ -31,10 +31,16 @@ class HubCrewSeeder extends Seeder
                         $email = HubCrewIdentity::email($role, $branch->name);
 
                         $crew = User::query()
-                            ->where('branch_id', $branch->id)
-                            ->where('role', $role)
-                            ->orderBy('id')
+                            ->where('email', $email)
                             ->first();
+
+                        if (! $crew) {
+                            $crew = User::query()
+                                ->where('branch_id', $branch->id)
+                                ->where('role', $role)
+                                ->orderBy('id')
+                                ->first();
+                        }
 
                         $payload = [
                             'email' => $email,
