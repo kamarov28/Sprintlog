@@ -239,22 +239,9 @@
           APP_REPLICAS={{ app_replicas }}
           LB_REPLICAS={{ lb_replicas }}
           MYSQL_REPLICAS={{ mysql_replicas }}
-          DEPLOY_BRANCH_NAME="SprintLog Hub DKI Jakarta"
-          DEPLOY_BRANCH_CITY="DKI Jakarta"
-          DEPLOY_BRANCH_ADDRESS="Jl. Operasional SprintLog, DKI Jakarta"
-          DEPLOY_BRANCH_PHONE="1500-P001"
           DEPLOY_ADMIN_NAME="Admin Utama"
           DEPLOY_ADMIN_EMAIL="admin@sprintlog.com"
           DEPLOY_ADMIN_PASSWORD="password"
-          DEPLOY_CASHIER_NAME="Kasir DKI Jakarta"
-          DEPLOY_CASHIER_EMAIL="kasir-dkijakarta@sprintlog.com"
-          DEPLOY_CASHIER_PASSWORD="password"
-          DEPLOY_MANAGER_NAME="Manajer DKI Jakarta"
-          DEPLOY_MANAGER_EMAIL="manager-dkijakarta@sprintlog.com"
-          DEPLOY_MANAGER_PASSWORD="password"
-          DEPLOY_COURIER_NAME="Kurir Satria"
-          DEPLOY_COURIER_EMAIL="kurir-dkijakarta@sprintlog.com"
-          DEPLOY_COURIER_PASSWORD="password"
       no_log: true
 
     - name: Write Nginx load balancer config
@@ -469,7 +456,7 @@
         - deploy
         - laravel-maintenance
 
-    - name: Seed deployment accounts only
+    - name: Seed deployment admin account
       ansible.builtin.shell: |
         docker run --rm \
           --network {{ docker_network_name }} \
