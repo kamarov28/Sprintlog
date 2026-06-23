@@ -4,7 +4,7 @@
 
 @section('content')
 
-    <div class="hud-panel" style="max-width: 800px; margin: 0 auto;">
+    <div class="hud-panel pos-counter-shell">
         <h3 class="font-bank text-accent mb-4">Input Shipment Counter</h3>
         <p class="font-ui text-gray" style="font-size: 0.86rem; line-height: 1.65; margin: -0.5rem 0 1.5rem;">
             Dipakai kasir untuk paket walk-in. Untuk order customer dari website, gunakan flow pickup sampai shipment aktif.
@@ -24,40 +24,57 @@
         <form action="{{ route('be.shipments.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div class="pos-form-grid pos-contact-grid">
                 <!-- Sender Info -->
                 <div class="form-cluster">
                     <div class="font-ui text-primary mb-3" style="font-size: 0.8rem;">Data Pengirim</div>
-                    <div style="margin-bottom: 1rem;">
+                    <div class="pos-field">
                         <label class="font-ui text-gray" style="font-size: 0.8rem;">Nama</label><br>
-                        <input type="text" name="sender_name" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
+                        <input type="text" name="sender_name" value="{{ old('sender_name') }}" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     </div>
-                    <div style="margin-bottom: 1rem;">
+                    <div class="pos-field">
                         <label class="font-ui text-gray" style="font-size: 0.8rem;">Nomor Telepon</label><br>
-                        <input type="text" name="sender_phone" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
+                        <input type="text" name="sender_phone" value="{{ old('sender_phone') }}" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     </div>
                 </div>
 
                 <!-- Receiver Info -->
                 <div class="form-cluster form-cluster--accent">
                     <div class="font-ui text-accent mb-3" style="font-size: 0.8rem;">Data Penerima</div>
-                    <div style="margin-bottom: 1rem;">
+                    <div class="pos-field">
                         <label class="font-ui text-gray" style="font-size: 0.8rem;">Nama</label><br>
-                        <input type="text" name="receiver_name" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
+                        <input type="text" name="receiver_name" value="{{ old('receiver_name') }}" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     </div>
-                    <div style="margin-bottom: 1rem;">
+                    <div class="pos-field">
                         <label class="font-ui text-gray" style="font-size: 0.8rem;">Nomor Telepon</label><br>
-                        <input type="text" name="receiver_phone" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
+                        <input type="text" name="receiver_phone" value="{{ old('receiver_phone') }}" required style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; outline: none;">
                     </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Alamat Tujuan</label><br>
-                        <textarea name="receiver_address" rows="2" placeholder="Alamat lengkap tujuan pengiriman" style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 0.95rem; outline: none; resize: none;"></textarea>
+                    <div class="pos-address-pair">
+                        <div class="pos-field">
+                            <label class="font-ui text-gray" style="font-size: 0.8rem;">Provinsi Tujuan</label><br>
+                            <select name="receiver_province_id" id="receiver_province_id" required style="width: 100%; padding: 0.5rem; font-family: var(--font-ui);">
+                                <option value="" disabled {{ old('receiver_province_id') ? '' : 'selected' }}>Pilih Provinsi...</option>
+                                @foreach($provinces as $province)
+                                    <option value="{{ $province->id }}" {{ old('receiver_province_id') == $province->id ? 'selected' : '' }}>{{ $province->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="pos-field">
+                            <label class="font-ui text-gray" style="font-size: 0.8rem;">Kota/Kab. Tujuan</label><br>
+                            <select name="receiver_city_id" id="receiver_city_id" required style="width: 100%; padding: 0.5rem; font-family: var(--font-ui);">
+                                <option value="">Pilih Kota...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="pos-field">
+                        <label class="font-ui text-gray" style="font-size: 0.8rem;">Alamat Lengkap Tujuan</label><br>
+                        <textarea name="receiver_address" rows="2" required placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan, patokan" style="width: 100%; padding: 0.5rem; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 0.95rem; outline: none; resize: none;">{{ old('receiver_address') }}</textarea>
                     </div>
                 </div>
             </div>
 
             <!-- Delivery & Package Config -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div class="pos-form-grid">
                 
                 <!-- Routine & Destination -->
                 <div class="form-cluster">
@@ -113,7 +130,9 @@
                         <select name="courier_id" style="width: 100%; padding: 0.5rem; font-family: var(--font-ui);">
                             <option value="">-- BIARKAN PENDING (AUTO) --</option>
                             @foreach($couriers as $courier)
-                                <option value="{{ $courier->id }}">{{ $courier->name }}</option>
+                                <option value="{{ $courier->id }}" @disabled(! $courier->vehicle || $courier->vehicle->status !== 'active')>
+                                    {{ $courier->name }} / {{ $courier->vehicle?->label() ?? 'belum ada kendaraan aktif' }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -185,8 +204,6 @@
 
 @push('scripts')
 <script>
-    const rateMatrix = @json($rates->mapWithKeys(fn ($rate) => [$rate->origin_zone . '-' . $rate->destination_zone => (float) $rate->price_per_kg]));
-    const branchZones = @json($branchZones);
     const originBranchInput = document.querySelector('[name="origin_branch_id"]');
     const destinationBranchSelect = document.querySelector('[name="destination_branch_id"]');
     const weightInput = document.querySelector('input[name="weight"]');
@@ -198,68 +215,134 @@
     const amountReceived = document.getElementById('amount_received');
     const displayChange = document.getElementById('display-change');
     const btnSubmit = document.getElementById('btn-submit');
+    const receiverProvinceSelect = document.getElementById('receiver_province_id');
+    const receiverCitySelect = document.getElementById('receiver_city_id');
+    const selectedReceiverCityId = @json(old('receiver_city_id'));
+    const originCityId = @json($originCityId);
     
     let currentTotal = 0;
+    let priceRequestSerial = 0;
 
     function formatRupiah(num) {
         return 'Rp ' + num.toLocaleString('id-ID');
     }
 
-    function calculate() {
-        const weight = parseFloat(weightInput.value) || 0;
-        const selectedOption = serviceTypeSelect.options[serviceTypeSelect.selectedIndex];
-        const originBranchId = originBranchInput.value;
-        const destinationBranchId = destinationBranchSelect.value;
-        const originZone = branchZones[originBranchId] || '';
-        const destinationZone = branchZones[destinationBranchId] || '';
-        const basePriceRate = rateMatrix[originZone + '-' + destinationZone] || 0;
-
-        // Validasi Kargo
-        if (serviceTypeSelect.value === 'KARGO' && weight < 10) {
-            alert('Layanan KARGO mewajibkan berat minimum 10 KG. Berat akan disesuaikan otomatis.');
-            weightInput.value = 10;
-            return calculate(); // Recalculate
-        }
-
-        const multiplier = parseFloat(selectedOption.getAttribute('data-multiplier')) || 1.0;
-        
-        if (!basePriceRate) {
-            currentTotal = 0;
-            displayTotal.innerText = 'Rate belum tersedia';
-            btnSubmit.disabled = true;
-            return;
-        }
-
-        const pricePerKg = basePriceRate * multiplier;
-        currentTotal = weight * pricePerKg;
-        
-        displayTotal.innerText = formatRupiah(currentTotal);
-
+    function updatePaymentPanel() {
         if (paymentMethod.value === 'cash') {
             cashPanel.style.display = 'grid';
             transferPanel.style.display = 'none';
             const received = parseFloat(amountReceived.value) || 0;
             const change = received - currentTotal;
             displayChange.innerText = formatRupiah(Math.max(0, change));
-            
+
             if (received < currentTotal && currentTotal > 0) {
                 btnSubmit.disabled = true;
                 displayChange.style.color = '#b91c1c';
             } else {
-                btnSubmit.disabled = false;
+                btnSubmit.disabled = currentTotal <= 0;
                 displayChange.style.color = '#b0005a';
             }
         } else if (paymentMethod.value === 'transfer') {
             cashPanel.style.display = 'none';
             transferPanel.style.display = 'grid';
-            btnSubmit.disabled = false;
+            btnSubmit.disabled = currentTotal <= 0;
             amountReceived.value = '';
         } else {
             cashPanel.style.display = 'none';
             transferPanel.style.display = 'none';
-            btnSubmit.disabled = false;
+            btnSubmit.disabled = currentTotal <= 0;
             amountReceived.value = '';
         }
+    }
+
+    async function calculate() {
+        const weight = parseFloat(weightInput.value) || 0;
+
+        if (serviceTypeSelect.value === 'KARGO' && weight < 10) {
+            alert('Layanan KARGO mewajibkan berat minimum 10 KG. Berat akan disesuaikan otomatis.');
+            weightInput.value = 10;
+            return calculate();
+        }
+
+        if (!originBranchInput.value || !originCityId || !receiverCitySelect.value || weight <= 0) {
+            currentTotal = 0;
+            displayTotal.innerText = 'Lengkapi tujuan & berat';
+            btnSubmit.disabled = true;
+            updatePaymentPanel();
+            return;
+        }
+
+        const serial = ++priceRequestSerial;
+        displayTotal.innerText = 'Menghitung ongkir...';
+        btnSubmit.disabled = true;
+
+            try {
+            const params = new URLSearchParams({
+                origin_kota_id: originCityId,
+                destination_kota_id: receiverCitySelect.value,
+                weight,
+                service_type: serviceTypeSelect.value,
+            });
+            const response = await fetch(`/api/calculate-rate?${params.toString()}`);
+            const data = await response.json();
+
+            if (serial !== priceRequestSerial) {
+                return;
+            }
+
+            if (!response.ok || !data.total_price) {
+                currentTotal = 0;
+                displayTotal.innerText = data.error || 'Ongkir belum tersedia';
+                btnSubmit.disabled = true;
+                updatePaymentPanel();
+                return;
+            }
+
+            currentTotal = Number(data.total_price);
+            displayTotal.innerText = formatRupiah(currentTotal);
+            updatePaymentPanel();
+        } catch (error) {
+            if (serial !== priceRequestSerial) {
+                return;
+            }
+
+            currentTotal = 0;
+            displayTotal.innerText = 'Ongkir gagal dimuat';
+            btnSubmit.disabled = true;
+            updatePaymentPanel();
+        }
+    }
+
+    function loadReceiverCities(selectedValue = null) {
+        const provinceId = receiverProvinceSelect.value;
+
+        if (!provinceId) {
+            receiverCitySelect.innerHTML = '<option value="">Pilih Kota...</option>';
+            calculate();
+            return;
+        }
+
+        receiverCitySelect.innerHTML = '<option value="">Loading...</option>';
+
+        fetch(`/api/locations/kota?provinsi_id=${provinceId}`)
+            .then(response => response.json())
+            .then(cities => {
+                receiverCitySelect.innerHTML = '<option value="" disabled selected>Pilih Kota...</option>';
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.textContent = city.name.toUpperCase();
+                    if (selectedValue && String(city.id) === String(selectedValue)) {
+                        option.selected = true;
+                    }
+                    receiverCitySelect.appendChild(option);
+                });
+                calculate();
+            })
+            .catch(() => {
+                receiverCitySelect.innerHTML = '<option value="">Kota gagal dimuat</option>';
+                calculate();
+            });
     }
 
     weightInput.addEventListener('input', calculate);
@@ -267,8 +350,13 @@
     destinationBranchSelect.addEventListener('change', calculate);
     paymentMethod.addEventListener('change', calculate);
     amountReceived.addEventListener('input', calculate);
+    receiverProvinceSelect.addEventListener('change', () => loadReceiverCities());
+    receiverCitySelect.addEventListener('change', calculate);
     
     // Initial call
+    if (receiverProvinceSelect.value) {
+        loadReceiverCities(selectedReceiverCityId);
+    }
     calculate();
 </script>
 @endpush

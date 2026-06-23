@@ -31,4 +31,14 @@ class ShipmentManifest extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function courier()
+    {
+        return $this->belongsTo(User::class, 'courier_id');
+    }
+
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
 }

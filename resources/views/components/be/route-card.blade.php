@@ -73,8 +73,8 @@
                 <div class="font-bank text-accent" style="font-size: 1.05rem;">{{ strtoupper($estimate['duration_label']) }}</div>
             </div>
             <div class="ops-card">
-                <div class="data-label">POINTS</div>
-                <div class="font-bank text-primary" style="font-size: 1.05rem;">{{ $points->count() }}</div>
+                <div class="data-label">ROUTING</div>
+                <div class="font-bank text-primary" style="font-size: 1.05rem;">{{ strtoupper($estimate['provider'] ?? 'fallback') }}</div>
             </div>
         </div>
 

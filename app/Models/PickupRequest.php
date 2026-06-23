@@ -11,6 +11,8 @@ class PickupRequest extends Model
     protected $casts = [
         'cash_collected_at' => 'datetime',
         'cash_handover_at' => 'datetime',
+        'auto_assignment_score' => 'float',
+        'auto_assignment_meta' => 'array',
     ];
 
     public function courier()

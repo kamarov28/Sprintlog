@@ -21,8 +21,9 @@ Edit:
 
 - `inventory.ini`: IP dan user SSH VM.
 - `group_vars/all.yml`: `app_repo_url`, IP, domain, dan password database.
-- `app_key` boleh dikosongkan untuk lab. Playbook akan membuat `APP_KEY` otomatis.
-- `database_seed_mode` default `accounts`, jadi akun deploy dibuat otomatis dari variable.
+- `app_key` boleh dikosongkan untuk lab. Playbook akan membuat `APP_KEY` hanya pada deploy pertama, lalu memakai ulang nilai di `infra/docker/.env` agar session/CSRF tetap valid saat redeploy.
+- `database_seed_mode` default `accounts`, jadi location, hub nasional, kurir/truck hub, dan akun deploy dibuat otomatis tanpa reset data.
+- `routing_osrm_enabled=true` mengaktifkan estimasi jarak jalan via OSRM. Jika OSRM tidak bisa diakses, SprintLog otomatis fallback ke estimasi lokal berbasis koordinat.
 
 Tes koneksi:
 
@@ -43,6 +44,20 @@ docker node ls
 docker stack services sprintlog
 docker stack ps sprintlog
 curl -I http://sprintlog.local
+```
+
+Maintenance Laravel yang aman untuk demo:
+
+```bash
+ansible-playbook site.yml --tags laravel-maintenance
+```
+
+Task ini menjalankan `php artisan optimize:clear`, `php artisan migrate --force`, `storage:link`, `php artisan optimize`, lalu seed sesuai `database_seed_mode`. Default `accounts` hanya memastikan akun deploy tersedia; gunakan `-e database_seed_mode=demo` hanya jika memang ingin mengisi ulang data demo.
+
+Jika sesi demo harus distabilkan cepat sebelum investigasi multi-replica selesai:
+
+```bash
+docker service scale sprintlog_app=1
 ```
 
 ## Catatan

@@ -32,6 +32,7 @@
         ]);
     $featurePanels = collect();
     $ctas = collect();
+    $shouldAutoQuote = request()->filled(['origin_prov', 'origin_kota_id', 'destination_prov', 'destination_kota_id', 'weight']);
 @endphp
 
 <div class="macaron-shell">
@@ -162,9 +163,9 @@
                     <x-fe.input type="number" label="Berat (kg)" name="weight" id="calc_weight" placeholder="1" min="0.1" step="0.1" value="{{ request('weight', 1) }}" required />
                     
                     <x-fe.input type="select" label="Layanan" name="service_type" id="calc_service">
-                        <option value="REGULAR" style="background: var(--color-bg);">REGULAR</option>
-                        <option value="BEST" style="background: var(--color-bg);">BEST</option>
-                        <option value="KARGO" style="background: var(--color-bg);">KARGO</option>
+                        <option value="REGULAR" style="background: var(--color-bg);" {{ request('service_type', 'REGULAR') === 'REGULAR' ? 'selected' : '' }}>REGULAR</option>
+                        <option value="BEST" style="background: var(--color-bg);" {{ request('service_type') === 'BEST' ? 'selected' : '' }}>BEST</option>
+                        <option value="KARGO" style="background: var(--color-bg);" {{ request('service_type') === 'KARGO' ? 'selected' : '' }}>KARGO</option>
                     </x-fe.input>
                 </div>
 
@@ -177,10 +178,11 @@
                     </div>
                     <div id="res-etd-container" style="text-align: right; {{ $rateResult ? '' : 'display: none;' }}">
                         <span class="text-gray" style="font-size: 0.75rem;">ETD</span><br>
-                        <span id="res-etd" class="text-main" style="font-size: 0.9rem; font-weight: bold;">{{ $rateResult ? $rateResult['estimated_days'] : '' }} HARI</span>
+                        <span id="res-etd" class="text-main" style="font-size: 0.9rem; font-weight: bold;">{{ $rateResult ? ($rateResult['estimated_days'] ? $rateResult['estimated_days'].' HARI' : 'DARI KURIR') : '' }}</span>
                     </div>
                 </div>
                 <x-fe.button type="button" onclick="calculateOngkir()" variant="secondary" style="width: 100%;">Hitung Ongkir</x-fe.button>
+                <x-fe.button :href="route('order.create', request()->only(['origin_prov', 'origin_kota_id', 'destination_prov', 'destination_kota_id', 'weight', 'service_type']))" id="continue-order-link" variant="primary" style="width: 100%; margin-top: 0.85rem; display: {{ $rateResult ? 'inline-flex' : 'none' }};">Lanjut Buat Order</x-fe.button>
             </form>
         </x-fe.panel>
 
@@ -585,10 +587,47 @@ function loadKota(provSelectId, kotaSelectId, selectedKotaId) {
                 if (selectedKotaId && k.id == selectedKotaId) opt.selected = true;
                 kotaSelect.appendChild(opt);
             });
+            refreshOrderLink();
+            maybeAutoCalculateQuote();
         })
         .catch(() => {
             kotaSelect.innerHTML = '<option value="">Gagal memuat kota.</option>';
         });
+}
+
+const shouldAutoQuote = @json($shouldAutoQuote);
+let autoQuoteDone = false;
+
+function maybeAutoCalculateQuote() {
+    if (!shouldAutoQuote || autoQuoteDone) return;
+
+    const params = quoteParams();
+    if (params.origin_kota_id && params.destination_kota_id && params.weight) {
+        autoQuoteDone = true;
+        calculateOngkir();
+    }
+}
+
+function quoteParams() {
+    return {
+        origin_prov: document.getElementById('origin_prov')?.value || '',
+        origin_kota_id: document.getElementById('origin_kota_id')?.value || '',
+        destination_prov: document.getElementById('destination_prov')?.value || '',
+        destination_kota_id: document.getElementById('destination_kota_id')?.value || '',
+        weight: document.getElementById('calc_weight')?.value || '',
+        service_type: document.getElementById('calc_service')?.value || 'REGULAR',
+    };
+}
+
+function refreshOrderLink(show = false) {
+    const link = document.getElementById('continue-order-link');
+    if (!link) return;
+
+    const params = quoteParams();
+    const complete = params.origin_prov && params.origin_kota_id && params.destination_prov && params.destination_kota_id && params.weight;
+    const query = new URLSearchParams(params);
+    link.href = `{{ route('order.create') }}?${query.toString()}`;
+    link.style.display = show && complete ? 'inline-flex' : 'none';
 }
 
 // On page load: restore city dropdowns if province was already selected (after form submission)
@@ -649,6 +688,7 @@ function calculateOngkir() {
 
     if (!originKotaId || !destKotaId || !weight) {
         alert('Lengkapi semua data terlebih dahulu.');
+        refreshOrderLink(false);
         return;
     }
 
@@ -665,18 +705,26 @@ function calculateOngkir() {
             if (data.error) {
                 alert(data.error);
                 priceSpan.textContent = 'Rp ---';
+                refreshOrderLink(false);
                 return;
             }
             priceSpan.textContent = data.total_price_fmt;
-            etdSpan.textContent = data.estimated_days + ' HARI';
+            etdSpan.textContent = data.estimated_days ? `${data.estimated_days} HARI` : 'DARI KURIR';
             etdContainer.style.display = 'block';
+            refreshOrderLink(true);
         })
         .catch(err => {
             console.error(err);
             priceSpan.textContent = 'Rp ---';
+            refreshOrderLink(false);
             alert('Gagal mengambil data ongkir.');
         });
 }
+
+['origin_prov', 'origin_kota_id', 'destination_prov', 'destination_kota_id', 'calc_weight', 'calc_service'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('change', () => refreshOrderLink(false));
+    document.getElementById(id)?.addEventListener('input', () => refreshOrderLink(false));
+});
 </script>
 @endpush
 

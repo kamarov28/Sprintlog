@@ -3,10 +3,28 @@
 namespace App\Http\Controllers\Fe;
 
 use App\Http\Controllers\Controller;
+use App\Models\ShipmentNotification;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    private const PAYMENT_WAITING_STATUSES = [
+        'pending_transfer_verification',
+        'pending_verification',
+        'awaiting_pickup_cash',
+        'cash_collected_by_courier',
+    ];
+
+    private const STEP_LABELS = [
+        'queued' => 'ORDER QUEUED',
+        'assigned' => 'COURIER ASSIGNED',
+        'picked_up' => 'PICKED UP',
+        'hub_received' => 'AT HUB',
+        'shipment_active' => 'SHIPMENT ACTIVE',
+        'in_transit' => 'IN TRANSIT',
+        'delivered' => 'DELIVERED',
+    ];
+
     public function index()
     {
         $user = Auth::user();
@@ -22,26 +40,7 @@ class DashboardController extends Controller
         $standaloneShipmentScope = $user->shipments()
             ->when($linkedShipmentIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $linkedShipmentIds));
 
-        $pickupCount = $user->pickups()->count();
-        $standaloneShipmentCount = (clone $standaloneShipmentScope)->count();
-
-        $summary = [
-            'total_orders' => $pickupCount + $standaloneShipmentCount,
-            'waiting_payment' => $user->pickups()
-                ->whereIn('payment_status', ['pending_transfer_verification', 'pending_verification', 'awaiting_pickup_cash', 'cash_collected_by_courier'])
-                ->count()
-                + (clone $standaloneShipmentScope)
-                    ->whereHas('payment', fn ($query) => $query->whereIn('payment_status', ['pending_transfer_verification', 'pending_verification', 'awaiting_pickup_cash', 'cash_collected_by_courier', 'pending']))
-                    ->count(),
-            'active_shipments' => $user->pickups()
-                ->whereHas('shipment', fn ($query) => $query->where('status', '!=', 'delivered'))
-                ->count()
-                + (clone $standaloneShipmentScope)->where('status', '!=', 'delivered')->count(),
-            'delivered' => $user->pickups()
-                ->whereHas('shipment', fn ($query) => $query->where('status', 'delivered'))
-                ->count()
-                + (clone $standaloneShipmentScope)->where('status', 'delivered')->count(),
-        ];
+        $summary = $this->customerSummary($user, $standaloneShipmentScope);
 
         $pickups = $user->pickups()
             ->with([
@@ -72,20 +71,54 @@ class DashboardController extends Controller
             ->take(30)
             ->values();
 
-        return view('fe.dashboard', compact('user', 'orderLifecycles', 'summary'));
+        $notificationQuery = ShipmentNotification::query()
+            ->with('shipment')
+            ->where('user_id', $user->id);
+
+        $summary['unread_notifications'] = (clone $notificationQuery)
+            ->whereNull('read_at')
+            ->count();
+
+        $notifications = $notificationQuery
+            ->latest('sent_at')
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        return view('fe.dashboard', [
+            'user' => $user,
+            'orderLifecycles' => $orderLifecycles,
+            'summary' => $summary,
+            'notifications' => $this->notificationCards($notifications),
+            'stepLabels' => self::STEP_LABELS,
+        ]);
+    }
+
+    public function markNotificationRead(ShipmentNotification $notification)
+    {
+        abort_unless((int) $notification->user_id === (int) Auth::id(), 403);
+
+        if (! $notification->read_at) {
+            $notification->update(['read_at' => now()]);
+        }
+
+        return back()->with('success', 'Notifikasi ditandai sudah dibaca.');
     }
 
     private function pickupLifecycle($pickup): array
     {
         $shipment = $pickup->shipment;
         $shipmentStatus = $shipment?->status;
+        $mainStatus = $shipmentStatus ?: $pickup->status;
+        $paymentStatus = $pickup->payment_status;
+        $hasShipment = (bool) $shipment;
 
         $steps = [
             'queued' => true,
-            'assigned' => in_array($pickup->status, ['assigned', 'picked_up', 'hub_received'], true) || (bool) $shipment,
-            'picked_up' => in_array($pickup->status, ['picked_up', 'hub_received'], true) || (bool) $shipment,
-            'hub_received' => $pickup->status === 'hub_received' || (bool) $shipment,
-            'shipment_active' => (bool) $shipment,
+            'assigned' => in_array($pickup->status, ['assigned', 'picked_up', 'hub_received'], true) || $hasShipment,
+            'picked_up' => in_array($pickup->status, ['picked_up', 'hub_received'], true) || $hasShipment,
+            'hub_received' => $pickup->status === 'hub_received' || $hasShipment,
+            'shipment_active' => $hasShipment,
             'in_transit' => $shipment && in_array($shipmentStatus, ['in_transit', 'arrived_at_branch', 'out_for_delivery', 'delivered'], true),
             'delivered' => $shipmentStatus === 'delivered',
         ];
@@ -104,7 +137,11 @@ class DashboardController extends Controller
             'payment_status' => $pickup->payment_status,
             'pickup_status' => $pickup->status,
             'shipment_status' => $shipmentStatus,
-            'has_shipment' => (bool) $shipment,
+            'main_status' => $mainStatus,
+            'status_class' => $this->statusChipClass($mainStatus),
+            'payment_class' => $this->paymentChipClass($paymentStatus),
+            'next_action' => $this->nextActionFor($hasShipment, $shipmentStatus, $paymentStatus),
+            'has_shipment' => $hasShipment,
             'latest_tracking' => $shipment?->latestTracking,
             'steps' => $steps,
             'can_reschedule' => ! $shipment && $pickup->status === 'pending',
@@ -116,6 +153,8 @@ class DashboardController extends Controller
 
     private function shipmentLifecycle($shipment): array
     {
+        $paymentStatus = $shipment->payment?->payment_status;
+
         $steps = [
             'queued' => true,
             'assigned' => true,
@@ -137,9 +176,13 @@ class DashboardController extends Controller
             'service_type' => null,
             'total_price' => $shipment->total_price,
             'payment_method' => $shipment->payment?->payment_method,
-            'payment_status' => $shipment->payment?->payment_status,
+            'payment_status' => $paymentStatus,
             'pickup_status' => null,
             'shipment_status' => $shipment->status,
+            'main_status' => $shipment->status,
+            'status_class' => $this->statusChipClass($shipment->status),
+            'payment_class' => $this->paymentChipClass($paymentStatus),
+            'next_action' => $this->nextActionFor(true, $shipment->status, $paymentStatus),
             'has_shipment' => true,
             'latest_tracking' => $shipment->latestTracking,
             'steps' => $steps,
@@ -148,5 +191,79 @@ class DashboardController extends Controller
             'can_reupload_payment' => false,
             'updated_at' => $shipment->updated_at,
         ];
+    }
+
+    private function customerSummary($user, $standaloneShipmentScope): array
+    {
+        return [
+            'total_orders' => $user->pickups()->count() + (clone $standaloneShipmentScope)->count(),
+            'waiting_payment' => $user->pickups()
+                ->whereIn('payment_status', self::PAYMENT_WAITING_STATUSES)
+                ->count()
+                + (clone $standaloneShipmentScope)
+                    ->whereHas('payment', fn ($query) => $query->whereIn('payment_status', [...self::PAYMENT_WAITING_STATUSES, 'pending']))
+                    ->count(),
+            'active_shipments' => $user->pickups()
+                ->whereHas('shipment', fn ($query) => $query->where('status', '!=', 'delivered'))
+                ->count()
+                + (clone $standaloneShipmentScope)->where('status', '!=', 'delivered')->count(),
+            'delivered' => $user->pickups()
+                ->whereHas('shipment', fn ($query) => $query->where('status', 'delivered'))
+                ->count()
+                + (clone $standaloneShipmentScope)->where('status', 'delivered')->count(),
+        ];
+    }
+
+    private function notificationCards($notifications)
+    {
+        return $notifications->map(function (ShipmentNotification $notification): array {
+            $trackingNumber = $notification->shipment?->tracking_number;
+
+            return [
+                'id' => $notification->id,
+                'is_unread' => ! $notification->read_at,
+                'sent_at_label' => optional($notification->sent_at ?: $notification->created_at)->format('d M Y H:i'),
+                'title' => $notification->title,
+                'message' => $notification->message,
+                'tracking_number' => $trackingNumber,
+                'tracking_url' => $trackingNumber ? route('track.show', ['receipt' => $trackingNumber]) : null,
+            ];
+        });
+    }
+
+    private function statusChipClass(?string $status): string
+    {
+        return match ($status) {
+            'delivered', 'hub_received' => 'status-chip--success',
+            'cancelled', 'failed', 'transfer_rejected' => 'status-chip--danger',
+            'in_transit', 'arrived_at_branch', 'out_for_delivery' => 'status-chip--accent',
+            default => 'status-chip--waiting',
+        };
+    }
+
+    private function paymentChipClass(?string $status): string
+    {
+        return match ($status) {
+            'paid' => 'status-chip--success',
+            'transfer_rejected', 'failed' => 'status-chip--danger',
+            'pending_transfer_verification', 'pending_verification', 'cash_collected_by_courier' => 'status-chip--accent',
+            default => 'status-chip--waiting',
+        };
+    }
+
+    private function nextActionFor(bool $hasShipment, ?string $shipmentStatus, ?string $paymentStatus): string
+    {
+        return match (true) {
+            ! $hasShipment && $paymentStatus === 'awaiting_pickup_cash' => 'Siapkan uang tunai untuk pickup. Kasir hub akan verifikasi setelah kurir menyetor cash.',
+            ! $hasShipment && in_array($paymentStatus, ['pending_transfer_verification', 'pending_verification'], true) => 'Bukti transfer sedang menunggu review kasir hub.',
+            ! $hasShipment && $paymentStatus === 'cash_collected_by_courier' => 'Kurir sudah menerima cash. Menunggu kasir hub verifikasi setoran.',
+            ! $hasShipment => 'Menunggu pickup kurir dan aktivasi shipment dari hub.',
+            $shipmentStatus === 'pending' => 'Shipment sudah aktif dan menunggu pergerakan pertama.',
+            in_array($shipmentStatus, ['picked_up', 'in_transit'], true) => 'Paket sedang bergerak di jalur hub. Cek tracking untuk scan berikutnya.',
+            $shipmentStatus === 'arrived_at_branch' => 'Paket sudah tiba di hub tujuan dan menunggu delivery terakhir.',
+            $shipmentStatus === 'out_for_delivery' => 'Kurir sedang menuju penerima. Pastikan nomor penerima aktif.',
+            $shipmentStatus === 'delivered' => 'Pengiriman selesai. Timeline tersedia di halaman tracking.',
+            default => 'Hub sedang memproses langkah operasional berikutnya.',
+        };
     }
 }

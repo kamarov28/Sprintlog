@@ -5,204 +5,266 @@
     <title>Resi Kasir - {{ $shipment->tracking_number }}</title>
     <style>
         @page { margin: 0; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { box-sizing: border-box; }
+
         body {
-            background: #fff3dc;
-            color: #151515;
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 8.5pt;
-            line-height: 1.35;
-            padding: 4mm;
+            margin: 0;
             width: 72mm;
+            padding: 3mm;
+            background: #ffffff;
+            color: #000000;
+            font-family: "DejaVu Sans Mono", "Courier New", monospace;
+            font-size: 8pt;
+            line-height: 1.32;
         }
+
         .receipt {
-            background: #fffaf1;
-            border: 2px solid #151515;
-            border-right: 5px solid #151515;
-            border-bottom: 5px solid #151515;
-            padding: 4mm;
+            width: 100%;
         }
+
         .center { text-align: center; }
         .right { text-align: right; }
-        .bold { font-weight: 900; }
+        .bold { font-weight: 700; }
+        .small { font-size: 7pt; }
+        .muted { color: #000000; }
+
         .brand {
-            font-family: DejaVu Serif, serif;
-            font-size: 18pt;
-            font-weight: 900;
-            letter-spacing: 3px;
+            font-size: 14pt;
+            font-weight: 700;
+            letter-spacing: 1.5px;
             line-height: 1;
         }
-        .brand span { color: #ff71ae; }
-        .tag {
-            background: #fff06d;
-            border: 2px solid #151515;
-            border-right: 4px solid #151515;
-            border-bottom: 4px solid #151515;
-            display: inline-block;
+
+        .subtitle {
+            margin-top: 1mm;
             font-size: 7pt;
-            font-weight: 900;
-            letter-spacing: 1px;
-            margin-top: 2mm;
-            padding: 1.5mm 2.5mm;
             text-transform: uppercase;
         }
-        .tracking-box {
-            background: #cdb8ff;
-            border: 2px solid #151515;
-            border-right: 5px solid #151515;
-            border-bottom: 5px solid #151515;
-            margin: 3mm 0;
-            padding: 3mm;
-            text-align: center;
+
+        .line {
+            border-top: 1px dashed #000000;
+            margin: 2.5mm 0;
         }
-        .tracking-id {
-            font-size: 12pt;
-            font-weight: 900;
-            letter-spacing: .5px;
+
+        .solid {
+            border-top: 1px solid #000000;
+            margin: 2.5mm 0;
+        }
+
+        .tracking {
+            margin: 2mm 0;
+            text-align: center;
             word-break: break-word;
         }
-        .dash { border-top: 2px dashed #151515; margin: 3mm 0; }
-        .solid { border-top: 2px solid #151515; margin: 3mm 0; }
-        .label {
-            color: #3f4652;
-            font-size: 6.5pt;
-            font-weight: 900;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+
+        .tracking .number {
+            display: block;
+            margin-top: 1mm;
+            font-size: 10pt;
+            font-weight: 700;
+            letter-spacing: .4px;
         }
-        .value { font-size: 8.8pt; font-weight: 900; }
-        .muted { color: #3f4652; }
-        table { border-collapse: collapse; width: 100%; }
-        td { padding: 1.2mm 0; vertical-align: top; }
-        .info td:first-child { width: 30%; }
+
         .section-title {
-            background: #151515;
-            color: #fffaf1;
-            font-size: 7pt;
-            font-weight: 900;
-            letter-spacing: 1.5px;
-            margin-bottom: 2mm;
-            padding: 1.5mm 2mm;
+            margin: 2mm 0 1mm;
+            font-weight: 700;
             text-transform: uppercase;
         }
-        .panel {
-            background: #b8f4cf;
-            border: 2px solid #151515;
-            border-right: 4px solid #151515;
-            border-bottom: 4px solid #151515;
-            margin-bottom: 3mm;
-            padding: 2.5mm;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .panel.pink { background: #ff7ab8; }
-        .panel.lilac { background: #cdb8ff; }
-        .total-box {
-            background: #fff06d;
-            border: 2px solid #151515;
-            border-right: 5px solid #151515;
-            border-bottom: 5px solid #151515;
-            margin: 3mm 0;
-            padding: 2.5mm;
+
+        td {
+            padding: .7mm 0;
+            vertical-align: top;
         }
-        .total-box .amount { font-size: 12pt; font-weight: 900; }
-        .footer {
-            color: #3f4652;
+
+        .label {
+            width: 28%;
             font-size: 7pt;
+            text-transform: uppercase;
+        }
+
+        .value {
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .items td:last-child {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .total td {
+            padding-top: 1mm;
+            font-size: 9pt;
+            font-weight: 700;
+        }
+
+        .amount {
+            font-size: 10pt;
+            white-space: nowrap;
+        }
+
+        .signature {
+            margin-top: 5mm;
+            text-align: center;
+        }
+
+        .cut {
             margin-top: 3mm;
             text-align: center;
+            font-size: 7pt;
+            letter-spacing: .7px;
         }
     </style>
 </head>
 <body>
-    <div class="receipt">
-        <div class="center">
-            <div class="brand">SPRINT<span>LOG</span></div>
-            <div class="tag">Resi Kasir Paket</div>
-            <div class="muted" style="margin-top:2mm;">{{ $shipment->originBranch->name ?? 'HUB KAMI' }}</div>
-            <div class="muted">{{ date('d M Y H:i', strtotime($shipment->created_at)) }}</div>
-        </div>
+@php
+    $payment = $shipment->payment;
+    $sender = $shipment->sender;
+    $receiver = $shipment->receiver;
+    $originBranch = $shipment->originBranch;
+    $destinationBranch = $shipment->destinationBranch;
+@endphp
 
-        <div class="tracking-box">
-            <div class="label">Tracking ID</div>
-            <div class="tracking-id">{{ $shipment->tracking_number }}</div>
-        </div>
-
-        <div class="section-title">Rute</div>
-        <div class="panel">
-            <table class="info">
-                <tr>
-                    <td class="label">From</td>
-                    <td class="value">{{ \Illuminate\Support\Str::limit($shipment->sender->name, 18) }}<br><span class="muted">{{ $shipment->sender->phone }}</span></td>
-                </tr>
-                <tr>
-                    <td class="label">To</td>
-                    <td class="value">{{ \Illuminate\Support\Str::limit($shipment->receiver->name, 18) }}<br><span class="muted">{{ $shipment->receiver->phone }}</span></td>
-                </tr>
-                <tr>
-                    <td class="label">Dest</td>
-                    <td class="value">{{ $shipment->destinationBranch->city ?? 'Unknown' }}</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="section-title">Items</div>
-        <div class="panel pink">
-            <table>
-                @foreach($shipment->items as $item)
-                    <tr>
-                        <td>- {{ $item->item_name }}</td>
-                        <td class="right bold" style="width: 24%;">{{ $item->quantity }}x</td>
-                    </tr>
-                @endforeach
-            </table>
-            <div class="dash"></div>
-            <table>
-                <tr>
-                    <td class="label">Berat</td>
-                    <td class="right value">{{ $shipment->total_weight }} KG</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="total-box">
-            <table>
-                <tr>
-                    <td class="label">Total Tagihan</td>
-                    <td class="right amount">Rp {{ number_format($shipment->total_price, 0, ',', '.') }}</td>
-                </tr>
-            </table>
-        </div>
-
-        @if($shipment->payment)
-            <div class="section-title">Pembayaran</div>
-            <div class="panel lilac">
-                <table>
-                    <tr>
-                        <td class="label">Metode</td>
-                        <td class="right value">{{ strtoupper($shipment->payment->payment_method) }}</td>
-                    </tr>
-                    @if($shipment->payment->payment_method === 'cash')
-                        <tr>
-                            <td class="label">Tunai</td>
-                            <td class="right value">Rp {{ number_format($shipment->payment->amount_received, 0, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Kembali</td>
-                            <td class="right value">Rp {{ number_format($shipment->payment->change_amount, 0, ',', '.') }}</td>
-                        </tr>
-                    @endif
-                    <tr>
-                        <td class="label">Status</td>
-                        <td class="right value">{{ strtoupper($shipment->payment->payment_status) }}</td>
-                    </tr>
-                </table>
-            </div>
-        @endif
-
-        <div class="footer">
-            Terima kasih telah menggunakan<br>layanan SprintLog Expedition.<br><br>
-            _________________________<br>
-            Ttd. Kasir / Petugas
-        </div>
+<div class="receipt">
+    <div class="center">
+        <div class="brand">SPRINTLOG</div>
+        <div class="subtitle">Resi Pengiriman</div>
+        <div class="small">{{ $originBranch->name ?? 'SprintLog Hub' }}</div>
+        <div class="small">{{ optional($shipment->created_at)->format('d/m/Y H:i') }}</div>
     </div>
+
+    <div class="line"></div>
+
+    <div class="tracking">
+        <span class="small">NO. RESI</span>
+        <span class="number">{{ $shipment->tracking_number }}</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="section-title">Pengirim</div>
+    <table>
+        <tr>
+            <td class="label">Nama</td>
+            <td class="value">{{ $sender->name ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Telp</td>
+            <td>{{ $sender->phone ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Asal</td>
+            <td>{{ $originBranch->city ?? $originBranch->name ?? '-' }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Penerima</div>
+    <table>
+        <tr>
+            <td class="label">Nama</td>
+            <td class="value">{{ $receiver->name ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Telp</td>
+            <td>{{ $receiver->phone ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Tujuan</td>
+            <td>{{ $destinationBranch->city ?? $destinationBranch->name ?? '-' }}</td>
+        </tr>
+        @if($receiver?->address)
+            <tr>
+                <td class="label">Alamat</td>
+                <td>{{ $receiver->address }}</td>
+            </tr>
+        @endif
+    </table>
+
+    <div class="line"></div>
+
+    <div class="section-title">Detail Paket</div>
+    <table class="items">
+        @forelse($shipment->items as $item)
+            <tr>
+                <td>{{ $item->item_name }}</td>
+                <td>{{ $item->quantity }}x</td>
+            </tr>
+        @empty
+            <tr>
+                <td>Paket</td>
+                <td>1x</td>
+            </tr>
+        @endforelse
+    </table>
+    <table>
+        <tr>
+            <td class="label">Berat</td>
+            <td class="right value">{{ number_format((float) $shipment->total_weight, 1, ',', '.') }} KG</td>
+        </tr>
+        @if($shipment->shipping_courier_service)
+            <tr>
+                <td class="label">Layanan</td>
+                <td class="right value">{{ strtoupper($shipment->shipping_courier_service) }}</td>
+            </tr>
+        @endif
+        @if($shipment->shipping_estimated_days)
+            <tr>
+                <td class="label">Estimasi</td>
+                <td class="right">{{ $shipment->shipping_estimated_days }} hari</td>
+            </tr>
+        @endif
+    </table>
+
+    <div class="solid"></div>
+
+    <table class="total">
+        <tr>
+            <td>Total</td>
+            <td class="right amount">Rp {{ number_format((float) $shipment->total_price, 0, ',', '.') }}</td>
+        </tr>
+    </table>
+
+    @if($payment)
+        <table>
+            <tr>
+                <td class="label">Bayar</td>
+                <td class="right">{{ strtoupper((string) $payment->payment_method) }}</td>
+            </tr>
+            @if($payment->payment_method === 'cash')
+                <tr>
+                    <td class="label">Tunai</td>
+                    <td class="right">Rp {{ number_format((float) $payment->amount_received, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Kembali</td>
+                    <td class="right">Rp {{ number_format((float) $payment->change_amount, 0, ',', '.') }}</td>
+                </tr>
+            @endif
+            <tr>
+                <td class="label">Status</td>
+                <td class="right">{{ strtoupper((string) $payment->payment_status) }}</td>
+            </tr>
+        </table>
+    @endif
+
+    <div class="line"></div>
+
+    <div class="center small">
+        Simpan resi ini untuk pelacakan.<br>
+        Tracking: sprintlog.id/track
+    </div>
+
+    <div class="signature">
+        _______________________<br>
+        Kasir / Petugas
+    </div>
+
+    <div class="cut">- - - - - - - - - - - - - - -</div>
+</div>
 </body>
 </html>

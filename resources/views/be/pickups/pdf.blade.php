@@ -1,168 +1,225 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<style>
-    @page { margin: 0; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-        background: #fff3dc;
-        color: #151515;
-        font-family: DejaVu Sans, sans-serif;
-        font-size: 8.5pt;
-        line-height: 1.35;
-        padding: 4mm;
-        width: 72mm;
-    }
-    .receipt {
-        background: #fffaf1;
-        border: 2px solid #151515;
-        border-right: 5px solid #151515;
-        border-bottom: 5px solid #151515;
-        padding: 4mm;
-    }
-    .center { text-align: center; }
-    .right { text-align: right; }
-    .bold { font-weight: 900; }
-    .brand {
-        font-family: DejaVu Serif, serif;
-        font-size: 18pt;
-        font-weight: 900;
-        letter-spacing: 3px;
-        line-height: 1;
-    }
-    .brand span { color: #ff71ae; }
-    .tag {
-        background: #fff06d;
-        border: 2px solid #151515;
-        border-right: 4px solid #151515;
-        border-bottom: 4px solid #151515;
-        display: inline-block;
-        font-size: 7pt;
-        font-weight: 900;
-        letter-spacing: 1px;
-        margin-top: 2mm;
-        padding: 1.5mm 2.5mm;
-        text-transform: uppercase;
-    }
-    .dash { border-top: 2px dashed #151515; margin: 3mm 0; }
-    .solid { border-top: 2px solid #151515; margin: 3mm 0; }
-    .tracking-box {
-        background: #cdb8ff;
-        border: 2px solid #151515;
-        border-right: 5px solid #151515;
-        border-bottom: 5px solid #151515;
-        margin: 3mm 0;
-        padding: 3mm;
-        text-align: center;
-    }
-    .tracking-id {
-        font-size: 14pt;
-        font-weight: 900;
-        letter-spacing: 1px;
-        word-break: break-word;
-    }
-    .label {
-        color: #3f4652;
-        font-size: 6.5pt;
-        font-weight: 900;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-    }
-    .value { font-size: 8.8pt; font-weight: 900; }
-    .muted { color: #3f4652; }
-    .row { display: table; margin-bottom: 1.5mm; width: 100%; }
-    .row > span { display: table-cell; vertical-align: top; }
-    .row > span:last-child { text-align: right; }
-    .section-title {
-        background: #151515;
-        color: #fffaf1;
-        font-size: 7pt;
-        font-weight: 900;
-        letter-spacing: 1.5px;
-        margin-bottom: 2mm;
-        padding: 1.5mm 2mm;
-        text-transform: uppercase;
-    }
-    .panel {
-        background: #b8f4cf;
-        border: 2px solid #151515;
-        border-right: 4px solid #151515;
-        border-bottom: 4px solid #151515;
-        margin-bottom: 3mm;
-        padding: 2.5mm;
-    }
-    .panel.pink { background: #ff7ab8; }
-    .address { font-size: 8pt; margin-top: .5mm; }
-    .footer {
-        color: #3f4652;
-        font-size: 7pt;
-        margin-top: 3mm;
-        text-align: center;
-    }
-</style>
+    <meta charset="UTF-8">
+    <style>
+        @page { margin: 0; }
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            width: 72mm;
+            padding: 3mm;
+            background: #ffffff;
+            color: #000000;
+            font-family: "DejaVu Sans Mono", "Courier New", monospace;
+            font-size: 8pt;
+            line-height: 1.32;
+        }
+
+        .receipt {
+            width: 100%;
+        }
+
+        .center { text-align: center; }
+        .right { text-align: right; }
+        .bold { font-weight: 700; }
+        .small { font-size: 7pt; }
+
+        .brand {
+            font-size: 14pt;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            line-height: 1;
+        }
+
+        .subtitle {
+            margin-top: 1mm;
+            font-size: 7pt;
+            text-transform: uppercase;
+        }
+
+        .line {
+            border-top: 1px dashed #000000;
+            margin: 2.5mm 0;
+        }
+
+        .solid {
+            border-top: 1px solid #000000;
+            margin: 2.5mm 0;
+        }
+
+        .tracking {
+            margin: 2mm 0;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .tracking .number {
+            display: block;
+            margin-top: 1mm;
+            font-size: 10pt;
+            font-weight: 700;
+            letter-spacing: .4px;
+        }
+
+        .section-title {
+            margin: 2mm 0 1mm;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: .7mm 0;
+            vertical-align: top;
+        }
+
+        .label {
+            width: 30%;
+            font-size: 7pt;
+            text-transform: uppercase;
+        }
+
+        .value {
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .amount {
+            font-size: 10pt;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .note {
+            word-break: break-word;
+        }
+
+        .signature {
+            margin-top: 5mm;
+            text-align: center;
+        }
+
+        .cut {
+            margin-top: 3mm;
+            text-align: center;
+            font-size: 7pt;
+            letter-spacing: .7px;
+        }
+    </style>
 </head>
 <body>
-    <div class="receipt">
-        <div class="center">
-            <div class="brand">SPRINT<span>LOG</span></div>
-            <div class="tag">Surat Tanda Terima Barang</div>
-        </div>
-        <div class="solid"></div>
-
-        <div class="tracking-box">
-            <div class="label">No. Resi Pickup</div>
-            <div class="tracking-id">SPL-{{ str_pad($pickup->id, 6, '0', STR_PAD_LEFT) }}</div>
-        </div>
-
-        <div class="row">
-            <span class="label">Tgl Terima</span>
-            <span class="value">{{ now()->format('d/m/Y H:i') }}</span>
-        </div>
-        <div class="row">
-            <span class="label">Hub</span>
-            <span class="value">{{ $branch->name ?? 'PUSAT' }}</span>
-        </div>
-        @if($pickup->courier)
-            <div class="row">
-                <span class="label">Kurir</span>
-                <span class="value">{{ strtoupper($pickup->courier->name) }}</span>
-            </div>
-        @endif
-
-        <div class="dash"></div>
-
-        <div class="section-title">Pengirim</div>
-        <div class="panel">
-            <div class="label">Nama</div>
-            <div class="value">{{ strtoupper($pickup->sender_name ?? $pickup->customer_name) }}</div>
-            <div class="label" style="margin-top:1.5mm;">Telepon</div>
-            <div class="value">{{ $pickup->sender_phone ?? $pickup->customer_phone }}</div>
-            <div class="label" style="margin-top:1.5mm;">Alamat</div>
-            <div class="address">{{ $pickup->sender_address ?? $pickup->pickup_address }}</div>
-        </div>
-
-        <div class="section-title">Penerima</div>
-        <div class="panel pink">
-            <div class="label">Nama</div>
-            <div class="value">{{ strtoupper($pickup->receiver_name ?? '-') }}</div>
-            <div class="label" style="margin-top:1.5mm;">Telepon</div>
-            <div class="value">{{ $pickup->receiver_phone ?? '-' }}</div>
-            <div class="label" style="margin-top:1.5mm;">Alamat</div>
-            <div class="address">{{ $pickup->receiver_address ?? '-' }}</div>
-        </div>
-
-        @if($pickup->item_description ?? $pickup->notes ?? null)
-            <div class="section-title">Keterangan</div>
-            <div class="address">{{ $pickup->item_description ?? $pickup->notes }}</div>
-            <div class="dash"></div>
-        @endif
-
-        <div class="footer">
-            Dokumen ini adalah bukti resmi penerimaan barang.<br>
-            Simpan resi ini untuk keperluan pelacakan.<br>
-            <strong>sprintlog.id</strong>
-        </div>
+<div class="receipt">
+    <div class="center">
+        <div class="brand">SPRINTLOG</div>
+        <div class="subtitle">Tanda Terima Pickup</div>
+        <div class="small">{{ $branch->name ?? 'SprintLog Hub' }}</div>
+        <div class="small">{{ now()->format('d/m/Y H:i') }}</div>
     </div>
+
+    <div class="line"></div>
+
+    <div class="tracking">
+        <span class="small">NO. RESI PICKUP</span>
+        <span class="number">SPL-{{ str_pad($pickup->id, 6, '0', STR_PAD_LEFT) }}</span>
+    </div>
+
+    <div class="line"></div>
+
+    <table>
+        <tr>
+            <td class="label">Tanggal</td>
+            <td class="right">{{ now()->format('d/m/Y H:i') }}</td>
+        </tr>
+        @if($pickup->courier)
+            <tr>
+                <td class="label">Kurir</td>
+                <td class="right">{{ $pickup->courier->name }}</td>
+            </tr>
+        @endif
+        <tr>
+            <td class="label">Status</td>
+            <td class="right">{{ strtoupper((string) $pickup->status) }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Pengirim</div>
+    <table>
+        <tr>
+            <td class="label">Nama</td>
+            <td class="value">{{ $pickup->sender_name ?? $pickup->customer_name ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Telp</td>
+            <td>{{ $pickup->sender_phone ?? $pickup->customer_phone ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Alamat</td>
+            <td>{{ $pickup->sender_address ?? $pickup->pickup_address ?? '-' }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Penerima</div>
+    <table>
+        <tr>
+            <td class="label">Nama</td>
+            <td class="value">{{ $pickup->receiver_name ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Telp</td>
+            <td>{{ $pickup->receiver_phone ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Alamat</td>
+            <td>{{ $pickup->receiver_address ?? '-' }}</td>
+        </tr>
+    </table>
+
+    <div class="line"></div>
+
+    <table>
+        <tr>
+            <td class="label">Layanan</td>
+            <td class="right value">{{ strtoupper((string) $pickup->service_type ?: '-') }}</td>
+        </tr>
+        <tr>
+            <td class="label">Berat</td>
+            <td class="right value">{{ number_format((float) $pickup->weight, 1, ',', '.') }} KG</td>
+        </tr>
+        <tr>
+            <td class="label">Bayar</td>
+            <td class="right">{{ strtoupper((string) $pickup->payment_method ?: '-') }}</td>
+        </tr>
+        <tr>
+            <td class="label">Tagihan</td>
+            <td class="right amount">Rp {{ number_format((float) $pickup->total_price, 0, ',', '.') }}</td>
+        </tr>
+    </table>
+
+    @if($pickup->item_description ?? $pickup->notes ?? null)
+        <div class="line"></div>
+        <div class="section-title">Catatan</div>
+        <div class="note">{{ $pickup->item_description ?? $pickup->notes }}</div>
+    @endif
+
+    <div class="line"></div>
+
+    <div class="center small">
+        Bukti resmi penerimaan pickup.<br>
+        Nomor SPRINT aktif setelah paket dan payment diverifikasi hub.
+    </div>
+
+    <div class="signature">
+        _______________________<br>
+        Kurir / Petugas
+    </div>
+
+    <div class="cut">- - - - - - - - - - - - - - -</div>
+</div>
 </body>
 </html>

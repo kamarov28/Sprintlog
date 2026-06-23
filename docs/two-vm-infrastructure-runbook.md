@@ -94,9 +94,9 @@ Akun deploy dapat diatur di `group_vars/all.yml`:
 database_seed_mode: accounts
 deploy_admin_email: "admin@sprintlog.com"
 deploy_admin_password: "password"
-deploy_cashier_email: "kasir@sprintlog.com"
+deploy_cashier_email: "kasir-dkijakarta@sprintlog.com"
 deploy_cashier_password: "password"
-deploy_courier_email: "kurir@sprintlog.com"
+deploy_courier_email: "kurir-dkijakarta@sprintlog.com"
 deploy_courier_password: "password"
 ```
 

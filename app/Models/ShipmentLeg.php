@@ -13,6 +13,8 @@ class ShipmentLeg extends Model
         'arrived_at' => 'datetime',
         'planned_departure_at' => 'datetime',
         'planned_arrival_at' => 'datetime',
+        'distance_km' => 'float',
+        'route_meta' => 'array',
     ];
 
     public function shipment()
@@ -33,6 +35,11 @@ class ShipmentLeg extends Model
     public function handler()
     {
         return $this->belongsTo(User::class, 'handler_id');
+    }
+
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function exceptions()

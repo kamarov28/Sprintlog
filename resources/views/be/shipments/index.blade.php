@@ -51,12 +51,28 @@
             <form action="{{ route('be.shipments.manifest-dispatch') }}" method="POST" id="manifest-dispatch-form">
                 @csrf
                 <div class="surface-toolbar mb-3" style="align-items: end;">
+                    <div style="min-width: min(100%, 320px);">
+                        <div class="font-ui text-gray" style="font-size: 0.76rem; margin-bottom: 0.35rem;">Kurir truk antar hub</div>
+                        <select name="courier_id" required style="width: 100%;">
+                            <option value="">Pilih kurir truk...</option>
+                            @foreach($truckCouriers as $courier)
+                                <option value="{{ $courier->id }}">
+                                    {{ $courier->name }} / {{ $courier->vehicle?->label() ?? 'kendaraan belum lengkap' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div style="min-width: min(100%, 360px);">
                         <div class="font-ui text-gray" style="font-size: 0.76rem; margin-bottom: 0.35rem;">Catatan manifest</div>
                         <input type="text" name="notes" placeholder="catatan batch departure..." style="width: 100%;">
                     </div>
                     <x-be.button type="submit" style="padding: 5px 20px;">Dispatch Terpilih</x-be.button>
                 </div>
+                @if($truckCouriers->isEmpty())
+                    <div class="inline-alert mb-3">
+                        Belum ada kurir dengan kendaraan truck aktif di hub ini. Manifest antar hub akan terkunci sampai fleet truck ditambahkan.
+                    </div>
+                @endif
         @endif
 
         <div class="table-responsive">

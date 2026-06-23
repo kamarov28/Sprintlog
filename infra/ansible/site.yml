@@ -21,12 +21,26 @@
     docker_storage_volume_name: volume_ujikom
     app_url: http://172.20.3.133:8080
     app_timezone: Asia/Jakarta
+    app_key: ""
     db_password: root
     db_root_password: root
     app_replicas: 3
     mysql_replicas: 1
     lb_replicas: 1
-    database_seed_mode: demo
+    database_seed_mode: accounts
+    rajaongkir_shipping_enabled: "false"
+    rajaongkir_shipping_api_key: ""
+    rajaongkir_shipping_base_url: https://rajaongkir.komerce.id/api/v1
+    rajaongkir_shipping_timeout: 10
+    rajaongkir_shipping_cache_ttl: 86400
+    rajaongkir_shipping_couriers: jne:jnt:sicepat:pos
+    rajaongkir_shipping_price_mode: lowest
+    routing_osrm_enabled: "true"
+    routing_osrm_base_url: https://router.project-osrm.org
+    routing_timeout: 4
+    routing_cache_ttl: 86400
+    routing_fallback_road_factor: 1.28
+    routing_fallback_speed_kmh: 42
 
   tasks:
     - name: Install base packages
@@ -141,17 +155,50 @@
     - name: Push SprintLog image to local registry
       ansible.builtin.command: docker push {{ sprintlog_image }}
 
-    - name: Generate Laravel APP_KEY
+    - name: Check existing stack environment file
+      ansible.builtin.stat:
+        path: "{{ app_deploy_path }}/infra/docker/.env"
+      register: stack_env_file
+
+    - name: Read existing stack environment file
+      ansible.builtin.slurp:
+        path: "{{ app_deploy_path }}/infra/docker/.env"
+      register: existing_stack_env
+      when: stack_env_file.stat.exists
+      no_log: true
+
+    - name: Prefer explicit app_key variable
+      ansible.builtin.set_fact:
+        effective_app_key: "{{ app_key | default('', true) | trim }}"
+      no_log: true
+
+    - name: Reuse existing Laravel APP_KEY from deployed env
+      ansible.builtin.set_fact:
+        effective_app_key: "{{ ((existing_stack_env.content | b64decode).splitlines() | select('match', '^APP_KEY=') | list | first | default('APP_KEY=')) | regex_replace('^APP_KEY=', '') }}"
+      when:
+        - effective_app_key | length == 0
+        - stack_env_file.stat.exists
+      no_log: true
+
+    - name: Generate Laravel APP_KEY only on first deploy
       ansible.builtin.shell: "printf 'base64:%s\n' \"$(openssl rand -base64 32)\""
       register: generated_app_key
       changed_when: true
+      when: effective_app_key | length == 0
+      no_log: true
+
+    - name: Use generated Laravel APP_KEY
+      ansible.builtin.set_fact:
+        effective_app_key: "{{ generated_app_key.stdout }}"
+      when: effective_app_key | length == 0
+      no_log: true
 
     - name: Write stack environment file
       ansible.builtin.copy:
         dest: "{{ app_deploy_path }}/infra/docker/.env"
         mode: "0600"
         content: |
-          APP_KEY={{ generated_app_key.stdout }}
+          APP_KEY={{ effective_app_key }}
           APP_URL={{ app_url }}
           APP_ENV=production
           APP_DEBUG=false
@@ -171,6 +218,19 @@
           SESSION_SECURE=false
           SESSION_SAME_SITE=lax
           TRUSTED_PROXIES=*
+          RAJAONGKIR_SHIPPING_ENABLED={{ rajaongkir_shipping_enabled }}
+          RAJAONGKIR_SHIPPING_API_KEY={{ rajaongkir_shipping_api_key }}
+          RAJAONGKIR_SHIPPING_BASE_URL={{ rajaongkir_shipping_base_url }}
+          RAJAONGKIR_SHIPPING_TIMEOUT={{ rajaongkir_shipping_timeout }}
+          RAJAONGKIR_SHIPPING_CACHE_TTL={{ rajaongkir_shipping_cache_ttl }}
+          RAJAONGKIR_SHIPPING_COURIERS={{ rajaongkir_shipping_couriers }}
+          RAJAONGKIR_SHIPPING_PRICE_MODE={{ rajaongkir_shipping_price_mode }}
+          ROUTING_OSRM_ENABLED={{ routing_osrm_enabled }}
+          ROUTING_OSRM_BASE_URL={{ routing_osrm_base_url }}
+          ROUTING_TIMEOUT={{ routing_timeout }}
+          ROUTING_CACHE_TTL={{ routing_cache_ttl }}
+          ROUTING_FALLBACK_ROAD_FACTOR={{ routing_fallback_road_factor }}
+          ROUTING_FALLBACK_SPEED_KMH={{ routing_fallback_speed_kmh }}
           SPRINTLOG_IMAGE={{ sprintlog_image }}
           SWARM_MANAGER_HOSTNAME={{ swarm_manager_hostname }}
           NGINX_LB_IMAGE=nginx:1.27-alpine
@@ -187,14 +247,15 @@
           DEPLOY_ADMIN_EMAIL="admin@sprintlog.com"
           DEPLOY_ADMIN_PASSWORD="password"
           DEPLOY_CASHIER_NAME="Kasir DKI Jakarta"
-          DEPLOY_CASHIER_EMAIL="kasir@sprintlog.com"
+          DEPLOY_CASHIER_EMAIL="kasir-dkijakarta@sprintlog.com"
           DEPLOY_CASHIER_PASSWORD="password"
           DEPLOY_MANAGER_NAME="Manajer DKI Jakarta"
-          DEPLOY_MANAGER_EMAIL="manager@sprintlog.com"
+          DEPLOY_MANAGER_EMAIL="manager-dkijakarta@sprintlog.com"
           DEPLOY_MANAGER_PASSWORD="password"
           DEPLOY_COURIER_NAME="Kurir Satria"
-          DEPLOY_COURIER_EMAIL="kurir@sprintlog.com"
+          DEPLOY_COURIER_EMAIL="kurir-dkijakarta@sprintlog.com"
           DEPLOY_COURIER_PASSWORD="password"
+      no_log: true
 
     - name: Write Nginx load balancer config
       ansible.builtin.copy:
@@ -256,6 +317,19 @@
             TRUSTED_PROXIES: "*"
             CACHE_STORE: database
             QUEUE_CONNECTION: database
+            RAJAONGKIR_SHIPPING_ENABLED: ${RAJAONGKIR_SHIPPING_ENABLED}
+            RAJAONGKIR_SHIPPING_API_KEY: ${RAJAONGKIR_SHIPPING_API_KEY}
+            RAJAONGKIR_SHIPPING_BASE_URL: ${RAJAONGKIR_SHIPPING_BASE_URL}
+            RAJAONGKIR_SHIPPING_TIMEOUT: ${RAJAONGKIR_SHIPPING_TIMEOUT}
+            RAJAONGKIR_SHIPPING_CACHE_TTL: ${RAJAONGKIR_SHIPPING_CACHE_TTL}
+            RAJAONGKIR_SHIPPING_COURIERS: ${RAJAONGKIR_SHIPPING_COURIERS}
+            RAJAONGKIR_SHIPPING_PRICE_MODE: ${RAJAONGKIR_SHIPPING_PRICE_MODE}
+            ROUTING_OSRM_ENABLED: ${ROUTING_OSRM_ENABLED}
+            ROUTING_OSRM_BASE_URL: ${ROUTING_OSRM_BASE_URL}
+            ROUTING_TIMEOUT: ${ROUTING_TIMEOUT}
+            ROUTING_CACHE_TTL: ${ROUTING_CACHE_TTL}
+            ROUTING_FALLBACK_ROAD_FACTOR: ${ROUTING_FALLBACK_ROAD_FACTOR}
+            ROUTING_FALLBACK_SPEED_KMH: ${ROUTING_FALLBACK_SPEED_KMH}
 
           services:
             lb:
@@ -351,32 +425,63 @@
       delay: 6
       until: db_replicas.stdout is search('1/1')
 
-    - name: Wait until app service has three replicas
+    - name: Wait until app service reaches configured replicas
       ansible.builtin.command: docker service ls --filter name={{ stack_name }}_app --format '{{ "{{.Replicas}}" }}'
       register: app_replicas_result
       changed_when: false
       retries: 20
       delay: 6
-      until: app_replicas_result.stdout is search('3/3')
+      until: app_replicas_result.stdout is search((app_replicas | string) ~ '/' ~ (app_replicas | string))
 
-    - name: Run Laravel migration, storage link, and optimize
+    - name: Run safe Laravel bootstrap commands
       ansible.builtin.shell: |
         docker run --rm \
           --network {{ docker_network_name }} \
           --env-file ./.env \
           -v {{ docker_storage_volume_name }}:/var/www/html/storage \
           {{ sprintlog_image }} \
-          sh -lc 'php artisan migrate --force && (php artisan storage:link || true) && php artisan optimize'
+          sh -lc 'php artisan optimize:clear && php artisan migrate --force && (php artisan storage:link || true) && php artisan optimize'
       args:
         chdir: "{{ app_deploy_path }}/infra/docker"
       register: laravel_bootstrap
       retries: 10
       delay: 15
       until: laravel_bootstrap.rc == 0
+      tags:
+        - deploy
+        - laravel-maintenance
 
     - name: Print Laravel bootstrap output
       ansible.builtin.debug:
         var: laravel_bootstrap.stdout_lines
+
+    - name: Seed national hub coverage and courier fleet
+      ansible.builtin.shell: |
+        docker run --rm \
+          --network {{ docker_network_name }} \
+          --env-file ./.env \
+          {{ sprintlog_image }} \
+          sh -lc 'php artisan db:seed --class=LocationSeeder --force && php artisan db:seed --class=NationalBranchSeeder --force && php artisan db:seed --class=HubCrewSeeder --force'
+      args:
+        chdir: "{{ app_deploy_path }}/infra/docker"
+      when: database_seed_mode == "accounts"
+      tags:
+        - deploy
+        - laravel-maintenance
+
+    - name: Seed deployment accounts only
+      ansible.builtin.shell: |
+        docker run --rm \
+          --network {{ docker_network_name }} \
+          --env-file ./.env \
+          {{ sprintlog_image }} \
+          php artisan db:seed --class=DeploymentAccountSeeder --force
+      args:
+        chdir: "{{ app_deploy_path }}/infra/docker"
+      when: database_seed_mode == "accounts"
+      tags:
+        - deploy
+        - laravel-maintenance
 
     - name: Seed full demo data
       ansible.builtin.shell: |
@@ -388,6 +493,9 @@
       args:
         chdir: "{{ app_deploy_path }}/infra/docker"
       when: database_seed_mode == "demo"
+      tags:
+        - deploy
+        - laravel-maintenance
 
   handlers:
     - name: Restart docker

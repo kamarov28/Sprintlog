@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Support\HubCrewIdentity;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -19,53 +21,53 @@ class HubCrewSeeder extends Seeder
     public function run(): void
     {
         $created = 0;
-        $existing = 0;
+        $updated = 0;
 
         Branch::query()
             ->orderBy('id')
-            ->chunk(100, function ($branches) use (&$created, &$existing): void {
+            ->chunk(100, function ($branches) use (&$created, &$updated): void {
                 foreach ($branches as $branch) {
                     foreach (self::ROLES as $role => $label) {
-                        $hasCrew = User::query()
+                        $email = HubCrewIdentity::email($role, $branch->name);
+
+                        $crew = User::query()
                             ->where('branch_id', $branch->id)
                             ->where('role', $role)
-                            ->exists();
+                            ->orderBy('id')
+                            ->first();
 
-                        if ($hasCrew) {
-                            $existing++;
+                        $payload = [
+                            'email' => $email,
+                            'name' => $label.' '.$this->hubDisplayName($branch->name),
+                            'password' => Hash::make('password'),
+                            'role' => $role,
+                            'branch_id' => $branch->id,
+                            'phone' => $this->phoneForBranchRole((int) $branch->id, $role),
+                            'address' => $branch->address,
+                            'city' => $branch->city,
+                        ];
 
-                            continue;
+                        if ($crew) {
+                            $crew->update($payload);
+                            $updated++;
+                        } else {
+                            $crew = User::create($payload);
+                            $created++;
                         }
 
-                        User::updateOrCreate(
-                            ['email' => $this->emailForBranchRole((int) $branch->id, $role)],
-                            [
-                                'name' => $label.' '.$this->hubDisplayName($branch->name),
-                                'password' => Hash::make('password'),
-                                'role' => $role,
-                                'branch_id' => $branch->id,
-                                'phone' => $this->phoneForBranchRole((int) $branch->id, $role),
-                                'address' => $branch->address,
-                                'city' => $branch->city,
-                            ],
-                        );
-
-                        $created++;
+                        if ($role === 'courier') {
+                            $this->syncCourierVehicle($crew, $branch);
+                        }
                     }
                 }
             });
 
-        $this->command?->info("Hub crew synced. Created: {$created}. Existing role slots: {$existing}.");
+        $this->command?->info("Hub crew synced. Created: {$created}. Updated: {$updated}.");
     }
 
     private function hubDisplayName(string $branchName): string
     {
         return trim(Str::replaceFirst('SprintLog Hub ', '', $branchName));
-    }
-
-    private function emailForBranchRole(int $branchId, string $role): string
-    {
-        return "hub{$branchId}.{$role}@sprintlog.local";
     }
 
     private function phoneForBranchRole(int $branchId, string $role): string
@@ -77,5 +79,20 @@ class HubCrewSeeder extends Seeder
         ][$role] ?? '0';
 
         return '08'.$roleCode.str_pad((string) $branchId, 9, '0', STR_PAD_LEFT);
+    }
+
+    private function syncCourierVehicle(User $courier, Branch $branch): void
+    {
+        Vehicle::updateOrCreate(
+            ['courier_id' => $courier->id],
+            [
+                'plate_number' => 'TRK-'.$branch->id,
+                'type' => 'truck',
+                'capacity_kg' => 1200,
+                'capacity_packages' => 180,
+                'status' => 'active',
+                'branch_id' => $branch->id,
+            ],
+        );
     }
 }

@@ -100,13 +100,17 @@
                             </div>
                         @elseif($pickup->courier)
                             <span class="font-ui text-primary">{{ $pickup->courier->name }}</span>
-                        @elseif(auth()->user()->role === 'manager')
+                        @elseif(in_array(auth()->user()->role, ['manager', 'cashier'], true))
+                            <form action="{{ route('be.pickups.auto-assign', $pickup) }}" method="POST" style="margin-bottom: 0.45rem;">
+                                @csrf
+                                <button type="submit" class="btn-neon pickup-assign-button" style="width: 100%; border-color: var(--color-accent); color: var(--color-accent);">AUTO</button>
+                            </form>
                             <form action="{{ route('be.pickups.assign', $pickup) }}" method="POST" class="pickup-assign-form">
                                 @csrf
                                 <select name="courier_id" required class="pickup-assign-select">
                                     <option value="" disabled selected>Select Courier...</option>
                                     @foreach($couriers as $courier)
-                                        <option value="{{ $courier->id }}">{{ $courier->name }}</option>
+                                        <option value="{{ $courier->id }}">{{ $courier->name }}{{ $courier->vehicle ? ' / '.$courier->vehicle->type : '' }}</option>
                                     @endforeach
                                 </select>
                                 <button type="submit" class="btn-neon pickup-assign-button">ASSIGN</button>

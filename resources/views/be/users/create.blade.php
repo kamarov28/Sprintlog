@@ -12,12 +12,17 @@
 
             <div style="margin-bottom: 2rem;">
                 <label class="font-ui text-gray" style="font-size: 0.8rem;">Nama Lengkap</label><br>
-                <input type="text" name="name" required style="width: 100%; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; padding: 0.5rem 0; outline: none;">
+                <input type="text" name="name" value="{{ old('name') }}" required style="width: 100%; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; padding: 0.5rem 0; outline: none;">
             </div>
 
             <div style="margin-bottom: 2rem;">
                 <label class="font-ui text-gray" style="font-size: 0.8rem;">Email / User ID</label><br>
-                <input type="email" name="email" required style="width: 100%; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; padding: 0.5rem 0; outline: none;">
+                <input type="email" name="email" value="{{ old('email') }}" required style="width: 100%; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; padding: 0.5rem 0; outline: none;">
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label class="font-ui text-gray" style="font-size: 0.8rem;">Nomor Telepon</label><br>
+                <input type="text" name="phone" value="{{ old('phone') }}" style="width: 100%; border: none; border-bottom: 2px solid var(--color-gray); background: transparent; font-family: var(--font-ui); color: var(--color-text-main); font-size: 1.1rem; padding: 0.5rem 0; outline: none;">
             </div>
 
             <div style="margin-bottom: 2rem;">
@@ -52,6 +57,35 @@
                     @endif
                 </div>
             </div>
+
+            @if(auth()->user()->role == 'manager')
+                <div class="form-cluster form-cluster--accent" style="margin-bottom: 3rem;">
+                    <div class="data-label">Kendaraan Kurir</div>
+                    <div class="font-ui text-gray" style="font-size: 0.78rem; margin-bottom: 1rem;">Wajib diisi kalau role yang dipilih adalah courier.</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label class="font-ui text-gray" style="font-size: 0.8rem;">Plat Nomor</label>
+                            <input type="text" name="vehicle_plate_number" value="{{ old('vehicle_plate_number') }}" placeholder="B 1234 SPL" style="width: 100%; padding: 0.55rem;">
+                        </div>
+                        <div>
+                            <label class="font-ui text-gray" style="font-size: 0.8rem;">Jenis</label>
+                            <select name="vehicle_type" style="width: 100%; padding: 0.55rem;">
+                                <option value="motor" @selected(old('vehicle_type') === 'motor')>MOTOR</option>
+                                <option value="mobil" @selected(old('vehicle_type') === 'mobil')>MOBIL</option>
+                                <option value="truck" @selected(old('vehicle_type', 'truck') === 'truck')>TRUCK</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-ui text-gray" style="font-size: 0.8rem;">Kapasitas KG</label>
+                            <input type="number" name="vehicle_capacity_kg" value="{{ old('vehicle_capacity_kg', 1200) }}" min="0.1" step="0.1" style="width: 100%; padding: 0.55rem;">
+                        </div>
+                        <div>
+                            <label class="font-ui text-gray" style="font-size: 0.8rem;">Kapasitas Paket</label>
+                            <input type="number" name="vehicle_capacity_packages" value="{{ old('vehicle_capacity_packages', 180) }}" min="1" step="1" style="width: 100%; padding: 0.55rem;">
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                 <a href="{{ route('be.users.index') }}" class="btn-neon" style="color: var(--color-gray); border-color: var(--color-gray);">Batal</a>

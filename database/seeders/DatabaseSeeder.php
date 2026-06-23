@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\BankAccount;
 use App\Models\Branch;
 use App\Models\Customer;
+use App\Support\HubCrewIdentity;
 use App\Models\Payment;
 use App\Models\Rate;
 use App\Models\Shipment;
@@ -42,8 +43,10 @@ class DatabaseSeeder extends Seeder
             ['name' => 'SprintLog Hub DKI Jakarta'],
             [
                 'city' => 'DKI Jakarta',
-                'address' => 'Jl. Operasional SprintLog, DKI Jakarta',
+                'address' => 'Balai Kota DKI Jakarta, Jl. Medan Merdeka Selatan No.8-9, Jakarta Pusat',
                 'phone' => '1500-P001',
+                'latitude' => -6.1805,
+                'longitude' => 106.8284,
             ],
         );
 
@@ -51,8 +54,10 @@ class DatabaseSeeder extends Seeder
             ['name' => 'SprintLog Hub Sulawesi Selatan'],
             [
                 'city' => 'Sulawesi Selatan',
-                'address' => 'Jl. Operasional SprintLog, Sulawesi Selatan',
+                'address' => 'Kantor Gubernur Sulawesi Selatan, Jl. Urip Sumoharjo No.269, Makassar',
                 'phone' => '1500-P073',
+                'latitude' => -5.1477,
+                'longitude' => 119.4327,
             ],
         );
 
@@ -87,7 +92,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'kasir@sprintlog.com'],
+            ['email' => HubCrewIdentity::email('cashier', $branchJkt->name)],
             [
                 'name' => 'Kasir DKI Jakarta',
                 'password' => Hash::make('password'),
@@ -97,7 +102,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'manager@sprintlog.com'],
+            ['email' => HubCrewIdentity::email('manager', $branchJkt->name)],
             [
                 'name' => 'Manajer DKI Jakarta',
                 'password' => Hash::make('password'),
@@ -107,9 +112,19 @@ class DatabaseSeeder extends Seeder
         );
 
         $courier = User::updateOrCreate(
-            ['email' => 'kurir@sprintlog.com'],
+            ['email' => HubCrewIdentity::email('courier', $branchJkt->name)],
             [
                 'name' => 'Kurir Satria',
+                'password' => Hash::make('password'),
+                'role' => 'courier',
+                'branch_id' => $branchJkt->id,
+            ],
+        );
+
+        $truckCourier = User::updateOrCreate(
+            ['email' => 'kurirtruk-'.HubCrewIdentity::hubSlug($branchJkt->name).'@sprintlog.com'],
+            [
+                'name' => 'Kurir Truk Jakarta',
                 'password' => Hash::make('password'),
                 'role' => 'courier',
                 'branch_id' => $branchJkt->id,
@@ -120,7 +135,23 @@ class DatabaseSeeder extends Seeder
             ['plate_number' => 'B 1234 SPL'],
             [
                 'type' => 'motor',
+                'capacity_kg' => 35,
+                'capacity_packages' => 8,
+                'status' => 'active',
                 'courier_id' => $courier->id,
+                'branch_id' => $branchJkt->id,
+            ],
+        );
+
+        Vehicle::updateOrCreate(
+            ['plate_number' => 'B 9001 TRK'],
+            [
+                'type' => 'truck',
+                'capacity_kg' => 1200,
+                'capacity_packages' => 180,
+                'status' => 'active',
+                'courier_id' => $truckCourier->id,
+                'branch_id' => $branchJkt->id,
             ],
         );
 
@@ -157,7 +188,7 @@ class DatabaseSeeder extends Seeder
                 'receiver_id' => $receiver->id,
                 'origin_branch_id' => $branchJkt->id,
                 'destination_branch_id' => $branchMks->id,
-                'courier_id' => $courier->id,
+                'courier_id' => $truckCourier->id,
                 'rate_id' => $rate->id,
                 'total_weight' => 2,
                 'total_price' => $rate->price_per_kg * 2,

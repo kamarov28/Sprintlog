@@ -56,6 +56,14 @@
                                 @if($branch->manager)
                                     <div style="font-weight: bold;">{{ strtoupper($branch->manager->name) }}</div>
                                     <div class="meta">{{ $branch->manager->email }}</div>
+                                    <div class="assign-actions" style="margin-top: 0.55rem;">
+                                        <a href="{{ route('be.users.edit', $branch->manager) }}" class="btn-neon">Edit</a>
+                                        <form action="{{ route('be.users.destroy', $branch->manager) }}" method="POST" onsubmit="return confirm('Pecat manager {{ addslashes($branch->manager->name) }}?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-neon" style="border-color: red; color: red; background: transparent;">Pecat</button>
+                                        </form>
+                                    </div>
                                 @else
                                     <div class="meta">Belum ditugaskan</div>
                                 @endif
@@ -118,7 +126,14 @@
                             </td>
                             <td class="centered">
                                 @if(in_array(auth()->user()->role, ['admin', 'manager']))
-                                    <a href="{{ route('be.users.edit', $user) }}" class="btn-neon">Edit</a>
+                                    <div class="assign-actions" style="justify-content: center;">
+                                        <a href="{{ route('be.users.edit', $user) }}" class="btn-neon">Edit</a>
+                                        <form action="{{ route('be.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Pecat {{ addslashes($user->name) }}?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-neon" style="border-color: red; color: red; background: transparent;">Pecat</button>
+                                        </form>
+                                    </div>
                                 @else
                                     <span class="text-gray" style="font-size: 0.7rem;">Kontak saja</span>
                                 @endif

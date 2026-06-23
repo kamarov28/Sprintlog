@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Location;
-use App\Models\Rate;
+use App\Services\ShippingCostService;
 use Illuminate\Http\Request;
 
 class LocationController extends Controller
@@ -43,6 +43,7 @@ class LocationController extends Controller
             'destination_kota_id' => 'required|integer|exists:locations,id',
             'weight' => 'required|numeric|min:0.1',
             'service_type' => 'nullable|string|in:BEST,REGULAR,KARGO',
+            'force_local' => 'nullable|boolean',
         ]);
 
         $serviceType = $request->service_type ?: 'REGULAR';
@@ -55,36 +56,38 @@ class LocationController extends Controller
         $originKota = Location::find($request->origin_kota_id);
         $destinationKota = Location::find($request->destination_kota_id);
 
-        $rate = Rate::where('origin_zone', $originKota->zone)
-            ->where('destination_zone', $destinationKota->zone)
-            ->first();
+        if ($request->boolean('force_local')) {
+            $estimate = app(ShippingCostService::class)->localEstimateFromCities(
+                $originKota,
+                $destinationKota,
+                (float) $request->weight,
+                $serviceType
+            );
+        } else {
+            $estimate = app(ShippingCostService::class)->estimateFromCities(
+                $originKota,
+                $destinationKota,
+                (float) $request->weight,
+                $serviceType
+            );
+        }
 
-        if (! $rate) {
+        if (! $estimate) {
             return response()->json(['error' => 'Rute tidak tersedia.'], 404);
         }
 
-        $weight = (float) $request->weight;
-        $basePrice = $rate->price_per_kg * $weight;
-
-        // Multipliers
-        $multiplier = 1.0;
-        if ($serviceType === 'BEST') {
-            $multiplier = 1.3;
+        // Optional debug info: append origin/destination zone and request inputs
+        if ($request->boolean('debug')) {
+            $estimate['debug'] = [
+                'origin_kota_id' => $originKota?->id ?? null,
+                'origin_zone' => $originKota?->zone ?? null,
+                'destination_kota_id' => $destinationKota?->id ?? null,
+                'destination_zone' => $destinationKota?->zone ?? null,
+                'service_type_requested' => $serviceType,
+                'weight_requested' => (float) $request->weight,
+            ];
         }
-        if ($serviceType === 'KARGO') {
-            $multiplier = 0.7;
-        }
 
-        $totalPrice = $basePrice * $multiplier;
-
-        return response()->json([
-            'total_price' => $totalPrice,
-            'total_price_fmt' => 'Rp '.number_format($totalPrice, 0, ',', '.'),
-            'price_per_kg' => $rate->price_per_kg * $multiplier,
-            'estimated_days' => $serviceType === 'BEST' ? 1 : $rate->estimated_days,
-            'service_type' => $serviceType,
-            'origin_zone' => $originKota->zone,
-            'dest_zone' => $destinationKota->zone,
-        ]);
+        return response()->json($estimate);
     }
 }

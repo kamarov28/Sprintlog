@@ -23,6 +23,7 @@
                 <div class="summary-row"><span>Tanggal Pickup</span><strong>{{ $pickup->pickup_date }}</strong></div>
                 <div class="summary-row"><span>Pengirim</span><strong>{{ $pickup->sender_name ?: $pickup->customer_name }}</strong></div>
                 <div class="summary-row"><span>Kota Asal</span><strong>{{ $pickup->senderCity?->name ?: '-' }}</strong></div>
+                <div class="summary-row"><span>Hub Pickup</span><strong>{{ $pickup->branch?->name ?: '-' }}</strong></div>
                 <div class="summary-row"><span>Penerima</span><strong>{{ $pickup->receiver_name ?: '-' }}</strong></div>
                 <div class="summary-row"><span>Kota Tujuan</span><strong>{{ $pickup->receiverCity?->name ?: '-' }}</strong></div>
                 <div class="summary-row"><span>Layanan</span><strong>{{ strtoupper((string) $pickup->service_type) }}</strong></div>

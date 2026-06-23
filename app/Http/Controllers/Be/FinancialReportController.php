@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Payment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class FinancialReportController extends Controller
@@ -21,8 +22,7 @@ class FinancialReportController extends Controller
     public function pdf(Request $request)
     {
         $data = $this->reportData($request, true);
-        $branchName = $data['selectedBranch']?->name ?? 'Semua Hub';
-        $fileBranch = Str::slug($branchName) ?: 'semua-hub';
+        $fileBranch = Str::slug($data['hubLabel']) ?: 'semua-hub';
         $filename = 'laporan-keuangan-'.$fileBranch.'-'.$data['startDate'].'-'.$data['endDate'].'.pdf';
 
         $pdf = Pdf::loadView('be.financial-reports.pdf', $data)
@@ -36,30 +36,68 @@ class FinancialReportController extends Controller
         $user = auth()->user();
         $branches = collect();
         $selectedBranch = null;
+        $selectedBranches = collect();
+        $branchIds = [];
+        $branchId = null;
 
         if ($user->role === 'admin') {
-            $branches = Branch::query()->select(['id', 'name'])->orderBy('name')->get();
-            $branchId = $request->get('branch_id');
-            $selectedBranch = $branchId ? $branches->firstWhere('id', (int) $branchId) : null;
+            $branches = Branch::query()->select(['id', 'name', 'city'])->orderBy('name')->get();
+            $availableBranchIds = $branches->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $hubScope = $this->resolveHubScope($request);
+
+            if ($hubScope === 'single') {
+                $branchId = $request->integer('branch_id') ?: null;
+
+                if ($branchId && in_array($branchId, $availableBranchIds, true)) {
+                    $branchIds = [$branchId];
+                    $selectedBranch = $branches->firstWhere('id', $branchId);
+                    $selectedBranches = collect([$selectedBranch])->filter();
+                } else {
+                    $branchId = null;
+                    $hubScope = 'all';
+                }
+            } elseif ($hubScope === 'selected') {
+                $branchIds = collect((array) $request->input('branch_ids', []))
+                    ->map(fn ($id) => (int) $id)
+                    ->filter(fn ($id) => in_array($id, $availableBranchIds, true))
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                if ($branchIds === []) {
+                    $hubScope = 'all';
+                } else {
+                    $selectedBranches = $branches->whereIn('id', $branchIds)->values();
+                    $selectedBranch = $selectedBranches->count() === 1 ? $selectedBranches->first() : null;
+                }
+            }
         } else {
             if (! $user->branch_id) {
                 abort(403, 'Akun staf belum terhubung ke cabang.');
             }
 
+            $hubScope = 'single';
             $branchId = $user->branch_id;
+            $branchIds = [(int) $branchId];
             $selectedBranch = $user->branch;
+            $selectedBranches = collect([$selectedBranch])->filter();
         }
 
-        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        [$period, $startDateCarbon, $endDateCarbon] = $this->resolvePeriod($request);
+        $startDate = $startDateCarbon->toDateString();
+        $endDate = $endDateCarbon->toDateString();
+        $periodOptions = $this->periodOptions();
+        $presetDates = $this->presetDates();
+        $hubLabel = $this->hubLabel($hubScope, $selectedBranch, $selectedBranches);
+        $filterQuery = $this->filterQuery($period, $startDate, $endDate, $hubScope, $branchId, $branchIds);
 
         $baseQuery = Payment::query()
             ->where('payment_status', 'paid')
             ->whereBetween('payment_date', [$startDate, $endDate]);
 
-        if ($branchId) {
-            $baseQuery->whereHas('shipment', function ($q) use ($branchId) {
-                $q->where('origin_branch_id', $branchId);
+        if ($branchIds !== []) {
+            $baseQuery->whereHas('shipment', function ($q) use ($branchIds) {
+                $q->whereIn('origin_branch_id', $branchIds);
             });
         }
 
@@ -92,13 +130,9 @@ class FinancialReportController extends Controller
             ? $paymentsQuery->get()
             : $paymentsQuery->paginate(20)->withQueryString();
 
-        // Data for chart (monthly revenue)
-        $monthlyData = (clone $baseQuery)
-            ->selectRaw('YEAR(payment_date) as year, MONTH(payment_date) as month, SUM(amount) as revenue')
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get();
+        $chartGranularity = $this->chartGranularity($period, $startDateCarbon, $endDateCarbon);
+        $chartData = $this->chartData((clone $baseQuery), $startDateCarbon, $endDateCarbon, $chartGranularity);
+        $chartLabel = $chartGranularity === 'month' ? 'Pendapatan Bulanan' : 'Pendapatan Harian';
 
         return compact(
             'branches',
@@ -109,11 +143,203 @@ class FinancialReportController extends Controller
             'otherPayments',
             'packageCount',
             'averageRevenue',
-            'monthlyData',
+            'chartData',
+            'chartLabel',
+            'chartGranularity',
             'startDate',
             'endDate',
+            'period',
+            'periodOptions',
+            'presetDates',
+            'hubScope',
+            'hubLabel',
             'branchId',
-            'selectedBranch'
+            'branchIds',
+            'selectedBranch',
+            'selectedBranches',
+            'filterQuery'
         );
+    }
+
+    private function resolveHubScope(Request $request): string
+    {
+        $scope = $request->input('hub_scope');
+
+        if (in_array($scope, ['all', 'single', 'selected'], true)) {
+            return $scope;
+        }
+
+        if ($request->filled('branch_id')) {
+            return 'single';
+        }
+
+        if ($request->filled('branch_ids')) {
+            return 'selected';
+        }
+
+        return 'all';
+    }
+
+    private function resolvePeriod(Request $request): array
+    {
+        $period = $request->input('period');
+
+        if (! array_key_exists($period, $this->periodOptions())) {
+            $period = $request->filled('start_date') || $request->filled('end_date') ? 'custom' : 'month';
+        }
+
+        $today = now();
+
+        [$startDate, $endDate] = match ($period) {
+            'today' => [$today->copy()->startOfDay(), $today->copy()->endOfDay()],
+            'week' => [$today->copy()->startOfWeek(Carbon::MONDAY), $today->copy()->endOfWeek(Carbon::SUNDAY)],
+            'year' => [$today->copy()->startOfYear(), $today->copy()->endOfYear()],
+            'custom' => [
+                $this->parseDate($request->input('start_date'), $today->copy()->startOfMonth()),
+                $this->parseDate($request->input('end_date'), $today),
+            ],
+            default => [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()],
+        };
+
+        if ($startDate->greaterThan($endDate)) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+        }
+
+        return [$period, $startDate->startOfDay(), $endDate->startOfDay()];
+    }
+
+    private function parseDate(?string $value, Carbon $fallback): Carbon
+    {
+        if (! $value) {
+            return $fallback;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return $fallback;
+        }
+    }
+
+    private function periodOptions(): array
+    {
+        return [
+            'today' => 'Hari ini',
+            'week' => 'Minggu ini',
+            'month' => 'Bulan ini',
+            'year' => 'Tahun ini',
+            'custom' => 'Custom',
+        ];
+    }
+
+    private function presetDates(): array
+    {
+        $today = now();
+
+        return [
+            'today' => [
+                'start' => $today->copy()->toDateString(),
+                'end' => $today->copy()->toDateString(),
+            ],
+            'week' => [
+                'start' => $today->copy()->startOfWeek(Carbon::MONDAY)->toDateString(),
+                'end' => $today->copy()->endOfWeek(Carbon::SUNDAY)->toDateString(),
+            ],
+            'month' => [
+                'start' => $today->copy()->startOfMonth()->toDateString(),
+                'end' => $today->copy()->endOfMonth()->toDateString(),
+            ],
+            'year' => [
+                'start' => $today->copy()->startOfYear()->toDateString(),
+                'end' => $today->copy()->endOfYear()->toDateString(),
+            ],
+        ];
+    }
+
+    private function hubLabel(string $hubScope, ?Branch $selectedBranch, $selectedBranches): string
+    {
+        if ($hubScope === 'single' && $selectedBranch) {
+            return $selectedBranch->name;
+        }
+
+        if ($hubScope === 'selected' && $selectedBranches->isNotEmpty()) {
+            return $selectedBranches->count().' hub dipilih';
+        }
+
+        return 'Semua Hub';
+    }
+
+    private function filterQuery(
+        string $period,
+        string $startDate,
+        string $endDate,
+        string $hubScope,
+        ?int $branchId,
+        array $branchIds
+    ): array {
+        $query = [
+            'period' => $period,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'hub_scope' => $hubScope,
+        ];
+
+        if ($hubScope === 'single' && $branchId) {
+            $query['branch_id'] = $branchId;
+        }
+
+        if ($hubScope === 'selected' && $branchIds !== []) {
+            $query['branch_ids'] = $branchIds;
+        }
+
+        return $query;
+    }
+
+    private function chartGranularity(string $period, Carbon $startDate, Carbon $endDate): string
+    {
+        if ($period === 'year' || $startDate->diffInDays($endDate) > 62) {
+            return 'month';
+        }
+
+        return 'day';
+    }
+
+    private function chartData($query, Carbon $startDate, Carbon $endDate, string $granularity): array
+    {
+        $payments = $query
+            ->select(['payment_date', 'amount'])
+            ->orderBy('payment_date')
+            ->get();
+
+        $groupedRevenue = $payments->groupBy(function (Payment $payment) use ($granularity) {
+            $date = Carbon::parse($payment->payment_date);
+
+            return $granularity === 'month'
+                ? $date->format('Y-m')
+                : $date->toDateString();
+        })->map(fn ($items) => (float) $items->sum('amount'));
+
+        $cursor = $granularity === 'month'
+            ? $startDate->copy()->startOfMonth()
+            : $startDate->copy();
+
+        $end = $granularity === 'month'
+            ? $endDate->copy()->startOfMonth()
+            : $endDate->copy();
+
+        $data = [];
+
+        while ($cursor->lessThanOrEqualTo($end)) {
+            $key = $granularity === 'month' ? $cursor->format('Y-m') : $cursor->toDateString();
+            $data[] = [
+                'key' => $key,
+                'label' => $granularity === 'month' ? $cursor->format('M Y') : $cursor->format('d M'),
+                'revenue' => (float) ($groupedRevenue[$key] ?? 0),
+            ];
+
+            $granularity === 'month' ? $cursor->addMonth() : $cursor->addDay();
+        }
+
+        return $data;
     }
 }

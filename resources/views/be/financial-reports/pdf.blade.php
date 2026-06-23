@@ -183,7 +183,7 @@
 </head>
 <body>
     @php
-        $branchLabel = $selectedBranch?->name ?? 'Semua Hub';
+        $branchLabel = $hubLabel ?? ($selectedBranch?->name ?? 'Semua Hub');
         $periodLabel = \Illuminate\Support\Carbon::parse($startDate)->format('d M Y') . ' - ' . \Illuminate\Support\Carbon::parse($endDate)->format('d M Y');
         $cashRatio = $totalRevenue > 0 ? round(($cashPayments / $totalRevenue) * 100) : 0;
         $transferRatio = $totalRevenue > 0 ? round(($transferPayments / $totalRevenue) * 100) : 0;

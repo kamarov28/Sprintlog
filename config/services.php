@@ -35,4 +35,25 @@ return [
         ],
     ],
 
+    'komerce' => [
+        'shipping_cost' => [
+            'enabled' => env('RAJAONGKIR_SHIPPING_ENABLED', false),
+            'key' => env('RAJAONGKIR_SHIPPING_API_KEY'),
+            'base_url' => rtrim((string) env('RAJAONGKIR_SHIPPING_BASE_URL', 'https://rajaongkir.komerce.id/api/v1'), '/'),
+            'timeout' => (int) env('RAJAONGKIR_SHIPPING_TIMEOUT', 10),
+            'cache_ttl' => (int) env('RAJAONGKIR_SHIPPING_CACHE_TTL', 86400),
+            'couriers' => env('RAJAONGKIR_SHIPPING_COURIERS', 'jne:jnt:sicepat:pos'),
+            'price_mode' => env('RAJAONGKIR_SHIPPING_PRICE_MODE', 'lowest'),
+        ],
+    ],
+
+    'routing' => [
+        'osrm_enabled' => env('ROUTING_OSRM_ENABLED', true),
+        'osrm_base_url' => rtrim((string) env('ROUTING_OSRM_BASE_URL', 'https://router.project-osrm.org'), '/'),
+        'timeout' => (int) env('ROUTING_TIMEOUT', 4),
+        'cache_ttl' => (int) env('ROUTING_CACHE_TTL', 86400),
+        'fallback_road_factor' => (float) env('ROUTING_FALLBACK_ROAD_FACTOR', 1.28),
+        'fallback_speed_kmh' => (float) env('ROUTING_FALLBACK_SPEED_KMH', 42),
+    ],
+
 ];

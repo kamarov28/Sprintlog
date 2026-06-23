@@ -8,6 +8,14 @@
 @endpush
 
 @section('content')
+@php
+    $prefillOriginProv = old('s_prov', request('origin_prov'));
+    $prefillOriginCity = old('sender_city_id', request('origin_kota_id'));
+    $prefillDestinationProv = old('r_prov', request('destination_prov'));
+    $prefillDestinationCity = old('receiver_city_id', request('destination_kota_id'));
+    $prefillWeight = old('weight', request('weight', '1.0'));
+    $prefillService = old('service_type', request('service_type', 'REGULAR'));
+@endphp
 <div class="order-create-wrapper">
     <x-fe.page-header title="Buat Order" subtitle="Isi pickup, tujuan, paket, dan pembayaran dalam satu alur.">
         <x-fe.button href="{{ route('dashboard') }}" variant="secondary" style="font-size: 0.8rem;">Dashboard</x-fe.button>
@@ -34,7 +42,7 @@
         <div class="grid-2" style="gap: 4rem; align-items: flex-start;">
             
             <!-- LEFT COLUMN: SENDER & DESTINATION -->
-            <div style="display: flex; flex-direction: column; gap: 3rem;">
+            <div style="display: flex; flex-direction: column; gap: 3rem; min-width: 0;">
                 
                 <!-- SENDER SECTION -->
                 <x-fe.panel title="Pengirim" variant="primary">
@@ -47,10 +55,10 @@
                         <x-fe.input label="Nama Pengirim" name="sender_name" id="s_name" required value="{{ old('sender_name', $user->name) }}" />
                         <x-fe.input label="Telepon Pengirim" name="sender_phone" id="s_phone" required value="{{ old('sender_phone', $user->phone) }}" />
 
-                        <x-fe.input type="select" label="Provinsi Pengirim" name="s_prov" id="s_prov" onchange="loadKota('s_prov', 's_city_id', '{{ old('sender_city_id') }}')" required>
-                            <option value="" disabled {{ old('s_prov') ? '' : 'selected' }}>Pilih Provinsi...</option>
+                        <x-fe.input type="select" label="Provinsi Pengirim" name="s_prov" id="s_prov" onchange="loadKota('s_prov', 's_city_id', '{{ $prefillOriginCity }}')" required>
+                            <option value="" disabled {{ $prefillOriginProv ? '' : 'selected' }}>Pilih Provinsi...</option>
                             @foreach($provinces as $prov)
-                                <option value="{{ $prov->id }}" {{ old('s_prov') == $prov->id ? 'selected' : '' }}>{{ $prov->name }}</option>
+                                <option value="{{ $prov->id }}" {{ (string) $prefillOriginProv === (string) $prov->id ? 'selected' : '' }}>{{ $prov->name }}</option>
                             @endforeach
                         </x-fe.input>
 
@@ -78,10 +86,10 @@
                     <x-fe.input label="Nama Penerima" name="receiver_name" required value="{{ old('receiver_name') }}" />
                     <x-fe.input label="Telepon Penerima" name="receiver_phone" required value="{{ old('receiver_phone') }}" />
                     
-                    <x-fe.input type="select" label="Provinsi Penerima" name="r_prov" id="r_prov" onchange="loadKota('r_prov', 'r_city_id', '{{ old('receiver_city_id') }}')" required>
-                        <option value="" disabled {{ old('r_prov') ? '' : 'selected' }}>Pilih Provinsi...</option>
+                    <x-fe.input type="select" label="Provinsi Penerima" name="r_prov" id="r_prov" onchange="loadKota('r_prov', 'r_city_id', '{{ $prefillDestinationCity }}')" required>
+                        <option value="" disabled {{ $prefillDestinationProv ? '' : 'selected' }}>Pilih Provinsi...</option>
                         @foreach($provinces as $prov)
-                            <option value="{{ $prov->id }}" {{ old('r_prov') == $prov->id ? 'selected' : '' }}>{{ $prov->name }}</option>
+                            <option value="{{ $prov->id }}" {{ (string) $prefillDestinationProv === (string) $prov->id ? 'selected' : '' }}>{{ $prov->name }}</option>
                         @endforeach
                     </x-fe.input>
                     
@@ -104,17 +112,17 @@
             </div>
 
             <!-- RIGHT COLUMN: CARGO & PAYMENT -->
-            <div style="display: flex; flex-direction: column; gap: 3rem;">
+            <div style="display: flex; flex-direction: column; gap: 3rem; min-width: 0;">
                 
                 <x-fe.panel title="Detail Paket" variant="primary">
                     <x-fe.input type="date" label="Tanggal Pickup" name="pickup_date" id="pickup_date" value="{{ old('pickup_date', now()->format('Y-m-d')) }}" min="{{ now()->format('Y-m-d') }}" required />
 
-                    <x-fe.input type="number" label="Berat Paket (kg)" name="weight" id="payload_weight" step="0.1" min="0.1" value="{{ old('weight', '1.0') }}" required style="font-size: 1.5rem; font-weight: bold;" />
+                    <x-fe.input type="number" label="Berat Paket (kg)" name="weight" id="payload_weight" step="0.1" min="0.1" value="{{ $prefillWeight }}" required style="font-size: 1.5rem; font-weight: bold;" />
 
                     <x-fe.input type="select" label="Layanan" name="service_type" id="service_type" required>
-                        <option value="REGULAR" {{ old('service_type') === 'REGULAR' ? 'selected' : '' }}>REGULAR (2-3 hari)</option>
-                        <option value="BEST" {{ old('service_type') === 'BEST' ? 'selected' : '' }}>BEST Priority (1 hari)</option>
-                        <option value="KARGO" {{ old('service_type') === 'KARGO' ? 'selected' : '' }}>KARGO (min 10kg, hemat 30%)</option>
+                        <option value="REGULAR" {{ $prefillService === 'REGULAR' ? 'selected' : '' }}>REGULAR (2-3 hari)</option>
+                        <option value="BEST" {{ $prefillService === 'BEST' ? 'selected' : '' }}>BEST Priority (1 hari)</option>
+                        <option value="KARGO" {{ $prefillService === 'KARGO' ? 'selected' : '' }}>KARGO (min 10kg, hemat 30%)</option>
                     </x-fe.input>
                     <div id="service-helper" class="helper-chip is-ok">REGULAR cocok untuk kebanyakan rute.</div>
 
@@ -145,9 +153,15 @@
 
                     <div id="transfer-payment-panel" class="payment-mode-panel">
                         <p class="text-main mb-4" style="font-size: 0.85rem;">
-                            Transfer sesuai estimasi ke:<br>
-                            <span class="text-primary" style="font-weight: bold;">BCA 8820-991-223</span><br>
-                            AN. SPRINTLOG EXPEDITION
+                            Transfer sesuai estimasi ke salah satu rekening berikut:<br>
+                            <br>
+                            @forelse($bankAccounts as $bank)
+                                <span class="text-primary" style="font-weight: bold;">{{ $bank->bank_name }} {{ $bank->account_number }}</span><br>
+                                AN. {{ $bank->account_holder }}<br><br>
+                            @empty
+                                <span class="text-primary" style="font-weight: bold;">BCA 8820-991-223</span><br>
+                                AN. SPRINTLOG EXPEDITION<br><br>
+                            @endforelse
                         </p>
                         <p class="text-gray" style="font-size: 0.72rem; margin-bottom: 1rem;">Upload bukti setelah cek estimasi di atas.</p>
 
@@ -200,6 +214,8 @@
 const AREA_LOOKUP_CACHE = new Map();
 const ADDRESS_REFINE_TIMERS = {};
 const MAP_LOCKS = { s: false, r: false };
+let rateRequestSerial = 0;
+let verifiedRateReady = false;
 
 function loadKota(provSelectId, kotaSelectId, selectedValue = null) {
     const provId = document.getElementById(provSelectId).value;
@@ -228,6 +244,8 @@ function loadKota(provSelectId, kotaSelectId, selectedValue = null) {
             if (selectedValue) {
                 syncMapToSelection(provSelectId, kotaSelectId);
             }
+            calculateRate();
+            updateLiveSummary();
         });
 }
 
@@ -239,20 +257,42 @@ function calculateRate() {
     
     syncServiceHelper();
     updateLiveSummary();
-    if (!originId || !destId || !weight) return;
+    verifiedRateReady = false;
+
+    if (!originId || !destId || !weight) {
+        document.getElementById('display-price').textContent = 'Rp 0';
+        document.getElementById('summary-total').textContent = 'Rp 0';
+        return;
+    }
+
+    const serial = ++rateRequestSerial;
+    document.getElementById('display-price').textContent = 'Menghitung...';
+    document.getElementById('summary-total').textContent = 'Menghitung...';
 
     fetch(`/api/calculate-rate?origin_kota_id=${originId}&destination_kota_id=${destId}&weight=${weight}&service_type=${service}`)
         .then(r => r.json())
         .then(data => {
+            if (serial !== rateRequestSerial) return;
+
             if (data.error) {
-                alert(data.error);
+                document.getElementById('display-price').textContent = 'Rp 0';
+                document.getElementById('summary-total').textContent = 'Rp 0';
+                updateNextAction(data.error);
                 return;
             }
             if (data.total_price) {
+                verifiedRateReady = true;
                 document.getElementById('display-price').textContent = data.total_price_fmt;
                 document.getElementById('summary-total').textContent = data.total_price_fmt;
                 updateNextAction('Estimasi siap. Cek pembayaran dan titik map, lalu submit request.');
             }
+        })
+        .catch(() => {
+            if (serial !== rateRequestSerial) return;
+
+            document.getElementById('display-price').textContent = 'Rp 0';
+            document.getElementById('summary-total').textContent = 'Rp 0';
+            updateNextAction('Ongkir belum bisa dimuat. Coba cek ulang kota dan koneksi.');
         });
 }
 
@@ -456,10 +496,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const receiverProv = document.getElementById('r_prov');
 
     if (senderProv.value) {
-        loadKota('s_prov', 's_city_id', "{{ old('sender_city_id') }}");
+        loadKota('s_prov', 's_city_id', @json($prefillOriginCity));
     }
     if (receiverProv.value) {
-        loadKota('r_prov', 'r_city_id', "{{ old('receiver_city_id') }}");
+        loadKota('r_prov', 'r_city_id', @json($prefillDestinationCity));
     }
 
     document.getElementById('s_prov').addEventListener('change', () => {
@@ -534,6 +574,13 @@ document.getElementById('btn-use-profile').addEventListener('click', () => {
     document.getElementById('s_lat').value = @json($user->latitude);
     document.getElementById('s_lng').value = @json($user->longitude);
 
+    const userProvId = @json($userOriginProvinceId);
+    const userCityId = @json($userOriginCityId);
+    if (userProvId) {
+        document.getElementById('s_prov').value = userProvId;
+        loadKota('s_prov', 's_city_id', userCityId);
+    }
+
     if (@json((bool) $user->latitude) && @json((bool) $user->longitude) && typeof window.focusMap_s === 'function') {
         window.focusMap_s(@json($user->latitude), @json($user->longitude), 14, false);
     }
@@ -552,6 +599,14 @@ document.querySelector('form[action="{{ route('order.store') }}"]').addEventList
         event.preventDefault();
         syncServiceHelper();
         updateNextAction('Perbaiki minimum berat KARGO sebelum submit.');
+        document.getElementById('payload_weight').focus();
+        return;
+    }
+
+    if (!verifiedRateReady) {
+        event.preventDefault();
+        calculateRate();
+        updateNextAction('Tunggu estimasi terverifikasi sebelum submit.');
         document.getElementById('payload_weight').focus();
     }
 });

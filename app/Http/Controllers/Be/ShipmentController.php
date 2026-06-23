@@ -17,12 +17,15 @@ use App\Models\ShipmentManifest;
 use App\Models\ShipmentManifestItem;
 use App\Models\ShipmentStatusAudit;
 use App\Models\User;
+use App\Services\RouteDistanceService;
+use App\Services\ShippingCostService;
 use App\Services\ShipmentNotifier;
 use App\Services\ShipmentRoutePlanner;
 use App\Support\RouteEstimate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ShipmentController extends Controller
@@ -108,7 +111,7 @@ class ShipmentController extends Controller
             'receiver',
             'originBranch',
             'destinationBranch',
-            'courier',
+            'courier.vehicle',
             'payment',
             'legs.originBranch',
             'legs.destinationBranch',
@@ -176,8 +179,21 @@ class ShipmentController extends Controller
         $this->applyShipmentPreset($query, $filters['preset']);
 
         $shipments = $query->latest()->paginate(15);
+        $truckCouriers = collect();
 
-        return view('be.shipments.index', compact('shipments', 'filters'));
+        if (auth()->user()->role === 'manager' && auth()->user()->branch_id) {
+            $truckCouriers = User::query()
+                ->with('vehicle')
+                ->where('role', 'courier')
+                ->where('branch_id', auth()->user()->branch_id)
+                ->whereHas('vehicle', function ($query) {
+                    $query->where('type', 'truck')->where('status', 'active');
+                })
+                ->orderBy('name')
+                ->get();
+        }
+
+        return view('be.shipments.index', compact('shipments', 'filters', 'truckCouriers'));
     }
 
     public function create()
@@ -195,17 +211,25 @@ class ShipmentController extends Controller
             ->orderBy('name')
             ->get();
         $couriers = User::query()
+            ->with('vehicle')
             ->select(['id', 'name'])
             ->where('role', 'courier');
         if ($bid = $this->hubBranchId()) {
             $couriers->where('branch_id', $bid);
         }
         $couriers = $couriers->orderBy('name')->get();
-        $rates = Rate::query()->select(['id', 'origin_zone', 'destination_zone', 'price_per_kg'])->get();
         $branchZones = $this->resolveBranchZones($branches);
+        $originBranch = Branch::find($this->hubBranchId());
+        $originCityId = $originBranch ? $this->resolveBranchCityLocation($originBranch)?->id : null;
         $bankAccounts = auth()->user()->branch ? auth()->user()->branch->bankAccounts : [];
+        $provinces = Location::query()
+            ->where('type', 'provinsi')
+            ->selectRaw('MIN(id) as id, name, zone')
+            ->groupBy('name', 'zone')
+            ->orderBy('name')
+            ->get();
 
-        return view('be.shipments.create', compact('branches', 'couriers', 'rates', 'branchZones', 'bankAccounts'));
+        return view('be.shipments.create', compact('branches', 'couriers', 'branchZones', 'originCityId', 'bankAccounts', 'provinces'));
     }
 
     public function store(Request $request)
@@ -223,7 +247,9 @@ class ShipmentController extends Controller
             'sender_phone' => 'required|string',
             'receiver_name' => 'required|string',
             'receiver_phone' => 'required|string',
-            'receiver_address' => 'nullable|string',
+            'receiver_province_id' => 'required|exists:locations,id',
+            'receiver_city_id' => 'required|exists:locations,id',
+            'receiver_address' => 'required|string',
             'origin_branch_id' => 'required|exists:branches,id',
             'destination_branch_id' => 'required|exists:branches,id',
             'weight' => 'required|numeric|min:0.1',
@@ -240,20 +266,50 @@ class ShipmentController extends Controller
             return back()->withErrors(['weight' => 'Layanan KARGO membutuhkan berat minimal 10 KG.'])->withInput();
         }
 
+        $receiverProvince = Location::query()
+            ->where('id', $request->receiver_province_id)
+            ->where('type', 'provinsi')
+            ->first();
+        $receiverCity = Location::query()
+            ->where('id', $request->receiver_city_id)
+            ->where('type', 'kota')
+            ->first();
+
+        if (! $receiverProvince || ! $receiverCity || (int) $receiverCity->parent_id !== (int) $receiverProvince->id) {
+            return back()
+                ->withErrors(['receiver_city_id' => 'Kota/Kabupaten tujuan wajib dipilih dari daftar lokasi.'])
+                ->withInput();
+        }
+
         // Pastikan origin branch = hub user (manager & kasir tidak boleh input atas nama hub lain)
         if (($bid = $this->hubBranchId()) !== null && (int) $request->origin_branch_id !== $bid) {
             abort(403);
         }
 
         if ($request->filled('courier_id')) {
-            $courierIsValid = User::where('id', $request->courier_id)
+            $courier = User::query()
+                ->with('vehicle')
+                ->where('id', $request->courier_id)
                 ->where('role', 'courier')
                 ->where('branch_id', $request->origin_branch_id)
-                ->exists();
+                ->first();
 
-            if (! $courierIsValid) {
+            if (! $courier) {
                 return back()
                     ->withErrors(['courier_id' => 'Kurir harus berasal dari hub asal dan memiliki role courier.'])
+                    ->withInput();
+            }
+
+            $vehicleError = $this->vehicleAssignmentError(
+                $courier,
+                (float) $request->weight,
+                1,
+                (int) $request->origin_branch_id !== (int) $request->destination_branch_id
+            );
+
+            if ($vehicleError) {
+                return back()
+                    ->withErrors(['courier_id' => $vehicleError])
                     ->withInput();
             }
         }
@@ -261,23 +317,48 @@ class ShipmentController extends Controller
         // Determine rate before opening the transaction so validation failures do not leave it dangling.
         $originBranch = Branch::findOrFail($request->origin_branch_id);
         $destinationBranch = Branch::findOrFail($request->destination_branch_id);
-        $rate = $this->resolveBranchRate($originBranch, $destinationBranch);
+        $originCity = $this->resolveBranchCityLocation($originBranch);
 
-        if (! $rate) {
+        if (! $originCity) {
             return back()
-                ->withErrors(['destination_branch_id' => 'Rate untuk rute cabang ini belum tersedia.'])
+                ->withErrors(['origin_branch_id' => 'Kota asal hub belum bisa dipetakan ke data lokasi.'])
                 ->withInput();
         }
 
-        $multiplier = 1.0;
-        if ($request->service_type === 'BEST') {
-            $multiplier = 1.3;
-        }
-        if ($request->service_type === 'KARGO') {
-            $multiplier = 0.7;
+        $rate = $this->resolveBranchRate($originBranch, $destinationBranch)
+            ?? $this->resolveLocationRate($originCity, $receiverCity);
+
+        $shippingEstimate = app(ShippingCostService::class)->estimateFromCities(
+            $originCity,
+            $receiverCity,
+            (float) $request->weight,
+            (string) $request->service_type
+        );
+
+        if (! $shippingEstimate) {
+            return back()
+                ->withErrors(['receiver_city_id' => 'Ongkir untuk tujuan ini belum tersedia dari RajaOngkir maupun fallback lokal.'])
+                ->withInput();
         }
 
-        $totalPrice = ($rate->price_per_kg * $multiplier) * $request->weight;
+        // Apply small pricing adjustment when shipment will traverse multiple legs.
+        // Add 10% per extra leg (beyond the first leg) to account for multi-hop handling.
+        try {
+            $routeBranches = app(ShipmentRoutePlanner::class)->branchesFor($originBranch, $destinationBranch);
+            $extraLegs = max(0, $routeBranches->count() - 2);
+            if ($extraLegs > 0 && isset($shippingEstimate['total_price'])) {
+                $multiplier = 1 + (0.10 * $extraLegs);
+                $shippingEstimate['total_price'] = (float) round(((float) $shippingEstimate['total_price']) * $multiplier, 2);
+                $shippingEstimate['total_price_fmt'] = 'Rp '.number_format($shippingEstimate['total_price'], 0, ',', '.');
+                $shippingEstimate['price_per_kg'] = (float) $shippingEstimate['total_price'] / max(0.1, (float) $request->weight);
+                $shippingEstimate['legs_count'] = max(1, $routeBranches->count() - 1);
+                $shippingEstimate['pricing_multiplier'] = $multiplier;
+            }
+        } catch (\Throwable) {
+            // Non-fatal: if planner fails, fall back to original estimate.
+        }
+
+        $totalPrice = (float) $shippingEstimate['total_price'];
         $amountReceived = $request->amount_received ?: 0;
 
         if ($request->payment_method === 'cash' && $amountReceived < $totalPrice) {
@@ -324,20 +405,35 @@ class ShipmentController extends Controller
                     'address' => '',
                 ]
             );
+            // Update sender name if it changed
+            if ($sender->name !== $request->sender_name) {
+                $sender->update(['name' => $request->sender_name]);
+            }
 
             $receiver = Customer::firstOrCreate(
                 ['phone' => $request->receiver_phone],
                 [
                     'name' => $request->receiver_name,
-                    'city' => 'Unknown',
-                    'address' => $request->receiver_address ?? '',
+                    'city' => $receiverCity->name,
+                    'address' => $request->receiver_address,
                     'email' => $request->receiver_phone.'@sprintlog.local',
                     'password' => bcrypt(Str::random(12)),
                 ]
             );
-            // Update address if provided and not yet set
-            if ($request->receiver_address && ! $receiver->address) {
-                $receiver->update(['address' => $request->receiver_address]);
+            // Update receiver name if it changed
+            if ($receiver->name !== $request->receiver_name) {
+                $receiver->update(['name' => $request->receiver_name]);
+            }
+
+            $receiverUpdates = [];
+            if ($request->receiver_address && $receiver->address !== $request->receiver_address) {
+                $receiverUpdates['address'] = $request->receiver_address;
+            }
+            if ($receiverCity->name && in_array($receiver->city, ['', 'Unknown', null], true)) {
+                $receiverUpdates['city'] = $receiverCity->name;
+            }
+            if ($receiverUpdates !== []) {
+                $receiver->update($receiverUpdates);
             }
 
             // 3. Create Shipment
@@ -348,9 +444,10 @@ class ShipmentController extends Controller
                 'origin_branch_id' => $request->origin_branch_id,
                 'destination_branch_id' => $request->destination_branch_id,
                 'courier_id' => $request->courier_id,
-                'rate_id' => $rate->id,
+                'rate_id' => $shippingEstimate['rate_id'] ?? $rate?->id,
                 'total_weight' => $request->weight,
                 'total_price' => $totalPrice,
+                ...$this->shippingSnapshotAttributes($shippingEstimate),
                 'status' => 'pending',
                 'shipment_date' => now(),
             ]);
@@ -454,6 +551,17 @@ class ShipmentController extends Controller
             ->first();
     }
 
+    protected function resolveLocationRate(Location $originCity, Location $destinationCity): ?Rate
+    {
+        if (! $originCity->zone || ! $destinationCity->zone) {
+            return null;
+        }
+
+        return Rate::where('origin_zone', $originCity->zone)
+            ->where('destination_zone', $destinationCity->zone)
+            ->first();
+    }
+
     protected function resolveBranchZones(iterable $branches): array
     {
         $zonesByCity = Location::query()
@@ -496,9 +604,69 @@ class ShipmentController extends Controller
             ->value('zone');
     }
 
+    protected function resolveBranchCityLocation(Branch $branch): ?Location
+    {
+        $city = trim((string) $branch->city);
+        if ($city === '') {
+            return null;
+        }
+
+        $normalizedCity = preg_replace('/^(kota|kab\.?|kabupaten)\s+/i', '', $city);
+
+        $cityLocation = Location::query()
+            ->where('type', 'kota')
+            ->where(function ($query) use ($city, $normalizedCity) {
+                $query->where('name', $city)
+                    ->orWhere('name', 'like', '%'.$normalizedCity.'%');
+            })
+            ->orderByRaw('CASE WHEN name = ? THEN 0 ELSE 1 END', [$city])
+            ->first();
+
+        if ($cityLocation) {
+            return $cityLocation;
+        }
+
+        $province = Location::query()
+            ->where('type', 'provinsi')
+            ->where(function ($query) use ($city, $normalizedCity) {
+                $query->where('name', $city)
+                    ->orWhere('name', 'like', '%'.$normalizedCity.'%');
+            })
+            ->orderByRaw('CASE WHEN name = ? THEN 0 ELSE 1 END', [$city])
+            ->first();
+
+        return $province
+            ? Location::query()
+                ->where('type', 'kota')
+                ->where('parent_id', $province->id)
+                ->orderByRaw("CASE WHEN name LIKE 'Kota %' THEN 0 ELSE 1 END")
+                ->orderBy('name')
+                ->first()
+            : null;
+    }
+
     protected function normalizeCityName(string $city): string
     {
         return strtolower(trim((string) preg_replace('/^(kota|kab\.?|kabupaten)\s+/i', '', $city)));
+    }
+
+    protected function shippingSnapshotAttributes(array $estimate): array
+    {
+        $map = [
+            'shipping_cost_source' => $estimate['source'] ?? null,
+            'shipping_courier_code' => $estimate['courier'] ?? null,
+            'shipping_courier_name' => $estimate['courier_name'] ?? null,
+            'shipping_courier_service' => $estimate['courier_service'] ?? null,
+            'shipping_courier_description' => $estimate['courier_description'] ?? null,
+            'shipping_origin_ro_id' => $estimate['origin_ro_id'] ?? null,
+            'shipping_destination_ro_id' => $estimate['destination_ro_id'] ?? null,
+            'shipping_estimated_days' => $estimate['estimated_days'] ?? null,
+            'shipping_quote_payload' => $estimate['quote_payload'] ?? $estimate,
+        ];
+
+        return collect($map)
+            ->filter(fn ($value, string $column) => Schema::hasColumn('shipments', $column))
+            ->all();
     }
 
     public function show(Shipment $shipment)
@@ -512,11 +680,12 @@ class ShipmentController extends Controller
             'destinationBranch',
             'items',
             'trackings',
-            'courier',
+            'courier.vehicle',
             'payment',
             'legs.originBranch',
             'legs.destinationBranch',
             'legs.handler',
+            'legs.vehicle',
             'exceptions.leg.originBranch',
             'exceptions.leg.destinationBranch',
             'exceptions.reporter',
@@ -526,7 +695,8 @@ class ShipmentController extends Controller
         $deliveryCouriers = collect();
         if (in_array(auth()->user()->role, ['manager', 'cashier'], true) && auth()->user()->branch_id) {
             $deliveryCouriers = User::query()
-                ->select(['id', 'name', 'email'])
+                ->with('vehicle')
+                ->select(['id', 'name', 'email', 'branch_id'])
                 ->where('role', 'courier')
                 ->where('branch_id', auth()->user()->branch_id)
                 ->orderBy('name')
@@ -538,14 +708,18 @@ class ShipmentController extends Controller
             ->where('shipment_id', $shipment->id)
             ->first();
         $useCourierCurrentLocation = auth()->user()->role === 'courier';
+        $distanceService = app(RouteDistanceService::class);
+        $linkedPickupHubPoint = $linkedPickup ? $distanceService->pointForBranch($linkedPickup->branch) : null;
+        $originHubPoint = $distanceService->pointForBranch($shipment->originBranch);
+        $destinationHubPoint = $distanceService->pointForBranch($shipment->destinationBranch);
 
         $routeEstimate = $linkedPickup
             ? RouteEstimate::make([
                 [
                     'label' => 'Hub awal',
-                    'address' => $linkedPickup->branch?->name.' - '.$linkedPickup->branch?->city,
-                    'lat' => $linkedPickup->branch?->latitude,
-                    'lng' => $linkedPickup->branch?->longitude,
+                    'address' => $linkedPickupHubPoint['address'] ?? ($linkedPickup->branch?->name.' - '.$linkedPickup->branch?->city),
+                    'lat' => $linkedPickupHubPoint['lat'] ?? null,
+                    'lng' => $linkedPickupHubPoint['lng'] ?? null,
                 ],
                 [
                     'label' => 'Titik pickup',
@@ -570,15 +744,15 @@ class ShipmentController extends Controller
             : RouteEstimate::make([
                 [
                     'label' => 'Hub asal',
-                    'address' => $shipment->originBranch?->name.' - '.$shipment->originBranch?->city,
-                    'lat' => $shipment->originBranch?->latitude,
-                    'lng' => $shipment->originBranch?->longitude,
+                    'address' => $originHubPoint['address'] ?? ($shipment->originBranch?->name.' - '.$shipment->originBranch?->city),
+                    'lat' => $originHubPoint['lat'] ?? null,
+                    'lng' => $originHubPoint['lng'] ?? null,
                 ],
                 [
                     'label' => 'Hub tujuan',
-                    'address' => $shipment->destinationBranch?->name.' - '.$shipment->destinationBranch?->city,
-                    'lat' => $shipment->destinationBranch?->latitude,
-                    'lng' => $shipment->destinationBranch?->longitude,
+                    'address' => $destinationHubPoint['address'] ?? ($shipment->destinationBranch?->name.' - '.$shipment->destinationBranch?->city),
+                    'lat' => $destinationHubPoint['lat'] ?? null,
+                    'lng' => $destinationHubPoint['lng'] ?? null,
                 ],
             ], [
                 'label' => 'Hub to hub route',
@@ -610,6 +784,29 @@ class ShipmentController extends Controller
         $previousStatus = $shipment->status;
         $nextStatus = $request->status;
 
+        // Arrival at a branch must be recorded by hub staff via hub scan.
+        // Disallow couriers from directly setting 'arrived_at_branch' here so
+        // the hub can register receipt and assign the next courier.
+        if ($nextStatus === 'arrived_at_branch') {
+            // Allow couriers to record arrival only when they are the handler
+            // (or the assigned shipment courier) for the active leg. Otherwise
+            // require hub staff to perform the Hub Scan.
+            $leg = $shipment->legs()
+                ->whereIn('status', ['departed', 'pending'])
+                ->orderByRaw("CASE WHEN status = 'departed' THEN 0 ELSE 1 END")
+                ->orderBy('sequence')
+                ->first();
+
+            if (! $leg) {
+                return back()->withErrors(['status' => 'Tidak ada leg inbound yang bisa diterima. Hub staff harus melakukan Hub Scan.']);
+            }
+
+            $userId = auth()->id();
+            if (((int) $leg->handler_id !== (int) $userId) && ((int) $shipment->courier_id !== (int) $userId)) {
+                return back()->withErrors(['status' => 'Hanya kurir yang membawa paket (atau Hub staff melalui Hub Scan) yang bisa menandai kedatangan di hub.']);
+            }
+        }
+
         if ($previousStatus === $nextStatus) {
             return back()->withErrors(['status' => 'Status baru harus berbeda dari status saat ini.']);
         }
@@ -620,6 +817,15 @@ class ShipmentController extends Controller
 
         if ($shipment->payment && $shipment->payment->payment_status !== 'paid') {
             return back()->withErrors(['status' => 'Shipment belum bisa berjalan sebelum pembayaran diverifikasi lunas.']);
+        }
+
+        if ($nextStatus === 'in_transit' && (int) $shipment->origin_branch_id !== (int) $shipment->destination_branch_id) {
+            $courier = auth()->user()->load('vehicle');
+            $vehicleError = $this->vehicleAssignmentError($courier, (float) $shipment->total_weight, 1, true);
+
+            if ($vehicleError) {
+                return back()->withErrors(['status' => $vehicleError]);
+            }
         }
 
         if ($nextStatus === 'delivered' && ! $request->hasFile('photo')) {
@@ -635,6 +841,21 @@ class ShipmentController extends Controller
         $shipment->save();
 
         app(ShipmentRoutePlanner::class)->applyShipmentStatus($shipment, $nextStatus);
+
+        // If courier marked arrival and this leg is the final destination hub,
+        // record the recipient's name into `received_by` for clarity at hub.
+        if ($nextStatus === 'arrived_at_branch') {
+            $activeLeg = $shipment->legs()
+                ->whereIn('status', ['arrived', 'departed', 'pending'])
+                ->orderByRaw("CASE WHEN status = 'departed' THEN 0 ELSE 1 END")
+                ->orderBy('sequence')
+                ->first();
+
+            if ($activeLeg && (int) $activeLeg->destination_branch_id === (int) $shipment->destination_branch_id) {
+                $shipment->loadMissing('receiver');
+                $shipment->update(['received_by' => $shipment->receiver?->name]);
+            }
+        }
 
         $shipment->trackings()->create([
             'location' => $request->location,
@@ -660,6 +881,32 @@ class ShipmentController extends Controller
             'Status shipment berubah',
             'Status paket berubah menjadi '.strtoupper($nextStatus).'.'
         );
+
+        // Notify customer when package is delivered to recipient at destination.
+        if ($nextStatus === 'delivered') {
+            $shipment->loadMissing('receiver');
+            $receivedBy = $shipment->receiver?->name ?: null;
+
+            // Prefer explicit receiver name; fallback to description provided by courier.
+            if (! $receivedBy && ! empty($request->description)) {
+                // Try to extract a name from description, otherwise use the raw text.
+                $receivedBy = trim($request->description);
+            }
+
+            if ($receivedBy) {
+                // Persist received_by if not set or different.
+                if ($shipment->received_by !== $receivedBy) {
+                    $shipment->update(['received_by' => $receivedBy]);
+                }
+            }
+
+            app(ShipmentNotifier::class)->record(
+                $shipment,
+                'delivered',
+                'Paket telah diterima',
+                'Paket Anda telah diterima oleh '.($receivedBy ?? 'penerima').'.'
+            );
+        }
 
         return back()->with('success', 'Status updated successfully.');
     }
@@ -718,14 +965,33 @@ class ShipmentController extends Controller
             return back()->withErrors(['scan_type' => 'Tidak ada leg yang siap diberangkatkan dari hub ini.']);
         }
 
+        $courier = $shipment->courier()->with('vehicle')->first();
+        if (! $courier) {
+            return back()->withErrors(['scan_type' => 'Assign kurir truk dulu sebelum outbound antar hub diberangkatkan.']);
+        }
+
+        $vehicleError = $this->vehicleAssignmentError($courier, (float) $shipment->total_weight, 1, true);
+        if ($vehicleError) {
+            return back()->withErrors(['scan_type' => $vehicleError]);
+        }
+
+        $vehicle = $courier->vehicle;
         $previousStatus = $shipment->status;
         $nextStatus = 'in_transit';
         $now = now();
 
-        DB::transaction(function () use ($leg, $nextStatus, $now, $previousStatus, $request, $shipment): void {
+        // Enforce: hub departure should not be performed by hub staff when the
+        // shipment is already marked as 'picked_up' by a courier. This keeps
+        // responsibility with the courier who picked the package.
+        if ($shipment->status === 'picked_up') {
+            return back()->withErrors(['scan_type' => 'Hub departure tidak bisa dilakukan oleh staff ketika paket sudah di-pickup oleh kurir.']);
+        }
+
+        DB::transaction(function () use ($leg, $nextStatus, $now, $previousStatus, $request, $shipment, $courier, $vehicle): void {
             $leg->update([
                 'status' => 'departed',
-                'handler_id' => auth()->id(),
+                'handler_id' => $courier->id,
+                'vehicle_id' => $vehicle->id,
                 'departed_at' => $now,
                 'notes' => $request->note,
             ]);
@@ -783,13 +1049,29 @@ class ShipmentController extends Controller
         DB::transaction(function () use ($leg, $nextStatus, $now, $previousStatus, $request, $shipment): void {
             $leg->update([
                 'status' => 'arrived',
-                'handler_id' => auth()->id(),
+                // Preserve existing handler (courier) if present so the origin
+                // courier remains recorded as the handler for this leg.
+                'handler_id' => $leg->handler_id ?: auth()->id(),
                 'departed_at' => $leg->departed_at ?: $now,
                 'arrived_at' => $now,
                 'notes' => $request->note,
             ]);
 
-            $shipment->update(['status' => $nextStatus]);
+            // If this arrival is at the shipment's final destination hub,
+            // record the intended recipient's name into `received_by` so
+            // downstream staff see who the package is for (e.g., "Syamil").
+            $receivedBy = null;
+            if ((int) $leg->destination_branch_id === (int) $shipment->destination_branch_id) {
+                $shipment->loadMissing('receiver');
+                $receivedBy = $shipment->receiver?->name;
+            }
+
+            $updatePayload = ['status' => $nextStatus];
+            if ($receivedBy !== null) {
+                $updatePayload['received_by'] = $receivedBy;
+            }
+
+            $shipment->update($updatePayload);
 
             $description = $request->note ?: 'Paket diterima di '.$leg->destinationBranch->name.' dari '.$leg->originBranch->name.'.';
 
@@ -858,13 +1140,40 @@ class ShipmentController extends Controller
         ]);
 
         $courier = User::query()
+            ->with('vehicle')
             ->where('id', $request->courier_id)
             ->where('role', 'courier')
             ->where('branch_id', $branchId)
             ->firstOrFail();
 
+        $vehicleError = $this->vehicleAssignmentError(
+            $courier,
+            (float) $shipment->total_weight,
+            1,
+            $canAssignOutbound
+        );
+
+        if ($vehicleError) {
+            return back()->withErrors(['courier_id' => $vehicleError]);
+        }
+
         $previousCourierId = $shipment->courier_id;
-        $shipment->update(['courier_id' => $courier->id]);
+        DB::transaction(function () use ($shipment, $courier, $canAssignOutbound, $branchId): void {
+            $shipment->update(['courier_id' => $courier->id]);
+
+            if ($canAssignOutbound) {
+                $leg = $shipment->legs()
+                    ->where('origin_branch_id', $branchId)
+                    ->whereIn('status', ['pending', 'departed'])
+                    ->orderBy('sequence')
+                    ->first();
+
+                $leg?->update([
+                    'handler_id' => $courier->id,
+                    'vehicle_id' => $courier->vehicle->id,
+                ]);
+            }
+        });
 
         ShipmentStatusAudit::create([
             'shipment_id' => $shipment->id,
@@ -901,8 +1210,16 @@ class ShipmentController extends Controller
         $request->validate([
             'shipment_ids' => 'required|array|min:1',
             'shipment_ids.*' => 'integer|exists:shipments,id',
+            'courier_id' => 'required|exists:users,id',
             'notes' => 'nullable|string|max:1000',
         ]);
+
+        $courier = User::query()
+            ->with('vehicle')
+            ->where('id', $request->courier_id)
+            ->where('role', 'courier')
+            ->where('branch_id', $branchId)
+            ->firstOrFail();
 
         $shipments = Shipment::query()
             ->with(['payment', 'legs.originBranch', 'legs.destinationBranch'])
@@ -940,14 +1257,27 @@ class ShipmentController extends Controller
             return back()->withErrors(['shipment_ids' => 'Batch manifest harus menuju hub berikutnya yang sama.']);
         }
 
+        $totalWeight = (float) $shipments->sum(fn (Shipment $shipment) => (float) $shipment->total_weight);
+        $packageCount = $shipments->count();
+        $vehicleError = $this->vehicleAssignmentError($courier, $totalWeight, $packageCount, true);
+
+        if ($vehicleError) {
+            return back()->withErrors(['courier_id' => $vehicleError]);
+        }
+
+        $vehicle = $courier->vehicle;
         $now = now();
 
-        $manifest = DB::transaction(function () use ($request, $shipments, $legs, $branchId, $destinationIds, $now) {
+        $manifest = DB::transaction(function () use ($request, $shipments, $legs, $branchId, $destinationIds, $now, $courier, $vehicle, $packageCount, $totalWeight) {
             $manifest = ShipmentManifest::create([
                 'manifest_number' => $this->generateManifestNumber(),
                 'origin_branch_id' => $branchId,
                 'destination_branch_id' => $destinationIds->first(),
                 'created_by' => auth()->id(),
+                'courier_id' => $courier->id,
+                'vehicle_id' => $vehicle->id,
+                'package_count' => $packageCount,
+                'total_weight' => $totalWeight,
                 'status' => 'dispatched',
                 'departed_at' => $now,
                 'notes' => $request->notes,
@@ -967,7 +1297,8 @@ class ShipmentController extends Controller
 
                 $leg->update([
                     'status' => 'departed',
-                    'handler_id' => auth()->id(),
+                    'handler_id' => $courier->id,
+                    'vehicle_id' => $vehicle->id,
                     'departed_at' => $now,
                     'notes' => $request->notes,
                 ]);
@@ -1110,6 +1441,39 @@ class ShipmentController extends Controller
         return $pdf->stream('resi-kasir-'.$shipment->tracking_number.'.pdf');
     }
 
+    private function vehicleAssignmentError(User $courier, float $weightKg, int $packageCount, bool $requiresTruck): ?string
+    {
+        $vehicle = $courier->vehicle;
+
+        if (! $vehicle) {
+            return 'Kurir '.$courier->name.' belum punya kendaraan terdaftar.';
+        }
+
+        if (! $vehicle->isActive()) {
+            return 'Kendaraan '.$vehicle->plate_number.' sedang tidak aktif.';
+        }
+
+        if ($vehicle->branch_id && (int) $vehicle->branch_id !== (int) $courier->branch_id) {
+            return 'Kendaraan '.$vehicle->plate_number.' tidak terdaftar di hub kurir ini.';
+        }
+
+        if ($requiresTruck && $vehicle->type !== 'truck') {
+            return 'Pengiriman antar hub wajib memakai kurir dengan kendaraan truck.';
+        }
+
+        if ((float) $vehicle->capacity_kg < $weightKg) {
+            return 'Kapasitas kendaraan '.$vehicle->plate_number.' hanya '
+                .number_format((float) $vehicle->capacity_kg, 0, ',', '.').' KG.';
+        }
+
+        if ((int) $vehicle->capacity_packages < $packageCount) {
+            return 'Kapasitas kendaraan '.$vehicle->plate_number.' hanya '
+                .number_format((int) $vehicle->capacity_packages, 0, ',', '.').' paket.';
+        }
+
+        return null;
+    }
+
     public function printManifest(ShipmentManifest $manifest)
     {
         if (auth()->user()->role !== 'manager') {
@@ -1125,6 +1489,8 @@ class ShipmentController extends Controller
             'originBranch',
             'destinationBranch',
             'createdBy',
+            'courier.vehicle',
+            'vehicle',
             'items.shipment.sender',
             'items.shipment.receiver',
             'items.leg.originBranch',

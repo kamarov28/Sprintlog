@@ -34,6 +34,8 @@ RUN apt-get update \
         xml \
         zip \
     && a2enmod rewrite headers \
+    && echo 'ServerName localhost' > /etc/apache2/conf-available/servername.conf \
+    && a2enconf servername \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -46,7 +48,7 @@ COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.con
 COPY docker/entrypoint.sh /usr/local/bin/sprintlog-entrypoint
 
 RUN chmod +x /usr/local/bin/sprintlog-entrypoint \
-    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache public/build
 
 ENTRYPOINT ["sprintlog-entrypoint"]

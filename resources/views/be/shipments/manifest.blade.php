@@ -105,6 +105,18 @@
         </div>
     </div>
 
+    <div class="meta">
+        <div>
+            <div class="label">Courier Truck</div>
+            <strong>{{ optional($manifest->courier)->name ?? '-' }}</strong>
+        </div>
+        <div>
+            <div class="label">Vehicle / Capacity</div>
+            {{ $manifest->vehicle?->label() ?? '-' }}<br>
+            {{ number_format((float) $manifest->total_weight, 0, ',', '.') }} KG / {{ number_format((int) $manifest->package_count, 0, ',', '.') }} paket dimuat
+        </div>
+    </div>
+
     @if($manifest->notes)
         <div>
             <div class="label">Notes</div>

@@ -36,6 +36,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Customer Dashboard & Profile
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [FeDashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/notifications/{notification}/read', [FeDashboardController::class, 'markNotificationRead'])->name('dashboard.notifications.read');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
@@ -81,6 +82,7 @@ Route::group(['prefix' => 'be', 'middleware' => ['auth', 'be.staff'], 'as' => 'b
         Route::get('pickups', [PickupController::class, 'index'])->name('pickups.index');
         Route::get('pickups/{pickup}', [PickupController::class, 'show'])->name('pickups.show');
         Route::post('pickups/{pickup}/assign', [PickupController::class, 'assign'])->name('pickups.assign');
+        Route::post('pickups/{pickup}/auto-assign', [PickupController::class, 'autoAssign'])->name('pickups.auto-assign');
         Route::post('pickups/{pickup}/status', [PickupController::class, 'updateStatus'])->name('pickups.status');
         Route::post('pickups/{pickup}/payment', [PickupController::class, 'updatePayment'])->name('pickups.payment');
         Route::post('pickups/{pickup}/transfer', [PickupController::class, 'verifyTransfer'])->name('pickups.transfer');

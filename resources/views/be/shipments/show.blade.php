@@ -1,6 +1,6 @@
 @extends('be.layouts.main')
 
-@section('header_title', 'Detail Shipment: ' . $shipment->tracking_number)
+@section('header_title', 'Detail Shipment')
 
 @section('content')
 
@@ -29,6 +29,10 @@
 
             <div class="hud-panel mb-4">
                 <h3 class="font-bank text-accent mb-3" style="font-size: 1.2rem;">Info Paket</h3>
+                <div style="margin-bottom: 1.5rem;">
+                    <div class="font-ui text-gray" style="font-size: 0.75rem;">No. Resi</div>
+                    <div class="shipment-tracking-code">{{ $shipment->tracking_number }}</div>
+                </div>
                 <div style="margin-bottom: 1.5rem;">
                         <div class="font-ui text-gray" style="font-size: 0.75rem;">Item</div>
                     @foreach($shipment->items as $item)
@@ -122,6 +126,15 @@
                                     @endif
                                     @if($leg->planned_arrival_at)
                                         / ETA {{ $leg->planned_arrival_at->format('d M Y H:i') }}
+                                    @endif
+                                    @if($leg->distance_km)
+                                        <br>{{ number_format((float) $leg->distance_km, 1, ',', '.') }} KM
+                                        @if($leg->duration_minutes)
+                                            / {{ $leg->duration_minutes }} menit
+                                        @endif
+                                        @if($leg->routing_provider)
+                                            / {{ strtoupper($leg->routing_provider) }}
+                                        @endif
                                     @endif
                                     @if($leg->delay_reason)
                                         <br>Delay: {{ $leg->delay_reason }}
@@ -230,15 +243,32 @@
                     <h3 class="font-bank text-primary mb-4">Assignment Kurir</h3>
                     <div class="font-ui text-gray" style="font-size: 0.78rem; margin-bottom: 0.8rem;">
                         Kurir saat ini: {{ $shipment->courier ? $shipment->courier->name : 'belum ditugaskan' }}
+                        @if($shipment->courier?->vehicle)
+                            / {{ $shipment->courier->vehicle->label() }}
+                        @endif
                     </div>
+                    @if($canAssignOutbound)
+                        <div class="font-ui text-gray" style="font-size: 0.74rem; line-height: 1.5; margin-bottom: 0.8rem;">
+                            Outbound antar hub hanya bisa di-assign ke kurir dengan kendaraan truck aktif dan kapasitas cukup.
+                        </div>
+                    @endif
 
                     <form action="{{ route('be.shipments.assign-delivery', $shipment) }}" method="POST">
                         @csrf
                         <select name="courier_id" required style="width: 100%; margin-bottom: 0.8rem;" {{ ! $canAssignCourier ? 'disabled' : '' }}>
                             <option value="">PILIH KURIR HUB...</option>
                             @foreach($deliveryCouriers as $courier)
-                                <option value="{{ $courier->id }}" @selected((int) $shipment->courier_id === (int) $courier->id)>
-                                    {{ $courier->name }} / {{ $courier->email }}
+                                @php
+                                    $vehicle = $courier->vehicle;
+                                    $vehicleBlocked = ! $vehicle
+                                        || $vehicle->status !== 'active'
+                                        || ($vehicle->branch_id && (int) $vehicle->branch_id !== (int) $courier->branch_id)
+                                        || ($canAssignOutbound && $vehicle->type !== 'truck')
+                                        || ((float) ($vehicle->capacity_kg ?? 0) < (float) $shipment->total_weight)
+                                        || ((int) ($vehicle->capacity_packages ?? 0) < 1);
+                                @endphp
+                                <option value="{{ $courier->id }}" @selected((int) $shipment->courier_id === (int) $courier->id) @disabled($vehicleBlocked)>
+                                    {{ $courier->name }} / {{ $vehicle?->label() ?? 'belum ada kendaraan' }}{{ $vehicleBlocked ? ' / tidak eligible' : '' }}
                                 </option>
                             @endforeach
                         </select>

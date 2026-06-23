@@ -7,7 +7,7 @@ use App\Models\Branch;
 use App\Models\Location;
 use App\Models\PickupRequest;
 use App\Models\PickupStatusAudit;
-use App\Models\Rate;
+use App\Services\ShippingCostService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,7 +23,23 @@ class OrderController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('fe.order_create', compact('user', 'provinces'));
+        $hqBranch = \App\Models\Branch::orderBy('id')->first();
+        $bankAccounts = $hqBranch
+            ? \App\Models\BankAccount::where('branch_id', $hqBranch->id)->get()
+            : collect();
+
+        $userOriginCityId = null;
+        $userOriginProvinceId = null;
+
+        if ($user->city) {
+            $userCity = Location::where('type', 'kota')->where('name', $user->city)->first();
+            if ($userCity) {
+                $userOriginCityId = $userCity->id;
+                $userOriginProvinceId = $userCity->parent_id;
+            }
+        }
+
+        return view('fe.order_create', compact('user', 'provinces', 'bankAccounts', 'userOriginCityId', 'userOriginProvinceId'));
     }
 
     public function store(Request $request)
@@ -112,13 +128,13 @@ class OrderController extends Controller
             $data['payment_proof'] = null;
         }
 
-        // --- NEAREST HUB CALCULATION ---
-        if ($request->sender_latitude && $request->sender_longitude) {
-            $data['branch_id'] = $this->calculateNearestBranch(
-                $request->sender_latitude,
-                $request->sender_longitude
-            );
+        $originBranchId = $this->resolveOriginBranchId($request);
+        if (! $originBranchId) {
+            return back()
+                ->withErrors(['sender_city_id' => 'Hub asal untuk kota pengirim belum tersedia. Hubungi admin untuk menambahkan hub provinsi tersebut.'])
+                ->withInput();
         }
+        $data['branch_id'] = $originBranchId;
 
         // We map the new fields into the pickup_requests table.
         $pickup = PickupRequest::create($data);
@@ -212,25 +228,104 @@ class OrderController extends Controller
             return null;
         }
 
-        $rate = Rate::where('origin_zone', $originCity->zone)
-            ->where('destination_zone', $destinationCity->zone)
-            ->first();
+        $estimate = app(ShippingCostService::class)->estimateFromCities($originCity, $destinationCity, $weight, $serviceType);
 
-        if (! $rate) {
+        if (! $estimate) {
             return null;
         }
 
-        $multiplier = 1.0;
-        if ($serviceType === 'BEST') {
-            $multiplier = 1.3;
-        } elseif ($serviceType === 'KARGO') {
-            $multiplier = 0.7;
+        // Try to determine number of legs via branch mapping so customers see final price.
+        try {
+            $originBranch = $this->findBranchForLocation($originCity);
+            $destinationBranch = $this->findBranchForLocation($destinationCity);
+
+            if ($originBranch && $destinationBranch) {
+                $routeBranches = app(\App\Services\ShipmentRoutePlanner::class)->branchesFor($originBranch, $destinationBranch);
+                $extraLegs = max(0, $routeBranches->count() - 2);
+                if ($extraLegs > 0 && isset($estimate['total_price'])) {
+                    $multiplier = 1 + (0.10 * $extraLegs);
+                    $estimate['total_price'] = (float) round(((float) $estimate['total_price']) * $multiplier, 2);
+                    $estimate['total_price_fmt'] = 'Rp '.number_format($estimate['total_price'], 0, ',', '.');
+                    $estimate['price_per_kg'] = (float) $estimate['total_price'] / max(0.1, (float) $weight);
+                    $estimate['legs_count'] = max(1, $routeBranches->count() - 1);
+                    $estimate['pricing_multiplier'] = $multiplier;
+                }
+            }
+        } catch (\Throwable) {
+            // non-fatal: return original estimate if planner fails
         }
 
-        return [
-            'total_price' => ($rate->price_per_kg * $multiplier) * max(0.1, $weight),
-            'estimated_days' => $serviceType === 'BEST' ? 1 : $rate->estimated_days,
-        ];
+        return $estimate;
+    }
+
+    private function resolveOriginBranchId(Request $request): ?int
+    {
+        $senderCity = Location::query()
+            ->with('parentLocation')
+            ->find($request->integer('sender_city_id'));
+
+        if ($senderCity) {
+            $branch = $this->findBranchForLocation($senderCity);
+            if ($branch) {
+                return (int) $branch->id;
+            }
+        }
+
+        if ($request->filled('sender_latitude') && $request->filled('sender_longitude')) {
+            return $this->calculateNearestBranch(
+                $request->input('sender_latitude'),
+                $request->input('sender_longitude')
+            );
+        }
+
+        return null;
+    }
+
+    private function findBranchForLocation(Location $city): ?Branch
+    {
+        $provinceName = $city->parentLocation?->name;
+
+        return $this->findBranchByRegionName($provinceName)
+            ?: $this->findBranchByRegionName($city->name);
+    }
+
+    private function findBranchByRegionName(?string $regionName): ?Branch
+    {
+        $regionName = trim((string) $regionName);
+        if ($regionName === '') {
+            return null;
+        }
+
+        $like = '%'.addcslashes($regionName, '%_\\').'%';
+        $directMatch = Branch::query()
+            ->where('city', $regionName)
+            ->orWhere('name', 'like', $like)
+            ->first();
+
+        if ($directMatch) {
+            return $directMatch;
+        }
+
+        $needle = $this->normalizeRegionName($regionName);
+
+        return Branch::query()
+            ->get(['id', 'name', 'city'])
+            ->first(function (Branch $branch) use ($needle) {
+                $branchCity = $this->normalizeRegionName($branch->city);
+                $branchName = $this->normalizeRegionName($branch->name);
+
+                return $branchCity === $needle
+                    || str_contains($branchName, $needle)
+                    || str_contains($needle, $branchCity);
+            });
+    }
+
+    private function normalizeRegionName(?string $value): string
+    {
+        $value = strtolower(trim((string) $value));
+        $value = preg_replace('/^(provinsi|kota|kabupaten|kab\.?)\s+/i', '', $value) ?? $value;
+
+        return preg_replace('/\s+/', ' ', $value) ?? $value;
     }
 
     /**

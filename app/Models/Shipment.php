@@ -10,6 +10,7 @@ class Shipment extends Model
 
     protected $casts = [
         'shipment_date' => 'datetime',
+        'shipping_quote_payload' => 'array',
     ];
 
     public function sender()

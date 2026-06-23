@@ -12,6 +12,10 @@ use App\Models\Rate;
 use App\Models\Shipment;
 use App\Models\ShipmentItem;
 use App\Models\User;
+use App\Services\CourierAssignmentService;
+use App\Services\RouteDistanceService;
+use App\Services\ShippingCostService;
+use App\Services\ShipmentNotifier;
 use App\Services\ShipmentRoutePlanner;
 use App\Support\RouteEstimate;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -180,7 +184,7 @@ class PickupController extends Controller
         }
 
         $pickups = $query->latest()->paginate(15);
-        $couriers = User::where('role', 'courier');
+        $couriers = User::with('vehicle')->where('role', 'courier');
 
         if (auth()->user()->branch_id) {
             $couriers->where('branch_id', auth()->user()->branch_id);
@@ -207,17 +211,20 @@ class PickupController extends Controller
             'statusAudits.user',
         ]);
 
-        $couriers = User::where('role', 'courier');
+        $couriers = User::with('vehicle')->where('role', 'courier');
         if (auth()->user()->branch_id) {
             $couriers->where('branch_id', auth()->user()->branch_id);
         }
 
+        $hub = $pickup->branch ?: auth()->user()->branch;
+        $hubPoint = app(RouteDistanceService::class)->pointForBranch($hub);
+
         $routeEstimate = RouteEstimate::make([
             [
                 'label' => 'Hub awal',
-                'address' => $pickup->branch?->name.' - '.$pickup->branch?->city,
-                'lat' => $pickup->branch?->latitude,
-                'lng' => $pickup->branch?->longitude,
+                'address' => $hubPoint['address'] ?? ($hub?->name.' - '.$hub?->city),
+                'lat' => $hubPoint['lat'] ?? null,
+                'lng' => $hubPoint['lng'] ?? null,
             ],
             [
                 'label' => 'Titik pickup',
@@ -237,10 +244,18 @@ class PickupController extends Controller
             'note' => 'Estimasi rute kurir dari hub ke titik pickup lalu ke alamat penerima. Buka Google Maps untuk navigasi real-time.',
         ]);
 
+        $assignmentRecommendation = $canRecommend = null;
+        if (in_array(auth()->user()->role, ['manager', 'cashier'], true) && ! $pickup->courier) {
+            $assignmentRecommendation = app(CourierAssignmentService::class)->recommendForPickup($pickup);
+            $canRecommend = (bool) $assignmentRecommendation;
+        }
+
         return view('be.pickups.show', [
             'pickup' => $pickup,
             'couriers' => $couriers->get(),
             'routeEstimate' => $routeEstimate,
+            'assignmentRecommendation' => $assignmentRecommendation,
+            'canAutoAssign' => $canRecommend,
         ]);
     }
 
@@ -262,9 +277,14 @@ class PickupController extends Controller
 
         $request->validate(['courier_id' => 'required|exists:users,id']);
 
-        $courier = User::where('id', $request->courier_id)->where('role', 'courier')->firstOrFail();
+        $courier = User::with('vehicle')->where('id', $request->courier_id)->where('role', 'courier')->firstOrFail();
         if ($branchId && $courier->branch_id && (int) $courier->branch_id !== (int) $branchId) {
             abort(403);
+        }
+
+        $assignmentError = app(CourierAssignmentService::class)->validatePickupCourier($pickup, $courier);
+        if ($assignmentError) {
+            return back()->withErrors(['courier_id' => $assignmentError]);
         }
 
         $payload = [
@@ -281,6 +301,48 @@ class PickupController extends Controller
         $this->auditPickup($request, $pickup->fresh(), 'courier_assigned', $previousStatus, 'assigned', null, null, 'Courier assigned to pickup.');
 
         return back()->with('success', 'Courier assigned to pickup unit.');
+    }
+
+    public function autoAssign(Request $request, PickupRequest $pickup)
+    {
+        if (! in_array(auth()->user()->role, ['manager', 'cashier'], true)) {
+            abort(403, 'Pickup assignment hanya bisa dilakukan Manager Hub atau Kasir Hub.');
+        }
+
+        $branchId = auth()->user()->branch_id;
+        if (! $branchId) {
+            abort(403, 'Akun staf belum terhubung ke cabang.');
+        }
+
+        $hasBranchColumn = Schema::hasColumn('pickup_requests', 'branch_id');
+        if ($hasBranchColumn && $pickup->branch_id && (int) $pickup->branch_id !== (int) $branchId) {
+            abort(403);
+        }
+
+        if ($pickup->courier_id) {
+            return back()->with('success', 'Pickup ini sudah punya kurir.');
+        }
+
+        if ($hasBranchColumn && ! $pickup->branch_id) {
+            $pickup->update(['branch_id' => $branchId]);
+            $pickup->refresh();
+        }
+
+        $previousStatus = $pickup->status;
+        $recommendation = app(CourierAssignmentService::class)->assignRecommended($pickup);
+
+        if (! $recommendation) {
+            return back()->withErrors(['courier_id' => 'Belum ada kurir available dengan kendaraan aktif dan kapasitas cukup.']);
+        }
+
+        $description = 'Auto assigned to '.$recommendation['courier']->name
+            .' using '.$recommendation['vehicle']->label()
+            .'. Score: '.$recommendation['score']
+            .($recommendation['distance_km'] ? '. Estimasi ke pickup: '.$recommendation['distance_km'].' KM' : '');
+
+        $this->auditPickup($request, $pickup->fresh(), 'courier_auto_assigned', $previousStatus, 'assigned', null, null, $description);
+
+        return back()->with('success', 'Auto assign memilih '.$recommendation['courier']->name.' untuk pickup ini.');
     }
 
     public function updateStatus(Request $request, PickupRequest $pickup)
@@ -462,10 +524,56 @@ class PickupController extends Controller
 
         $destinationBranch = $this->resolveDestinationBranch($pickup, $originBranch);
         $rate = $this->resolvePickupRate($pickup);
+        $shippingEstimate = null;
 
-        if (! $rate) {
-            return back()->with('error', 'Rate pickup tidak ditemukan untuk rute kota pengirim dan penerima.');
+        $pickup->loadMissing(['senderCity', 'receiverCity']);
+        if ($pickup->senderCity && $pickup->receiverCity) {
+            $shippingEstimate = app(ShippingCostService::class)->estimateFromCities(
+                $pickup->senderCity,
+                $pickup->receiverCity,
+                (float) $pickup->weight,
+                (string) $pickup->service_type
+            );
         }
+
+        if (! $shippingEstimate && $pickup->total_price) {
+            $shippingEstimate = [
+                'total_price' => (float) $pickup->total_price,
+                'total_price_fmt' => 'Rp '.number_format((float) $pickup->total_price, 0, ',', '.'),
+                'price_per_kg' => (float) $pickup->total_price / max(0.1, (float) $pickup->weight),
+                'estimated_days' => $rate?->estimated_days,
+                'service_type' => (string) $pickup->service_type,
+                'source' => 'pickup_snapshot',
+                'rate_id' => $rate?->id,
+                'quote_payload' => [
+                    'source' => 'pickup_snapshot',
+                    'pickup_request_id' => $pickup->id,
+                ],
+            ];
+        }
+
+        if (! $shippingEstimate) {
+            return back()->with('error', 'Ongkir pickup belum tersedia dari RajaOngkir maupun snapshot order.');
+        }
+
+        // Apply small pricing adjustment when shipment will traverse multiple legs.
+        // Add 10% per extra leg (beyond the first leg) to account for multi-hop handling.
+        try {
+            $routeBranches = app(\App\Services\ShipmentRoutePlanner::class)->branchesFor($originBranch, $destinationBranch);
+            $extraLegs = max(0, $routeBranches->count() - 2);
+            if ($extraLegs > 0 && isset($shippingEstimate['total_price'])) {
+                $multiplier = 1 + (0.10 * $extraLegs);
+                $shippingEstimate['total_price'] = (float) round(((float) $shippingEstimate['total_price']) * $multiplier, 2);
+                $shippingEstimate['total_price_fmt'] = 'Rp '.number_format($shippingEstimate['total_price'], 0, ',', '.');
+                $shippingEstimate['price_per_kg'] = (float) $shippingEstimate['total_price'] / max(0.1, (float) $pickup->weight);
+                $shippingEstimate['legs_count'] = max(1, $routeBranches->count() - 1);
+                $shippingEstimate['pricing_multiplier'] = $multiplier;
+            }
+        } catch (\Throwable) {
+            // Non-fatal: keep original estimate if planner fails.
+        }
+
+        $totalPrice = (float) $shippingEstimate['total_price'];
 
         try {
             DB::beginTransaction();
@@ -516,16 +624,17 @@ class PickupController extends Controller
                 'origin_branch_id' => $originBranch->id,
                 'destination_branch_id' => $destinationBranch->id,
                 'courier_id' => null,
-                'rate_id' => $rate->id,
+                'rate_id' => $shippingEstimate['rate_id'] ?? $rate?->id,
                 'total_weight' => $pickup->weight,
-                'total_price' => $pickup->total_price,
+                'total_price' => $totalPrice,
+                ...$this->shippingSnapshotAttributes($shippingEstimate),
                 'status' => 'pending',
                 'shipment_date' => now(),
             ]);
 
             Payment::create([
                 'shipment_id' => $shipment->id,
-                'amount' => $pickup->total_price,
+                'amount' => $totalPrice,
                 'payment_method' => $pickup->payment_method === 'cash_on_pickup' ? 'cash' : 'transfer',
                 'payment_status' => 'paid',
                 'payment_date' => now(),
@@ -558,9 +667,19 @@ class PickupController extends Controller
                 'user_agent' => substr((string) $request->userAgent(), 0, 512),
             ]);
 
+            app(ShipmentNotifier::class)->record(
+                $shipment,
+                'shipment_activated',
+                'Shipment aktif',
+                'Nomor resi '.$shipment->tracking_number.' sudah aktif dan bisa dilacak.'
+            );
+
             app(ShipmentRoutePlanner::class)->createLegsFor($shipment);
 
-            $pickup->update(['shipment_id' => $shipment->id]);
+            $pickup->update([
+                'shipment_id' => $shipment->id,
+                'total_price' => $totalPrice,
+            ]);
             $this->auditPickup($request, $pickup->fresh(), 'shipment_activated', null, null, null, null, 'Shipment '.$shipment->tracking_number.' activated from pickup.');
 
             DB::commit();
@@ -586,6 +705,25 @@ class PickupController extends Controller
         }
 
         return false;
+    }
+
+    private function shippingSnapshotAttributes(array $estimate): array
+    {
+        $map = [
+            'shipping_cost_source' => $estimate['source'] ?? null,
+            'shipping_courier_code' => $estimate['courier'] ?? null,
+            'shipping_courier_name' => $estimate['courier_name'] ?? null,
+            'shipping_courier_service' => $estimate['courier_service'] ?? null,
+            'shipping_courier_description' => $estimate['courier_description'] ?? null,
+            'shipping_origin_ro_id' => $estimate['origin_ro_id'] ?? null,
+            'shipping_destination_ro_id' => $estimate['destination_ro_id'] ?? null,
+            'shipping_estimated_days' => $estimate['estimated_days'] ?? null,
+            'shipping_quote_payload' => $estimate['quote_payload'] ?? $estimate,
+        ];
+
+        return collect($map)
+            ->filter(fn ($value, string $column) => Schema::hasColumn('shipments', $column))
+            ->all();
     }
 
     private function resolvePickupRate(PickupRequest $pickup): ?Rate

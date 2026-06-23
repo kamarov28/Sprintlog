@@ -176,13 +176,39 @@
                 <h3 class="font-bank text-primary mb-4" style="font-size: 1.15rem;">AKSI PICKUP</h3>
 
                 @if($canManage && !$pickup->courier)
+                    @if($assignmentRecommendation)
+                        <div class="form-cluster form-cluster--accent mb-3">
+                            <div class="data-label">Rekomendasi Auto Assign</div>
+                            <div class="font-ui text-main" style="font-size: 1rem; font-weight: 800;">{{ $assignmentRecommendation['courier']->name }}</div>
+                            <div class="font-ui text-gray" style="font-size: 0.78rem; line-height: 1.55; margin-top: 0.4rem;">
+                                {{ $assignmentRecommendation['vehicle']->label() }}<br>
+                                Score {{ $assignmentRecommendation['score'] }}
+                                @if($assignmentRecommendation['distance_km'])
+                                    / {{ $assignmentRecommendation['distance_km'] }} KM
+                                @endif
+                                @if($assignmentRecommendation['duration_minutes'])
+                                    / {{ $assignmentRecommendation['duration_minutes'] }} menit
+                                @endif
+                                <br>Aktif: {{ $assignmentRecommendation['active_pickups'] }} pickup / {{ $assignmentRecommendation['same_day_pickups'] }} di tanggal ini
+                            </div>
+                            <form action="{{ route('be.pickups.auto-assign', $pickup) }}" method="POST" style="margin-top: 0.85rem;">
+                                @csrf
+                                <button type="submit" class="btn-neon" style="width: 100%; background: transparent; border-color: var(--color-accent); color: var(--color-accent);">Auto Assign Kurir</button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="inline-alert mb-3">
+                            <div class="font-ui text-gray" style="font-size: 0.8rem;">Belum ada rekomendasi otomatis. Cek kendaraan aktif, kapasitas, dan hub kurir.</div>
+                        </div>
+                    @endif
+
                     <form action="{{ route('be.pickups.assign', $pickup) }}" method="POST" class="form-cluster mb-3">
                         @csrf
                         <div class="data-label">Assign Kurir Pickup</div>
                         <select name="courier_id" required style="width: 100%; padding: 0.55rem; font-family: var(--font-ui); margin: 0.5rem 0;">
                             <option value="" disabled selected>Pilih kurir...</option>
                             @foreach($couriers as $courier)
-                                <option value="{{ $courier->id }}">{{ $courier->name }}</option>
+                                <option value="{{ $courier->id }}">{{ $courier->name }}{{ $courier->vehicle ? ' / '.$courier->vehicle->label() : ' / kendaraan belum ada' }}</option>
                             @endforeach
                         </select>
                         <button type="submit" class="btn-neon" style="width: 100%; background: transparent;">Assign Kurir</button>
