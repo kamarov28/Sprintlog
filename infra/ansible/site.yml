@@ -146,6 +146,7 @@
         dest: "{{ app_deploy_path }}"
         version: "{{ app_repo_version }}"
         update: true
+        force: true
 
     - name: Build SprintLog custom Docker image
       ansible.builtin.command: docker build --network=host -t {{ sprintlog_image }} -f Dockerfile .
