@@ -10,26 +10,28 @@
     @endpush
 @endonce
 
-<div class="map-picker">
-    <div style="margin-top: 1.5rem;">
-        <div class="map-picker__controls">
-            <x-fe.input type="textarea" label="{{ $labelText }}" name="{{ $addressName }}" id="{{ $id }}_address_display" required class="mb-0" style="flex-grow: 1;" {{ $attributes }}>{{ $addressValue }}</x-fe.input>
-            <x-fe.button type="button" onclick="toggleMap_{{ $id }}()" variant="secondary" style="font-size: 0.7rem; white-space: nowrap; margin-bottom: 4px;">{{ $buttonText }}</x-fe.button>
+<div class="space-y-3">
+    <div class="flex flex-col sm:flex-row items-end gap-3 w-full">
+        <div class="flex-grow w-full">
+            <x-fe.input type="textarea" label="{{ $labelText }}" name="{{ $addressName }}" id="{{ $id }}_address_display" required class="mb-0" {{ $attributes }}>{{ $addressValue }}</x-fe.input>
         </div>
-        @if($infoText)
-        <p class="text-gray" style="font-size: 0.7rem; margin-top: 10px;">{{ $infoText }}</p>
-        @endif
-        <div id="{{ $id }}_lock_status" class="map-lock-status">
-            <span>Point ready</span>
-            <strong id="{{ $id }}_lock_label">{{ $addressValue ? \Illuminate\Support\Str::limit($addressValue, 58) : 'Map point follows selected city until you lock exact address.' }}</strong>
-        </div>
+        <x-fe.button type="button" onclick="toggleMap_{{ $id }}()" variant="outline" class="btn-sm font-semibold shrink-0 mb-4 h-12">{{ $buttonText }}</x-fe.button>
+    </div>
+    
+    @if($infoText)
+        <p class="text-[10px] text-slate-400 font-light text-left">{{ $infoText }}</p>
+    @endif
+    
+    <div id="{{ $id }}_lock_status" class="text-[10px] text-slate-400 font-semibold border-l-2 border-primary/40 pl-3 leading-normal text-left">
+        <span class="text-primary font-bold uppercase tracking-wider block text-[8px] mb-0.5">Ready</span>
+        <strong id="{{ $id }}_lock_label" class="font-normal block">{{ $addressValue ? \Illuminate\Support\Str::limit($addressValue, 58) : 'Map point follows selected city until you lock exact address.' }}</strong>
     </div>
     
     <input type="hidden" name="{{ $latName }}" id="{{ $id }}_lat" value="{{ $defaultLat }}">
     <input type="hidden" name="{{ $lngName }}" id="{{ $id }}_lng" value="{{ $defaultLng }}">
 
-    <div id="{{ $id }}-map-container" class="map-picker__map-shell" style="display: none; margin-top: 1.5rem;">
-        <div id="{{ $id }}_map" style="height: 250px;"></div>
+    <div id="{{ $id }}-map-container" class="glass-panel border-white/5 p-2 rounded-2xl shadow-xl mt-3" style="display: none;">
+        <div id="{{ $id }}_map" class="w-full rounded-xl overflow-hidden" style="height: 250px;"></div>
     </div>
 </div>
 
@@ -106,7 +108,6 @@ function announceMapLock_{{ $id }}(status, label, lat = null, lng = null) {
     const labelBox = document.getElementById('{{ $id }}_lock_label');
     if (!statusBox || !labelBox) return;
 
-    statusBox.classList.add('is-locked');
     statusBox.querySelector('span').textContent = status.replaceAll('_', ' ').toLowerCase();
     labelBox.textContent = label || 'Exact point selected.';
     document.dispatchEvent(new CustomEvent('map-point-updated', {

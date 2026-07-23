@@ -239,9 +239,9 @@
                 const xStep = values.length > 1 ? width / (values.length - 1) : width;
 
                 ctx.lineWidth = 1;
-                ctx.strokeStyle = '#ded3c0';
-                ctx.fillStyle = '#25252b';
-                ctx.font = '700 12px sans-serif';
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '500 11px "Space Grotesk", sans-serif';
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
 
@@ -255,8 +255,8 @@
                     ctx.fillText(formatCurrency(value), padding.left - 12, y);
                 }
 
-                ctx.strokeStyle = '#151515';
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.moveTo(padding.left, padding.top);
                 ctx.lineTo(padding.left, padding.top + height);
@@ -276,29 +276,37 @@
                 ctx.lineTo(points.at(-1)?.x ?? padding.left, padding.top + height);
                 ctx.lineTo(points[0]?.x ?? padding.left, padding.top + height);
                 ctx.closePath();
-                ctx.fillStyle = 'rgba(184, 244, 207, 0.58)';
+                
+                const fillGrad = ctx.createLinearGradient(0, padding.top, 0, padding.top + height);
+                fillGrad.addColorStop(0, 'rgba(166, 216, 0, 0.12)');
+                fillGrad.addColorStop(0.5, 'rgba(167, 139, 250, 0.04)');
+                fillGrad.addColorStop(1, 'rgba(167, 139, 250, 0)');
+                ctx.fillStyle = fillGrad;
                 ctx.fill();
 
                 ctx.beginPath();
                 points.forEach((point, index) => {
                     index === 0 ? ctx.moveTo(point.x, point.y) : ctx.lineTo(point.x, point.y);
                 });
-                ctx.strokeStyle = '#176b3b';
-                ctx.lineWidth = 4;
+                const strokeGrad = ctx.createLinearGradient(padding.left, 0, cssWidth - padding.right, 0);
+                strokeGrad.addColorStop(0, '#a6d800');
+                strokeGrad.addColorStop(1, '#a78bfa');
+                ctx.strokeStyle = strokeGrad;
+                ctx.lineWidth = 3;
                 ctx.stroke();
 
                 points.forEach(point => {
                     ctx.beginPath();
-                    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
-                    ctx.fillStyle = '#fff06d';
+                    ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
                     ctx.fill();
-                    ctx.strokeStyle = '#151515';
+                    ctx.strokeStyle = '#a6d800';
                     ctx.lineWidth = 2;
                     ctx.stroke();
                 });
 
-                ctx.fillStyle = '#25252b';
-                ctx.font = '800 12px sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '500 11px "Space Grotesk", sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
 
@@ -314,8 +322,8 @@
                 });
 
                 if (values.every(value => value === 0)) {
-                    ctx.fillStyle = '#25252b';
-                    ctx.font = '900 16px sans-serif';
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.font = '600 14px "Space Grotesk", sans-serif';
                     ctx.fillText('Tidak ada pendapatan pada filter ini', padding.left + width / 2, padding.top + height / 2);
                 }
             };

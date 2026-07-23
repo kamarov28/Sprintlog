@@ -1,77 +1,219 @@
-/* Backend Toy Standard: dense admin surfaces with the shared pastel neo-brutalist language. */
+/* ==========================================================================
+   Backend Control Panel Redesign: Premium Glassmorphism & Modern Fonts
+   ========================================================================== */
+
+/* 1. Global Page Styles & Variables */
 body.theme-toy-be.app-shell--be {
-    background: #fff3df !important;
-    background-color: #fff3df !important;
+    background: #070a13 !important;
+    background-color: #070a13 !important;
     background-image: none !important;
-    background-size: auto !important;
-    background-attachment: scroll !important;
-    --color-gray: #2d2d33;
-    color: var(--color-text-main);
-    font-family: var(--font-body) !important;
+    color: #94a3b8 !important;
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif !important;
     overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+    
+    /* Variable Overrides from style.css */
+    --color-bg: #070a13;
+    --color-text-main: #f1f5f9;
+    --color-gray: #94a3b8;
+    --color-panel: rgba(13, 18, 34, 0.45);
+    --color-panel-border: rgba(255, 255, 255, 0.05);
+    --color-primary: #a6d800;
+    --color-accent: #a78bfa;
+    --color-sun: #1e1b4b;
+    --color-sky: rgba(167, 139, 250, 0.15);
+    --color-lilac: rgba(167, 139, 250, 0.1);
+    
+    --font-title: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    --font-sub: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    --font-ui: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    
+    --be-page-pad: clamp(1rem, 2.4vw, 2.65rem);
+    --be-stack-gap: clamp(1.25rem, 2vw, 1.85rem);
+    --be-card-gap: clamp(1.35rem, 2.2vw, 2.05rem);
+    --be-panel-pad: clamp(1.25rem, 2vw, 1.75rem);
+    --be-shadow-size: 0px;
 }
 
-body.theme-toy-be.app-shell--be::before,
+/* 2. Pure CSS Ambient Glow Blobs */
+body.theme-toy-be.app-shell--be::before {
+    display: block !important;
+    content: "" !important;
+    position: fixed !important;
+    width: 600px;
+    height: 600px;
+    top: -150px;
+    left: -150px;
+    background: radial-gradient(circle, rgba(166, 216, 0, 0.06) 0%, rgba(166, 216, 0, 0) 70%) !important;
+    filter: blur(80px) !important;
+    z-index: -10 !important;
+    pointer-events: none !important;
+}
+
 body.theme-toy-be.app-shell--be::after {
-    display: none !important;
-    content: none !important;
-    background: none !important;
+    display: block !important;
+    content: "" !important;
+    position: fixed !important;
+    width: 700px;
+    height: 700px;
+    bottom: -150px;
+    right: -150px;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.08) 0%, rgba(167, 139, 250, 0) 70%) !important;
+    filter: blur(90px) !important;
+    z-index: -10 !important;
+    pointer-events: none !important;
 }
 
+/* 3. Sleek Translucent Custom Scrollbars (resolves thick white browser bar) */
+body.theme-toy-be.app-shell--be ::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+body.theme-toy-be.app-shell--be ::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+body.theme-toy-be.app-shell--be ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 10px !important;
+}
+body.theme-toy-be.app-shell--be ::-webkit-scrollbar-thumb:hover {
+    background: rgba(166, 216, 0, 0.3) !important;
+}
+
+/* Firefox compatibility */
+body.theme-toy-be.app-shell--be * {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent !important;
+}
+
+/* 4. Layout Spacing & Grid overrides (resolves collapsed card columns and margins) */
+body.theme-toy-be.app-shell--be .be-grid {
+    display: grid !important;
+    gap: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+body.theme-toy-be.app-shell--be .be-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+body.theme-toy-be.app-shell--be .be-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+body.theme-toy-be.app-shell--be .be-grid--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 768px) {
+    body.theme-toy-be.app-shell--be .be-grid--2,
+    body.theme-toy-be.app-shell--be .be-grid--3,
+    body.theme-toy-be.app-shell--be .be-grid--4 {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+/* Responsive Grid for Filter forms */
+body.theme-toy-be.app-shell--be .financial-filter-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+body.theme-toy-be.app-shell--be .be-form-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+    gap: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* Vertical spacing between stacked panels */
+body.theme-toy-be.app-shell--be .sidebar-role-card,
+body.theme-toy-be.app-shell--be .hud-panel,
+body.theme-toy-be.app-shell--be .ui-surface,
+body.theme-toy-be.app-shell--be .form-cluster,
+body.theme-toy-be.app-shell--be .auth-card,
+body.theme-toy-be.app-shell--be .metric-card,
+body.theme-toy-be.app-shell--be .be-empty,
+body.theme-toy-be.app-shell--be .top-nav {
+    margin-bottom: 1.5rem !important;
+}
+
+/*
+ * ── Sticky header fix ─────────────────────────────────────────────
+ * Problem 1: .main-content has overflow-x: hidden which BREAKS
+ *   position: sticky on any descendant (all browsers).
+ *   Fix: swap to overflow-x: clip — clips visually but doesn't
+ *   create a new scroll container, so sticky still works.
+ *
+ * Problem 2: base style.css sets .top-nav { position: relative; top: auto }
+ *   which specificity-beats our later rule even with !important when
+ *   the selector weight matches. Fix: add body qualifier to beat it.
+ */
+body.theme-toy-be.app-shell--be .main-content {
+    overflow-x: clip !important; /* replaces overflow-x: hidden without breaking sticky */
+}
+
+
+/* Inline form field label padding */
+body.theme-toy-be.app-shell--be .be-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* 5. Typography Overrides: Using Outfit and Plus Jakarta Sans */
 body.theme-toy-be.app-shell--be,
+body.theme-toy-be.app-shell--be p,
+body.theme-toy-be.app-shell--be li,
+body.theme-toy-be.app-shell--be td,
+body.theme-toy-be.app-shell--be input,
+body.theme-toy-be.app-shell--be select,
+body.theme-toy-be.app-shell--be textarea,
 body.theme-toy-be.app-shell--be .font-ui {
-    font-family: var(--font-ui) !important;
-    letter-spacing: 0 !important;
-}
-
-body.theme-toy-be.app-shell--be {
-    font-family: var(--font-body) !important;
-}
-
-body.theme-toy-be.app-shell--be .font-bank,
-body.theme-toy-be.app-shell--be .font-modula {
-    font-family: var(--font-title) !important;
-    letter-spacing: 0.035em !important;
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif !important;
+    letter-spacing: -0.01em !important;
+    line-height: 1.6 !important;
 }
 
 body.theme-toy-be.app-shell--be h1,
 body.theme-toy-be.app-shell--be h2,
 body.theme-toy-be.app-shell--be h3,
+body.theme-toy-be.app-shell--be h4,
 body.theme-toy-be.app-shell--be .logo-text,
 body.theme-toy-be.app-shell--be .be-stat__value,
-body.theme-toy-be.app-shell--be .metric-value {
-    font-family: var(--font-title) !important;
-    font-weight: 400 !important;
-    letter-spacing: 0.035em !important;
+body.theme-toy-be.app-shell--be .metric-value,
+body.theme-toy-be.app-shell--be .font-bank,
+body.theme-toy-be.app-shell--be .font-modula {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+    letter-spacing: -0.02em !important;
+    text-transform: none !important; /* Soft capitalize/none transform prevents vertical clipping */
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+    text-shadow: none !important; /* Disables retro 3D offset shadow overlay */
 }
 
-body.theme-toy-be.app-shell--be .top-nav__section,
-body.theme-toy-be.app-shell--be .top-nav__description,
-body.theme-toy-be.app-shell--be .top-nav__date,
-body.theme-toy-be.app-shell--be .sidebar-section-label,
-body.theme-toy-be.app-shell--be .be-stat__label,
-body.theme-toy-be.app-shell--be .be-btn,
-body.theme-toy-be.app-shell--be .be-badge,
-body.theme-toy-be.app-shell--be th,
-body.theme-toy-be.app-shell--be label {
-    font-family: var(--font-ui) !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.02em !important;
-    text-transform: none !important;
-}
-
-body.theme-toy-be.app-shell--be .be-container {
-    min-height: 100vh;
-}
-
+/* 6. Sidebar Glass styling */
 body.theme-toy-be.app-shell--be .sidebar {
     width: 300px;
-    padding: 1.4rem;
-    background: var(--color-panel) !important;
-    border-right: 3px solid var(--color-panel-border) !important;
-    box-shadow: 7px 0 0 var(--color-panel-border) !important;
+    padding: 1.6rem;
+    background: rgba(13, 18, 34, 0.55) !important;
+    background-image: none !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    display: flex;
+    flex-direction: column;
 }
 
+/* Sidebar Logo override to Neon Green */
+body.theme-toy-be.app-shell--be .sidebar .logo-text span {
+    color: #a6d800 !important;
+}
+
+/* 7. UI Cards & Surface elements override */
 body.theme-toy-be.app-shell--be .sidebar-role-card,
 body.theme-toy-be.app-shell--be .hud-panel,
 body.theme-toy-be.app-shell--be .ui-surface,
@@ -79,100 +221,113 @@ body.theme-toy-be.app-shell--be .form-cluster,
 body.theme-toy-be.app-shell--be .auth-card,
 body.theme-toy-be.app-shell--be .metric-card,
 body.theme-toy-be.app-shell--be .be-empty {
-    border: 3px solid var(--color-panel-border) !important;
-    border-radius: 8px !important;
-    background: var(--color-panel) !important;
-    box-shadow: 7px 7px 0 var(--color-panel-border) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 20px !important;
+    background: rgba(13, 18, 34, 0.55) !important;
+    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    transform: none !important;
+    padding: var(--be-panel-pad);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+/* Hover effects for Interactive Cards */
 body.theme-toy-be.app-shell--be .hud-panel:hover,
 body.theme-toy-be.app-shell--be .ui-surface:hover,
 body.theme-toy-be.app-shell--be .form-cluster:hover,
 body.theme-toy-be.app-shell--be .auth-card:hover,
 body.theme-toy-be.app-shell--be .metric-card:hover {
-    transform: none !important;
-    box-shadow: 7px 7px 0 var(--color-panel-border) !important;
+    transform: translateY(-2px) !important;
+    border-color: rgba(166, 216, 0, 0.2) !important;
+    box-shadow: 0 12px 40px 0 rgba(166, 216, 0, 0.05), 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
 }
 
-body.theme-toy-be.app-shell--be .hud-panel::before,
-body.theme-toy-be.app-shell--be .hud-panel::after {
-    display: none !important;
+body.theme-toy-be.app-shell--be .sidebar-role-card {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    box-shadow: none !important;
+    padding: 1.2rem !important;
+    border-radius: 14px !important;
 }
 
-body.theme-toy-be.app-shell--be .be-quick-search {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) max-content;
-    min-width: 0;
-    width: 100%;
-    max-width: none;
-}
-
-body.theme-toy-be.app-shell--be .mobile-toggle {
-    border: 3px solid var(--color-panel-border);
-    border-radius: 8px;
-    background: var(--color-sun);
-    box-shadow: 4px 4px 0 var(--color-panel-border);
-    min-height: 48px;
-    padding: 0.35rem 0.65rem;
-}
-
-body.theme-toy-be.app-shell--be .be-quick-search input,
+/* 8. Inputs & Select Fields */
 body.theme-toy-be.app-shell--be input[type="text"],
 body.theme-toy-be.app-shell--be input[type="password"],
 body.theme-toy-be.app-shell--be input[type="email"],
 body.theme-toy-be.app-shell--be input[type="number"],
 body.theme-toy-be.app-shell--be input[type="search"],
 body.theme-toy-be.app-shell--be input[type="file"],
+body.theme-toy-be.app-shell--be input[type="date"],
 body.theme-toy-be.app-shell--be select,
 body.theme-toy-be.app-shell--be textarea {
-    min-height: 42px;
-    border: 3px solid var(--color-panel-border) !important;
-    border-radius: 8px !important;
-    background: #ffffff !important;
-    color: var(--color-text-main) !important;
-    box-shadow: 4px 4px 0 var(--color-panel-border) !important;
-    font-family: var(--font-body) !important;
-    font-weight: 700;
+    min-height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    color: #f1f5f9 !important;
+    box-shadow: none !important;
+    padding: 0.5rem 0.85rem !important;
+    transition: all 0.2s ease;
+    box-sizing: border-box !important;
 }
 
 body.theme-toy-be.app-shell--be input:focus,
 body.theme-toy-be.app-shell--be select:focus,
 body.theme-toy-be.app-shell--be textarea:focus {
-    border-color: var(--color-panel-border) !important;
-    box-shadow: 4px 4px 0 var(--color-panel-border), 0 0 0 4px var(--color-sun) !important;
+    border-color: rgba(166, 216, 0, 0.4) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    box-shadow: 0 0 0 3px rgba(166, 216, 0, 0.08) !important;
     outline: none !important;
 }
 
+/* Select option styles to resolve white-on-white text rendering */
+body.theme-toy-be.app-shell--be select option {
+    background-color: #0d1222 !important;
+    color: #f1f5f9 !important;
+    padding: 0.5rem !important;
+}
+
+/* Styling multiple select / list boxes */
+body.theme-toy-be.app-shell--be select[multiple] {
+    height: auto !important;
+    min-height: 120px !important;
+    background: rgba(13, 18, 34, 0.5) !important;
+    padding: 0.5rem !important;
+}
+
+/* Date input picker icon color fix (inverting to white) */
+body.theme-toy-be.app-shell--be input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+    cursor: pointer;
+    opacity: 0.7;
+}
+body.theme-toy-be.app-shell--be input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* 9. Buttons */
 body.theme-toy-be.app-shell--be .be-btn,
 body.theme-toy-be.app-shell--be .btn-primary,
 body.theme-toy-be.app-shell--be .btn-secondary,
 body.theme-toy-be.app-shell--be .btn-neon,
 body.theme-toy-be.app-shell--be .btn-outline,
 body.theme-toy-be.app-shell--be .ui-button {
-    min-height: 40px;
-    border: 3px solid var(--color-panel-border) !important;
-    border-radius: 8px !important;
-    background: var(--color-panel) !important;
-    color: var(--color-text-main) !important;
-    box-shadow: 4px 4px 0 var(--color-panel-border) !important;
-}
-
-body.theme-toy-be.app-shell--be .be-btn--primary,
-body.theme-toy-be.app-shell--be .btn-primary,
-body.theme-toy-be.app-shell--be .ui-button--primary {
-    background: var(--color-primary) !important;
-}
-
-body.theme-toy-be.app-shell--be .be-btn--accent,
-body.theme-toy-be.app-shell--be .btn-secondary,
-body.theme-toy-be.app-shell--be .ui-button--secondary {
-    background: var(--color-lilac) !important;
-}
-
-body.theme-toy-be.app-shell--be .be-btn--danger {
-    background: var(--color-peach) !important;
+    min-height: 42px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-weight: 700 !important;
+    text-transform: none !important; /* Soft casing resolves letter-overflow */
+    letter-spacing: -0.01em !important;
+    padding: 0.5rem 1.4rem !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 body.theme-toy-be.app-shell--be .be-btn:hover,
@@ -181,512 +336,240 @@ body.theme-toy-be.app-shell--be .btn-secondary:hover,
 body.theme-toy-be.app-shell--be .btn-neon:hover,
 body.theme-toy-be.app-shell--be .btn-outline:hover,
 body.theme-toy-be.app-shell--be .ui-button:hover {
-    transform: translate(2px, 2px) !important;
-    box-shadow: 2px 2px 0 var(--color-panel-border) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
 }
 
-body.theme-toy-be.app-shell--be .sidebar-links {
-    gap: 0.45rem;
+body.theme-toy-be.app-shell--be .be-btn--primary,
+body.theme-toy-be.app-shell--be .btn-primary,
+body.theme-toy-be.app-shell--be .ui-button--primary {
+    background: rgba(166, 216, 0, 0.12) !important;
+    color: #a6d800 !important;
+    border: 1px solid rgba(166, 216, 0, 0.25) !important;
+    box-shadow: 0 4px 15px rgba(166, 216, 0, 0.08) !important;
+}
+body.theme-toy-be.app-shell--be .be-btn--primary:hover,
+body.theme-toy-be.app-shell--be .btn-primary:hover {
+    background: rgba(166, 216, 0, 0.22) !important;
+    border-color: rgba(166, 216, 0, 0.45) !important;
+    color: #a6d800 !important;
 }
 
+body.theme-toy-be.app-shell--be .be-btn--accent,
+body.theme-toy-be.app-shell--be .btn-secondary,
+body.theme-toy-be.app-shell--be .ui-button--secondary {
+    background: rgba(167, 139, 250, 0.12) !important;
+    color: #a78bfa !important;
+    border: 1px solid rgba(167, 139, 250, 0.25) !important;
+    box-shadow: 0 4px 15px rgba(167, 139, 250, 0.08) !important;
+}
+body.theme-toy-be.app-shell--be .be-btn--accent:hover,
+body.theme-toy-be.app-shell--be .btn-secondary:hover {
+    background: rgba(167, 139, 250, 0.22) !important;
+    border-color: rgba(167, 139, 250, 0.45) !important;
+    color: #a78bfa !important;
+}
+
+/* 10. Sidebar Links & Labels Typography fixes */
 body.theme-toy-be.app-shell--be .sidebar-links a {
-    border: 3px solid transparent;
-    border-radius: 8px;
-    padding: 0.8rem 0.9rem;
-    margin: 0;
-    font-family: var(--font-ui) !important;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    box-shadow: none;
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    padding: 0.8rem 1.1rem !important;
+    margin: 0 0 0.25rem 0 !important;
+    color: #94a3b8 !important;
+    text-transform: none !important; /* Resolves BankGothic all-caps override */
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: none !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.01em !important;
 }
 
 body.theme-toy-be.app-shell--be .sidebar-links a:hover {
-    background: var(--color-sky) !important;
-    color: var(--color-text-main) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #f1f5f9 !important;
+    transform: none !important; /* Remove legacy translate horizontal push */
 }
 
 body.theme-toy-be.app-shell--be .sidebar-links a.active {
-    border-color: var(--color-panel-border);
-    background: var(--color-primary) !important;
-    box-shadow: 5px 5px 0 var(--color-panel-border);
+    border-color: rgba(166, 216, 0, 0.2) !important;
+    border-left: 4px solid #a6d800 !important;
+    background: rgba(166, 216, 0, 0.08) !important;
+    color: #a6d800 !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
 }
 
 body.theme-toy-be.app-shell--be .sidebar-section-label {
-    margin: 1.35rem 0 0.5rem;
-    color: var(--color-gray);
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.06em !important;
+    color: rgba(255, 255, 255, 0.35) !important;
+    text-transform: uppercase !important;
+    margin: 1.4rem 0 0.5rem 0.5rem !important;
 }
 
-body.theme-toy-be.app-shell--be .role-brief,
-body.theme-toy-be.app-shell--be .role-responsibility-grid,
-body.theme-toy-be.app-shell--be .qol-stat-grid,
-body.theme-toy-be.app-shell--be .branch-summary,
-body.theme-toy-be.app-shell--be .shipment-filter {
-    gap: 1rem;
+/* 11. Top Navigation Bar - Padding and Spacing Optimization */
+body.theme-toy-be.app-shell--be .top-nav {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 120 !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 18px !important;
+    background: rgba(13, 18, 34, 0.82) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(28px) !important;
+    -webkit-backdrop-filter: blur(28px) !important;
+    max-width: 100%;
+    padding: 1.5rem !important;
+    margin-bottom: 2rem !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
 }
 
+body.theme-toy-be.app-shell--be .top-nav::before {
+    display: none !important; /* Remove legacy gradient underline line */
+}
+
+body.theme-toy-be.app-shell--be .top-nav__identity {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    min-width: 250px !important;
+    flex-grow: 1 !important;
+}
+
+body.theme-toy-be.app-shell--be .top-nav__tools {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 1rem 1.5rem !important;
+    flex-grow: 1 !important;
+    justify-content: flex-end !important;
+}
+
+@media (max-width: 992px) {
+    body.theme-toy-be.app-shell--be .top-nav__tools {
+        justify-content: flex-start !important;
+    }
+}
+
+/* Keyboard hint badges context strip padding fix */
+body.theme-toy-be.app-shell--be .be-context-strip {
+    margin: 1.5rem 0 2rem !important; /* Positive margin moves it cleanly below top-nav card */
+}
+
+/* Search bar styling inside top nav */
+body.theme-toy-be.app-shell--be .be-quick-search {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+body.theme-toy-be.app-shell--be .be-quick-search input {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 12px 0 0 12px !important;
+    color: #f1f5f9 !important;
+    box-shadow: none !important;
+    min-height: 42px !important;
+}
+
+body.theme-toy-be.app-shell--be .be-quick-search .be-btn,
+body.theme-toy-be.app-shell--be .be-quick-search .btn-primary {
+    border-radius: 0 12px 12px 0 !important;
+    min-height: 42px !important;
+}
+
+/* 12. Stat Grid & Cards */
 body.theme-toy-be.app-shell--be .be-stat {
-    border: 2px solid var(--color-panel-border);
-    border-radius: 8px;
-    background: #ffffff;
-    box-shadow: 4px 4px 0 var(--color-panel-border);
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    box-shadow: none !important;
+    padding: 1.25rem !important;
 }
 
-body.theme-toy-be.app-shell--be .be-stat:nth-child(2n) {
-    background: var(--color-lilac);
-}
-
-body.theme-toy-be.app-shell--be .be-stat:nth-child(3n) {
-    background: var(--color-primary);
-}
-
+body.theme-toy-be.app-shell--be .be-stat:nth-child(2n),
+body.theme-toy-be.app-shell--be .be-stat:nth-child(3n),
 body.theme-toy-be.app-shell--be .be-stat:nth-child(4n) {
-    background: var(--color-sky);
+    background: rgba(255, 255, 255, 0.03) !important;
 }
 
-body.theme-toy-be.app-shell--be .be-stat__label {
-    color: var(--color-gray);
-}
-
-body.theme-toy-be.app-shell--be .app-table,
-body.theme-toy-be.app-shell--be .personnel-table,
+/* 13. Tables */
 body.theme-toy-be.app-shell--be table {
-    font-family: var(--font-body) !important;
-    border-collapse: separate;
-    border-spacing: 0 0.45rem;
-}
-
-body.theme-toy-be.app-shell--be .app-table th,
-body.theme-toy-be.app-shell--be .personnel-table th {
-    color: var(--color-gray) !important;
+    border-collapse: collapse !important;
 }
 
 body.theme-toy-be.app-shell--be .app-table tbody tr,
-body.theme-toy-be.app-shell--be .personnel-table tbody tr {
-    background: #ffffff;
+body.theme-toy-be.app-shell--be .personnel-table tbody tr,
+body.theme-toy-be.app-shell--be .hud-panel table tbody tr {
+    background: rgba(255, 255, 255, 0.01) !important;
 }
 
 body.theme-toy-be.app-shell--be .app-table tbody tr:hover,
+body.theme-toy-be.app-shell--be .personnel-table tbody tr:hover,
 body.theme-toy-be.app-shell--be .hud-panel table tbody tr:hover {
-    background: var(--color-sky) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
 }
 
+body.theme-toy-be.app-shell--be .app-table td,
+body.theme-toy-be.app-shell--be .personnel-table td,
+body.theme-toy-be.app-shell--be .hud-panel table td {
+    color: #e2e8f0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 0.95rem 1.2rem !important;
+}
+
+/* 14. Badges */
 body.theme-toy-be.app-shell--be .be-badge {
-    border: 2px solid var(--color-panel-border);
-    border-radius: 8px;
-    background: var(--color-panel);
-    color: var(--color-text-main);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #f1f5f9 !important;
+    padding: 0.25rem 0.5rem !important;
 }
 
 body.theme-toy-be.app-shell--be .be-badge--primary,
 body.theme-toy-be.app-shell--be .be-badge--success {
-    background: var(--color-primary);
+    background: rgba(166, 216, 0, 0.15) !important;
+    color: #a6d800 !important;
+    border-color: rgba(166, 216, 0, 0.3) !important;
 }
 
 body.theme-toy-be.app-shell--be .be-badge--accent {
-    background: var(--color-lilac);
+    background: rgba(167, 139, 250, 0.15) !important;
+    color: #c084fc !important;
+    border-color: rgba(167, 139, 250, 0.3) !important;
 }
 
 body.theme-toy-be.app-shell--be .be-badge--danger {
-    background: var(--color-peach);
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #fca5a5 !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
+/* 15. Alerts & Notifications */
 body.theme-toy-be.app-shell--be .be-context-strip span,
 body.theme-toy-be.app-shell--be .inline-alert,
 body.theme-toy-be.app-shell--be .be-flash {
-    border: 3px solid var(--color-panel-border);
-    border-radius: 8px;
-    background: var(--color-sun);
-    color: var(--color-text-main);
-    box-shadow: 4px 4px 0 var(--color-panel-border);
-    font-family: var(--font-ui);
-    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 12px !important;
+    background: rgba(30, 27, 75, 0.4) !important;
+    color: #cbd5e1 !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
 }
 
-/* Backend Toy Responsiveness Reset: one spacing/layout rhythm for every admin
-   surface so old inline grids and margin utilities cannot collapse card gaps. */
-body.theme-toy-be.app-shell--be {
-    --be-page-pad: clamp(1rem, 2.4vw, 2.65rem);
-    --be-stack-gap: clamp(1.25rem, 2vw, 1.85rem);
-    --be-card-gap: clamp(1.35rem, 2.2vw, 2.05rem);
-    --be-panel-pad: clamp(1.25rem, 2vw, 1.75rem);
-    --be-shadow-size: 7px;
-}
-
-body.theme-toy-be.app-shell--be .main-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--be-stack-gap);
-    padding: var(--be-page-pad);
-    min-width: 0;
-    overflow-x: clip;
-}
-
-body.theme-toy-be.app-shell--be .main-content > .top-nav,
-body.theme-toy-be.app-shell--be .main-content > .be-context-strip,
-body.theme-toy-be.app-shell--be .main-content > .hud-panel,
-body.theme-toy-be.app-shell--be .main-content > .ui-surface,
-body.theme-toy-be.app-shell--be .main-content > .grid-2,
-body.theme-toy-be.app-shell--be .main-content > .grid-3,
-body.theme-toy-be.app-shell--be .main-content > .grid-4 {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-}
-
-body.theme-toy-be.app-shell--be .top-nav {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.05rem;
-    min-height: 0;
-    padding: var(--be-panel-pad) !important;
-    align-items: start;
-    border: 3px solid var(--color-panel-border) !important;
-    border-radius: 8px !important;
-    background: var(--color-panel) !important;
-    box-shadow: 7px 7px 0 var(--color-panel-border) !important;
-    overflow: visible !important;
-    box-sizing: border-box;
-    max-width: calc(100% - var(--be-shadow-size));
-}
-
-body.theme-toy-be.app-shell--be .top-nav::before {
-    display: none !important;
-}
-
-body.theme-toy-be.app-shell--be .top-nav__identity {
-    grid-row: 2;
-    max-width: 760px;
-}
-
-body.theme-toy-be.app-shell--be .top-nav h2 {
-    max-width: 840px;
-    font-size: clamp(3rem, 4.45vw, 4.8rem) !important;
-    overflow-wrap: normal;
-    word-break: normal;
-    text-wrap: balance;
-}
-
-body.theme-toy-be.app-shell--be .top-nav__tools {
-    grid-row: 1;
-    justify-self: end;
-    position: static;
-    width: min(100%, 680px);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) max-content;
-    gap: 0.85rem;
-    align-self: start;
-}
-
-body.theme-toy-be.app-shell--be .top-nav__actions {
-    grid-column: auto;
-    justify-content: flex-start;
-    margin-top: 1rem;
-}
-
-body.theme-toy-be.app-shell--be .top-nav__date {
-    justify-self: end;
-    align-self: center;
-}
-
-body.theme-toy-be.app-shell--be .be-context-strip {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.65rem;
-    margin: 0 !important;
-}
-
-body.theme-toy-be.app-shell--be .hud-panel,
-body.theme-toy-be.app-shell--be .ui-surface,
-body.theme-toy-be.app-shell--be .form-cluster,
-body.theme-toy-be.app-shell--be .auth-card,
-body.theme-toy-be.app-shell--be .metric-card,
-body.theme-toy-be.app-shell--be .be-empty {
-    box-sizing: border-box;
-    min-width: 0;
-    max-width: calc(100% - var(--be-shadow-size));
-    padding: var(--be-panel-pad);
-}
-
-body.theme-toy-be.app-shell--be .grid-2,
-body.theme-toy-be.app-shell--be .grid-3,
-body.theme-toy-be.app-shell--be .grid-4,
-body.theme-toy-be.app-shell--be .be-grid,
-body.theme-toy-be.app-shell--be .qol-stat-grid,
-body.theme-toy-be.app-shell--be .branch-summary,
-body.theme-toy-be.app-shell--be .role-responsibility-grid {
-    display: grid;
-    gap: var(--be-card-gap) !important;
-    align-items: stretch;
-    min-width: 0;
-}
-
-body.theme-toy-be.app-shell--be .grid-2 {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-}
-
-body.theme-toy-be.app-shell--be .be-grid--2 {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-}
-
-body.theme-toy-be.app-shell--be .grid-3 {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-}
-
-body.theme-toy-be.app-shell--be .be-grid--3 {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-}
-
-body.theme-toy-be.app-shell--be .grid-4,
-body.theme-toy-be.app-shell--be .qol-stat-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
-}
-
-body.theme-toy-be.app-shell--be .be-grid--4 {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
-}
-
-body.theme-toy-be.app-shell--be .branch-summary,
-body.theme-toy-be.app-shell--be .role-responsibility-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-}
-
-body.theme-toy-be.app-shell--be .hud-panel > form > .grid-2,
-body.theme-toy-be.app-shell--be .hud-panel > form > .grid-3,
-body.theme-toy-be.app-shell--be .hud-panel > form > .grid-4,
-body.theme-toy-be.app-shell--be .be-form-grid,
-body.theme-toy-be.app-shell--be .hud-panel > form > [style*="grid-template-columns"] {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--be-form-grid-min, 230px)), 1fr)) !important;
-    gap: var(--be-card-gap) !important;
-    align-items: end !important;
-}
-
-body.theme-toy-be.app-shell--be .hud-panel > [style*="justify-content: flex-end"],
-body.theme-toy-be.app-shell--be .hud-header,
-body.theme-toy-be.app-shell--be .be-actions {
-    display: flex !important;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.85rem;
-    margin-top: var(--be-stack-gap) !important;
-}
-
-body.theme-toy-be.app-shell--be .hud-header {
-    justify-content: space-between;
-    margin-top: 0 !important;
-}
-
-body.theme-toy-be.app-shell--be .be-actions--start {
-    justify-content: flex-start;
-}
-
-body.theme-toy-be.app-shell--be .be-actions--between {
-    justify-content: space-between;
-}
-
-body.theme-toy-be.app-shell--be .metric-card {
-    min-height: 132px;
-}
-
-body.theme-toy-be.app-shell--be .table-responsive {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    padding: 0 0 calc(var(--be-shadow-size) + 0.5rem);
-}
-
-body.theme-toy-be.app-shell--be .app-table,
-body.theme-toy-be.app-shell--be .personnel-table {
-    min-width: var(--be-table-min-width, 720px);
-}
-
-body.theme-toy-be.app-shell--be .be-field {
-    min-width: 0;
-}
-
-body.theme-toy-be.app-shell--be .be-field label {
-    display: inline-block;
-    margin-bottom: 0.5rem;
-    font-size: 0.8rem;
-}
-
-body.theme-toy-be.app-shell--be .mb-2 {
-    margin-bottom: 0.65rem !important;
-}
-
-body.theme-toy-be.app-shell--be .mb-4 {
-    margin-bottom: var(--be-stack-gap) !important;
-}
-
-body.theme-toy-be.app-shell--be .pickup-queue-table {
-    --be-table-min-width: 1080px;
-}
-
-body.theme-toy-be.app-shell--be .pickup-assign-form {
-    display: grid;
-    grid-template-columns: minmax(132px, 1fr) auto;
-    align-items: center;
-    gap: 0.55rem;
-    min-width: 230px;
-    margin: 0;
-}
-
-body.theme-toy-be.app-shell--be .pickup-assign-select {
-    min-height: 42px;
-    width: 100%;
-    min-width: 0;
-    padding: 0.45rem 0.55rem !important;
-    font-size: 0.76rem !important;
-}
-
-body.theme-toy-be.app-shell--be .pickup-assign-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 78px;
-    min-height: 42px;
-    padding: 0.45rem 0.75rem !important;
-    font-size: 0.72rem !important;
-    line-height: 1 !important;
-    white-space: nowrap;
-    overflow: visible;
-}
-
-@media (max-width: 1180px) {
-    body.theme-toy-be.app-shell--be .pickup-assign-form {
-        grid-template-columns: 1fr;
-        min-width: 170px;
-    }
-
-    body.theme-toy-be.app-shell--be .pickup-assign-button {
-        width: 100%;
-    }
-}
-
-@media (max-width: 1280px) {
-    body.theme-toy-be.app-shell--be .top-nav {
-        grid-template-columns: 1fr;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__identity,
-    body.theme-toy-be.app-shell--be .top-nav h2 {
-        max-width: 100%;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__tools {
-        max-width: 760px;
-    }
-}
-
-@media (max-width: 760px) {
-    body.theme-toy-be.app-shell--be {
-        --be-page-pad: 1rem;
-        --be-stack-gap: 1rem;
-        --be-card-gap: 1rem;
-        --be-panel-pad: 1rem;
-        --be-shadow-size: 5px;
-    }
-
-    body.theme-toy-be.app-shell--be .main-content {
-        overflow-x: hidden;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav {
-        max-width: calc(100% - var(--be-shadow-size));
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__identity {
-        grid-row: 1;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__tools {
-        grid-row: 2;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__identity {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.8rem;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__identity,
-    body.theme-toy-be.app-shell--be .top-nav__identity > div,
-    body.theme-toy-be.app-shell--be .top-nav__tools {
-        min-width: 0;
-        width: 100%;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__identity .mobile-toggle {
-        justify-self: start;
-        margin-right: 0;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav h2 {
-        font-size: clamp(1.9rem, 8.2vw, 2.45rem) !important;
-        line-height: 1.05;
-        letter-spacing: 0.015em !important;
-        text-wrap: pretty;
-        overflow-wrap: normal;
-        word-break: keep-all;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__tools,
-    body.theme-toy-be.app-shell--be .be-quick-search {
-        grid-template-columns: 1fr;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__description {
-        max-width: 100%;
-        overflow-wrap: anywhere;
-    }
-
-    body.theme-toy-be.app-shell--be .top-nav__date,
-    body.theme-toy-be.app-shell--be .top-nav__actions {
-        justify-self: start;
-    }
-
-    body.theme-toy-be.app-shell--be .be-btn,
-    body.theme-toy-be.app-shell--be .btn-primary,
-    body.theme-toy-be.app-shell--be .btn-secondary,
-    body.theme-toy-be.app-shell--be .btn-neon,
-    body.theme-toy-be.app-shell--be .btn-outline,
-    body.theme-toy-be.app-shell--be .ui-button {
-        width: 100%;
-        justify-content: center;
-        text-align: center;
-    }
-}
-
-/* Toy UI: no scroll reveal. Admin users need to see that more content exists
-   immediately, so legacy "fade/slide in when visible" states are neutralized. */
-body.theme-toy .section-animate,
-body.theme-toy .reveal-on-scroll,
-body.theme-toy.app-shell .section-animate,
-body.theme-toy.app-shell .reveal-on-scroll,
-body.theme-toy-be.app-shell--be .section-animate,
-body.theme-toy-be.app-shell--be .reveal-on-scroll {
-    opacity: 1 !important;
-    transform: none !important;
-    clip-path: none !important;
-    animation: none !important;
-    transition: none !important;
-}
-
-body.theme-toy-be.app-shell--be .page-header h1,
-body.theme-toy-be.app-shell--be .page-header p,
-body.theme-toy-be.app-shell--be .top-nav h2,
-body.theme-toy-be.app-shell--be .hud-panel,
-body.theme-toy-be.app-shell--be .ui-surface,
-body.theme-toy-be.app-shell--be .metric-card,
-body.theme-toy-be.app-shell--be .be-empty {
-    opacity: 1 !important;
-    transform: none !important;
-    clip-path: none !important;
-    animation: none !important;
-}
-
-/* Backend readability pass: admin pages are dense, so captions, table labels,
-   badges, and muted helper text need stronger contrast than the old HUD look. */
+/* 16. Typography Color & Contrast Hierarchies */
 body.theme-toy-be.app-shell--be,
 body.theme-toy-be.app-shell--be p,
 body.theme-toy-be.app-shell--be li,
@@ -700,7 +583,7 @@ body.theme-toy-be.app-shell--be .data-label,
 body.theme-toy-be.app-shell--be .table-empty,
 body.theme-toy-be.app-shell--be .meta,
 body.theme-toy-be.app-shell--be small {
-    color: #25252b !important;
+    color: #94a3b8 !important;
     opacity: 1 !important;
 }
 
@@ -711,9 +594,9 @@ body.theme-toy-be.app-shell--be .data-label,
 body.theme-toy-be.app-shell--be .sidebar-section-label,
 body.theme-toy-be.app-shell--be .be-badge,
 body.theme-toy-be.app-shell--be .status-chip {
-    color: #18181d !important;
+    color: #cbd5e1 !important;
     opacity: 1 !important;
-    font-weight: 850 !important;
+    font-weight: 700 !important;
 }
 
 body.theme-toy-be.app-shell--be strong,
@@ -721,269 +604,262 @@ body.theme-toy-be.app-shell--be b,
 body.theme-toy-be.app-shell--be .be-stat__value,
 body.theme-toy-be.app-shell--be .metric-value,
 body.theme-toy-be.app-shell--be .font-bank,
-body.theme-toy-be.app-shell--be .font-modula {
-    color: #0a0a0a !important;
+body.theme-toy-be.app-shell--be .font-modula,
+body.theme-toy-be.app-shell--be h1,
+body.theme-toy-be.app-shell--be h2,
+body.theme-toy-be.app-shell--be h3,
+body.theme-toy-be.app-shell--be h4 {
+    color: #f1f5f9 !important;
     opacity: 1 !important;
-    font-weight: 900 !important;
+    font-weight: 700 !important;
 }
 
 body.theme-toy-be.app-shell--be .text-primary {
-    color: #176b3b !important;
+    color: #a6d800 !important;
     opacity: 1 !important;
-    font-weight: 850 !important;
+    font-weight: 700 !important;
 }
 
 body.theme-toy-be.app-shell--be .text-accent,
 body.theme-toy-be.app-shell--be a.text-accent,
 body.theme-toy-be.app-shell--be td .text-accent,
 body.theme-toy-be.app-shell--be td a {
-    color: #b0005a !important;
+    color: #a78bfa !important;
     opacity: 1 !important;
-    font-weight: 850 !important;
+    font-weight: 700 !important;
 }
 
-body.theme-toy-be.app-shell--be input:not(:disabled),
-body.theme-toy-be.app-shell--be select:not(:disabled),
-body.theme-toy-be.app-shell--be textarea:not(:disabled),
-body.theme-toy-be.app-shell--be .ui-control:not(:disabled) {
-    color: #0a0a0a !important;
-    background: #fffaf2 !important;
-    opacity: 1 !important;
-}
-
-body.theme-toy-be.app-shell--be input::placeholder,
-body.theme-toy-be.app-shell--be textarea::placeholder {
-    color: #3d3d43 !important;
-    opacity: 1 !important;
-}
-
-/* Legacy class compatibility: several Blade templates still use old HUD/cyber
-   class names, but the backend should read as a soft toy UI, not a terminal. */
-body.theme-toy-be.app-shell--be .hud-panel__gsap-scan,
-body.theme-toy-be.app-shell--be .scanline,
-body.theme-toy-be.app-shell--be [class*="scanline"] {
-    display: none !important;
-}
-
-body.theme-toy-be.app-shell--be .app-table tbody tr:hover,
-body.theme-toy-be.app-shell--be .personnel-table tbody tr:hover,
-body.theme-toy-be.app-shell--be .hud-panel table tbody tr:hover {
-    background: #fff6df !important;
-}
-
-body.theme-toy-be.app-shell--be .app-table td,
-body.theme-toy-be.app-shell--be .personnel-table td,
-body.theme-toy-be.app-shell--be .hud-panel table td {
-    color: #18181d !important;
-}
-
-body.theme-toy-be.app-shell--be .pos-counter-shell {
-    max-width: 860px;
-    margin: 0 auto !important;
-}
-
-body.theme-toy-be.app-shell--be .pos-form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-    gap: var(--be-card-gap);
-    align-items: start;
-    margin-bottom: 2rem;
-}
-
-body.theme-toy-be.app-shell--be .pos-contact-grid {
-    align-items: start;
-}
-
-body.theme-toy-be.app-shell--be .pos-field {
-    margin-bottom: 1rem;
-}
-
-body.theme-toy-be.app-shell--be .pos-field:last-child {
-    margin-bottom: 0;
-}
-
-body.theme-toy-be.app-shell--be .pos-address-pair {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-body.theme-toy-be.app-shell--be .pos-address-pair select {
-    min-width: 0;
-}
-
-body.theme-toy-be.app-shell--be .pos-counter-shell textarea[name="receiver_address"] {
-    min-height: 86px;
-}
-
-body.theme-toy-be.app-shell--be .shipment-tracking-code {
-    display: inline-block;
-    max-width: 100%;
-    color: #0a0a0a;
-    font-family: var(--font-title) !important;
-    font-size: clamp(1.2rem, 2.4vw, 1.8rem);
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: 0.035em;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-panel {
-    display: grid;
-    gap: 1.15rem;
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: end;
-    padding-bottom: 1rem;
-    border-bottom: 2px dashed rgba(24, 24, 29, 0.22);
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-header h3 {
-    margin: 0;
-    font-size: clamp(1.2rem, 2vw, 1.65rem);
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-meta {
-    margin-top: 0.25rem;
-    color: #25252b;
-    font-family: var(--font-ui);
-    font-size: 0.82rem;
-    font-weight: 800;
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-form {
-    display: grid;
-    gap: 1.15rem;
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
-    gap: 1rem;
-    align-items: end;
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-grid .be-field {
-    min-width: 0;
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-grid select,
-body.theme-toy-be.app-shell--be .financial-filter-grid input {
-    width: 100%;
-}
-
-body.theme-toy-be.app-shell--be .financial-hub-multi select[multiple] {
-    min-height: 132px;
-    padding: 0.45rem 0.55rem !important;
-}
-
-body.theme-toy-be.app-shell--be .financial-hub-multi option {
-    padding: 0.35rem 0.45rem;
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.85rem;
-    padding-top: 0.2rem;
-}
-
-body.theme-toy-be.app-shell--be .financial-filter-actions .btn-neon {
-    min-width: 180px;
-}
-
-body.theme-toy-be.app-shell--be .financial-export-button {
-    background: var(--color-primary) !important;
-}
-
-body.theme-toy-be.app-shell--be .financial-chart-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: baseline;
-    flex-wrap: wrap;
-}
-
-body.theme-toy-be.app-shell--be .financial-chart-header h3 {
-    margin-bottom: 0 !important;
-}
-
-body.theme-toy-be.app-shell--be .financial-chart-header span {
-    color: #25252b;
-    font-family: var(--font-ui);
-    font-size: 0.82rem;
-    font-weight: 850;
-}
-
-body.theme-toy-be.app-shell--be .financial-chart-wrap {
-    width: 100%;
-    min-height: 320px;
-    margin-top: 1rem;
-    overflow: hidden;
-}
-
-body.theme-toy-be.app-shell--be #revenueChart {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-}
-
-body.theme-toy-be.app-shell--be .is-hidden {
-    display: none !important;
-}
-
+/* 17. POS Payment panel overrides */
 body.theme-toy-be.app-shell--be .pos-payment-panel {
-    position: relative;
-    margin-bottom: 2rem;
-    padding: clamp(1.1rem, 2vw, 1.5rem);
-    border: 3px solid var(--color-panel-border);
-    border-radius: 8px;
-    background: #fffaf2;
-    box-shadow: 5px 5px 0 var(--color-panel-border);
-    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    box-shadow: none !important;
 }
 
-body.theme-toy-be.app-shell--be .pos-payment-panel h4 {
-    margin-top: 0;
-}
-
-body.theme-toy-be.app-shell--be .pos-payment-total,
-body.theme-toy-be.app-shell--be .pos-payment-change {
-    color: #176b3b !important;
-    font-size: clamp(2rem, 4vw, 2.7rem);
-    line-height: 1;
-    overflow-wrap: anywhere;
+body.theme-toy-be.app-shell--be .pos-payment-total {
+    color: #a6d800 !important;
 }
 
 body.theme-toy-be.app-shell--be .pos-payment-change {
-    color: #b0005a !important;
-    font-size: clamp(1.65rem, 3vw, 2.25rem);
+    color: #ef4444 !important;
 }
 
 body.theme-toy-be.app-shell--be .pos-payment-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 2px dashed rgba(24, 24, 29, 0.22);
+    border-top: 1px dashed rgba(255, 255, 255, 0.08) !important;
 }
 
-@media (max-width: 760px) {
-    body.theme-toy-be.app-shell--be .pos-address-pair {
-        grid-template-columns: 1fr;
-        gap: 0;
+body.theme-toy-be.app-shell--be .financial-filter-header {
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08) !important;
+}
+
+body.theme-toy-be.app-shell--be .financial-filter-meta {
+    color: #94a3b8 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Sidebar Collapse / Expand
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Transition on the sidebar itself */
+body.theme-toy-be.app-shell--be .sidebar {
+    transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    will-change: width;
+}
+
+/* Collapsed state — thin icon rail */
+body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed {
+    width: 56px !important;
+    padding: 1.6rem 0 !important;
+    align-items: center;
+}
+
+/* Hide all text content when collapsed */
+body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-brand-link span,
+body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-brand-link .logo-text,
+body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-role-card,
+body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed nav.sidebar-links,
+body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .mobile-toggle,
+body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-user-footer {
+    display: none !important;
+}
+
+/* Toggle button — always visible */
+.sidebar-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #94a3b8;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+    padding: 0;
+    line-height: 1;
+}
+.sidebar-collapse-btn:hover {
+    background: rgba(166, 216, 0, 0.12);
+    border-color: rgba(166, 216, 0, 0.3);
+    color: #a6d800;
+}
+
+/* Row that holds logo + collapse btn */
+.sidebar-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+/* When collapsed: header row centers the toggle button only */
+body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-header-row {
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Floating "open" tab that appears on the left edge when sidebar is collapsed */
+.sidebar-open-tab {
+    position: fixed;
+    left: 56px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 200;
+    width: 18px;
+    height: 52px;
+    background: rgba(13, 18, 34, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #94a3b8;
+    transition: background 0.18s, color 0.18s;
+    backdrop-filter: blur(12px);
+}
+.sidebar-open-tab:hover {
+    background: rgba(166, 216, 0, 0.12);
+    color: #a6d800;
+}
+body.sidebar-is-collapsed .sidebar-open-tab {
+    display: flex;
+}
+
+/* Give the main content area room when sidebar collapses */
+body.theme-toy-be.app-shell--be .main-content {
+    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 0;
+    flex: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Mobile fixes  (≤ 900px)
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+
+    /* ── Sidebar: desktop collapse button hidden on mobile ── */
+    .sidebar-collapse-btn,
+    .sidebar-open-tab {
+        display: none !important;
     }
 
-    body.theme-toy-be.app-shell--be .pos-payment-row {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+    /* Sidebar uses slide (left) on mobile, not width collapse */
+    body.theme-toy-be.app-shell--be .sidebar {
+        transition: left 0.3s ease !important;
+        width: 280px !important;
+        padding: 1.6rem !important;
+        overflow-y: auto !important;
+    }
+
+    /* Undo collapsed state entirely on mobile */
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed {
+        width: 280px !important;
+        padding: 1.6rem !important;
+        align-items: stretch !important;
+    }
+    /* Restore every element that collapsed state hides */
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-brand-link,
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-brand-link .logo-text,
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-brand-link .logo-text span,
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-role-card,
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed nav.sidebar-links,
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-user-footer,
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .mobile-toggle {
+        display: revert !important;
+    }
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed nav.sidebar-links {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    body.theme-toy-be.app-shell--be .sidebar.sidebar--collapsed .sidebar-header-row {
+        justify-content: space-between !important;
+        margin-bottom: 2rem !important;
+    }
+
+    /* ── Top-nav: tighten on mobile ── */
+    body.theme-toy-be.app-shell--be .top-nav {
+        padding: 1rem !important;
+        border-radius: 12px !important;
+        gap: 0.75rem !important;
+        margin-bottom: 1rem !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    body.theme-toy-be.app-shell--be .top-nav__identity {
+        min-width: 0 !important;
+        width: 100% !important;
+        gap: 0.65rem !important;
+    }
+    body.theme-toy-be.app-shell--be .top-nav__identity h2 {
+        font-size: 1.25rem !important;
+    }
+    /* Hide the long description in top-nav on mobile (page panel shows it) */
+    body.theme-toy-be.app-shell--be .top-nav__description {
+        display: none !important;
+    }
+    body.theme-toy-be.app-shell--be .top-nav__tools {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        gap: 0.6rem !important;
+    }
+    /* Date hidden on mobile to save space */
+    body.theme-toy-be.app-shell--be .top-nav__date {
+        display: none !important;
+    }
+    /* Global search takes full width */
+    body.theme-toy-be.app-shell--be .be-quick-search {
+        flex: 1 !important;
+        width: 100% !important;
+    }
+    body.theme-toy-be.app-shell--be .be-quick-search input {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+}
+
+/* ── Responsive filter grid ───────────────────────────────── */
+#filter-form > div {
+    grid-template-columns: 1fr 1fr !important;
+}
+#filter-form > div > div[style*="grid-column: span 2"] {
+    grid-column: span 2 !important;
+}
+@media (min-width: 640px) {
+    #filter-form > div {
+        grid-template-columns: 1fr 1fr 1fr !important;
+    }
+}
+@media (min-width: 1024px) {
+    #filter-form > div {
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
     }
 }

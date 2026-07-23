@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="sprintlog-dark">
 
 <head>
     <meta charset="utf-8">
@@ -86,6 +86,48 @@
                     }
                 }
             });
+
+            // ── Sidebar collapse / expand ─────────────────────────────────
+            const sidebar      = document.getElementById('be-sidebar');
+            const collapseBtn  = document.getElementById('sidebar-collapse-btn');
+            const openTab      = document.getElementById('sidebar-open-tab');
+            const chevron      = document.getElementById('sidebar-chevron');
+            const STORAGE_KEY  = 'sprintlog_sidebar_collapsed';
+
+            const CHEVRON_LEFT  = 'M15 19l-7-7 7-7';  // «  collapse
+            const CHEVRON_RIGHT = 'M9 5l7 7-7 7';      // »  expand
+
+            function setSidebarCollapsed(collapsed) {
+                if (!sidebar) return;
+                if (collapsed) {
+                    sidebar.classList.add('sidebar--collapsed');
+                    document.body.classList.add('sidebar-is-collapsed');
+                    if (chevron) chevron.querySelector('path').setAttribute('d', CHEVRON_RIGHT);
+                } else {
+                    sidebar.classList.remove('sidebar--collapsed');
+                    document.body.classList.remove('sidebar-is-collapsed');
+                    if (chevron) chevron.querySelector('path').setAttribute('d', CHEVRON_LEFT);
+                }
+                try { localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0'); } catch (_) {}
+            }
+
+            // Restore saved preference immediately (before paint)
+            try {
+                if (localStorage.getItem(STORAGE_KEY) === '1') {
+                    setSidebarCollapsed(true);
+                }
+            } catch (_) {}
+
+            if (collapseBtn) {
+                collapseBtn.addEventListener('click', () => {
+                    const isCollapsed = sidebar.classList.contains('sidebar--collapsed');
+                    setSidebarCollapsed(!isCollapsed);
+                });
+            }
+
+            if (openTab) {
+                openTab.addEventListener('click', () => setSidebarCollapsed(false));
+            }
         });
     </script>
 </body>

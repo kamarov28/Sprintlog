@@ -80,6 +80,8 @@ Route::group(['prefix' => 'be', 'middleware' => ['auth', 'be.staff'], 'as' => 'b
     // Pickup queue: cabang (manajer / kasir) - bukan admin pusat
     Route::middleware('pickup.hub')->group(function () {
         Route::get('pickups', [PickupController::class, 'index'])->name('pickups.index');
+        Route::post('pickups/bulk-auto-assign', [PickupController::class, 'bulkAutoAssign'])->name('pickups.bulk-auto-assign');
+        Route::post('pickups/bulk-assign', [PickupController::class, 'bulkAssign'])->name('pickups.bulk-assign');
         Route::get('pickups/{pickup}', [PickupController::class, 'show'])->name('pickups.show');
         Route::post('pickups/{pickup}/assign', [PickupController::class, 'assign'])->name('pickups.assign');
         Route::post('pickups/{pickup}/auto-assign', [PickupController::class, 'autoAssign'])->name('pickups.auto-assign');

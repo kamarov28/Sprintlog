@@ -1,31 +1,35 @@
 @props([
     'title' => null,
     'subtitle' => null,
-    'variant' => 'primary', // primary (lime), accent (purple)
+    'variant' => 'neutral', // neutral, primary, accent
     'class' => '',
     'headerClass' => '',
     'compact' => false,
 ])
 
 @php
-    $surfaceClasses = trim(implode(' ', [
-        'hud-panel',
-        'ui-surface',
-        'ui-surface--' . $variant,
-        $compact ? 'ui-surface--compact' : '',
+    $bgClass = match ($variant) {
+        'primary' => 'glass-panel-primary border-primary/20',
+        'accent' => 'glass-panel-accent border-secondary/20',
+        default => 'glass-panel',
+    };
+
+    $panelClasses = trim(implode(' ', [
+        $bgClass,
+        'rounded-2xl shadow-xl border',
+        $compact ? 'p-4' : 'p-6 md:p-8',
         $class,
     ]));
 @endphp
 
-<div {{ $attributes->merge(['class' => $surfaceClasses]) }}>
-    
+<div {{ $attributes->merge(['class' => $panelClasses]) }}>
     @if($title)
-        <div class="ui-surface__header mb-4 {{ $headerClass }}">
-            <h2 class="ui-surface__title {{ $variant === 'accent' ? 'text-accent' : 'text-main' }}" style="font-size: 1.2rem;">
+        <div class="mb-5 {{ $headerClass }}">
+            <h2 class="font-unbounded font-bold tracking-tight text-lg md:text-xl uppercase {{ $variant === 'primary' ? 'text-primary' : ($variant === 'accent' ? 'text-secondary' : 'text-slate-100') }}">
                 {{ $title }}
             </h2>
             @if($subtitle)
-                <p class="text-gray ui-surface__subtitle" style="font-size: 0.8rem;">{{ $subtitle }}</p>
+                <p class="text-xs text-slate-400 mt-1 font-alt font-light">{{ $subtitle }}</p>
             @endif
         </div>
     @endif

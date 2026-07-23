@@ -1,124 +1,12 @@
 @extends('fe.layouts.main')
 
-@push('head_assets')
-    <style>
-        .dashboard-shell {
-            margin-top: 5rem;
-        }
-
-        .dashboard-empty-actions,
-        .dashboard-notification-list {
-            display: grid;
-            gap: 0.85rem;
-        }
-
-        .dashboard-empty-actions {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1rem;
-            align-items: stretch;
-        }
-
-        .dashboard-notification {
-            border-color: var(--glass-control-border);
-        }
-
-        .dashboard-notification.is-unread {
-            border-color: var(--color-primary);
-        }
-
-        .dashboard-notification__body {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 1rem;
-            align-items: start;
-        }
-
-        .dashboard-notification__meta {
-            display: flex;
-            gap: 0.65rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .dashboard-notification__title {
-            font-size: 1rem;
-            font-weight: 900;
-            margin-top: 0.45rem;
-        }
-
-        .dashboard-order-card {
-            margin-bottom: 1.25rem;
-        }
-
-        .dashboard-lifecycle-body {
-            display: grid;
-            grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.7fr);
-            gap: 1.5rem;
-            margin-top: 1.1rem;
-        }
-
-        .dashboard-payment-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-top: 0.45rem;
-        }
-
-        .dashboard-lifecycle-steps {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(74px, 1fr));
-            gap: 0.65rem;
-        }
-
-        .dashboard-lifecycle-step {
-            border: 2px solid var(--color-panel-border);
-            border-radius: 8px;
-            background: var(--color-panel);
-            padding: 0.55rem 0.45rem;
-            text-align: center;
-        }
-
-        .dashboard-lifecycle-step.is-done {
-            background: var(--color-primary);
-        }
-
-        .dashboard-lifecycle-step__mark {
-            color: var(--color-gray);
-            font-size: 0.9rem;
-            font-weight: 800;
-        }
-
-        .dashboard-lifecycle-step.is-done .dashboard-lifecycle-step__mark {
-            color: var(--color-text-main);
-        }
-
-        .dashboard-lifecycle-step__label {
-            font-size: 0.62rem;
-            margin-top: 0.3rem;
-        }
-
-        .dashboard-order-footer {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        @media (max-width: 900px) {
-            .dashboard-empty-actions,
-            .dashboard-lifecycle-body {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-@endpush
+@section('title', 'SprintLog | Customer Dashboard')
 
 @section('content')
-<div class="dashboard-shell">
-    <x-fe.page-header title="Dashboard" subtitle="Halo {{ $user->name }}, semua pickup dan pengiriman kamu ada di sini.">
-        <x-fe.button href="{{ route('order.create') }}" variant="primary" style="font-size: 0.8rem;">Buat Order</x-fe.button>
-        <x-fe.button href="{{ route('profile') }}" variant="secondary" style="font-size: 0.8rem;">Profil</x-fe.button>
+<div class="space-y-8">
+    <x-fe.page-header title="Dashboard Pengiriman" subtitle="Halo {{ $user->name }}, kelola semua order pickup dan riwayat paket Anda di sini.">
+        <x-fe.button href="{{ route('order.create') }}" variant="primary" class="btn-sm font-bold px-4 py-2 flex items-center gap-1.5 font-alt text-xs"><i class="bi bi-plus-circle-fill"></i> Buat Order Pickup</x-fe.button>
+        <x-fe.button href="{{ route('profile') }}" variant="outline" class="btn-sm font-bold px-4 py-2 flex items-center gap-1.5 font-alt text-xs"><i class="bi bi-person-circle"></i> Profil</x-fe.button>
     </x-fe.page-header>
 
     @if($errors->any())
@@ -130,73 +18,79 @@
     @endif
 
     @if($summary['total_orders'] === 0)
-        <x-fe.panel title="Mulai Pengiriman Pertama" subtitle="Pilih jalur yang paling cepat buat kamu" variant="primary" class="section-animate" style="margin-bottom: 2rem;">
-            <div class="dashboard-empty-actions">
-                <div class="ops-card">
-                    <span class="data-label">Langsung Order</span>
-                    <p class="data-value" style="margin-top: 0.5rem;">Isi pickup, tujuan, berat, layanan, dan pembayaran.</p>
-                    <div style="margin-top: 1rem;">
-                        <x-fe.button href="{{ route('order.create') }}" variant="primary">Buat Order</x-fe.button>
+        <x-fe.panel title="Mulai Pengiriman Pertama" subtitle="Pilih jalur yang paling cepat buat Anda" variant="primary">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-alt">
+                <div class="glass-panel border-white/5 p-6 rounded-2xl flex flex-col justify-between text-left">
+                    <div>
+                        <span class="text-xs text-primary font-bold uppercase tracking-wider flex items-center gap-1.5"><i class="bi bi-box-seam-fill"></i> Langsung Order Pickup</span>
+                        <p class="text-xs text-slate-300 mt-3 leading-relaxed font-light">Isi data pickup, alamat tujuan, detail berat, jenis layanan, dan upload bukti pembayaran transfer.</p>
+                    </div>
+                    <div class="mt-6">
+                        <x-fe.button href="{{ route('order.create') }}" variant="primary" class="btn-sm font-bold flex items-center gap-1.5"><i class="bi bi-plus-lg"></i> Buat Order</x-fe.button>
                     </div>
                 </div>
-                <div class="ops-card">
-                    <span class="data-label">Mulai Dari Estimasi</span>
-                    <p class="data-value" style="margin-top: 0.5rem;">Cek ongkir dulu, lalu lanjut ke form order dengan data yang sama.</p>
-                    <div style="margin-top: 1rem;">
-                        <x-fe.button href="{{ route('home') }}#rates" variant="secondary">Cek Ongkir</x-fe.button>
+                <div class="glass-panel border-white/5 p-6 rounded-2xl flex flex-col justify-between text-left">
+                    <div>
+                        <span class="text-xs text-secondary font-bold uppercase tracking-wider flex items-center gap-1.5"><i class="bi bi-calculator-fill"></i> Cek Estimasi Dahulu</span>
+                        <p class="text-xs text-slate-300 mt-3 leading-relaxed font-light">Gunakan kalkulator cek ongkir dahulu, lalu klik tombol lanjut untuk mengisi form order secara otomatis.</p>
+                    </div>
+                    <div class="mt-6">
+                        <x-fe.button href="{{ route('home') }}#rates" variant="outline" class="btn-sm font-bold flex items-center gap-1.5"><i class="bi bi-search"></i> Cek Ongkir</x-fe.button>
                     </div>
                 </div>
             </div>
         </x-fe.panel>
     @endif
 
-    <div class="grid-4 section-animate" style="gap: 1rem; margin-bottom: 2rem;">
-        <div class="metric-card">
-            <div class="data-label">Total Order</div>
-            <div class="metric-value">{{ $summary['total_orders'] }}</div>
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-alt">
+        <div class="glass-panel border-white/5 p-5 rounded-2xl flex flex-col justify-between text-left">
+            <span class="text-xs text-slate-400 font-bold tracking-wide uppercase flex items-center gap-1.5"><i class="bi bi-box-seam text-slate-500"></i> Total Order</span>
+            <span class="text-3xl font-unbounded font-black text-slate-100 mt-3">{{ $summary['total_orders'] }}</span>
         </div>
-        <div class="metric-card metric-card--accent">
-            <div class="data-label">Menunggu Bayar</div>
-            <div class="metric-value">{{ $summary['waiting_payment'] }}</div>
+        <div class="glass-panel border-white/5 p-5 rounded-2xl flex flex-col justify-between text-left">
+            <span class="text-xs text-slate-400 font-bold tracking-wide uppercase flex items-center gap-1.5"><i class="bi bi-hourglass-split text-secondary"></i> Menunggu Bayar</span>
+            <span class="text-3xl font-unbounded font-black text-secondary mt-3">{{ $summary['waiting_payment'] }}</span>
         </div>
-        <div class="metric-card">
-            <div class="data-label">Paket Aktif</div>
-            <div class="metric-value">{{ $summary['active_shipments'] }}</div>
+        <div class="glass-panel border-white/5 p-5 rounded-2xl flex flex-col justify-between text-left">
+            <span class="text-xs text-slate-400 font-bold tracking-wide uppercase flex items-center gap-1.5"><i class="bi bi-truck text-primary"></i> Paket Aktif</span>
+            <span class="text-3xl font-unbounded font-black text-primary mt-3">{{ $summary['active_shipments'] }}</span>
         </div>
-        <div class="metric-card metric-card--accent">
-            <div class="data-label">Terkirim</div>
-            <div class="metric-value">{{ $summary['delivered'] }}</div>
+        <div class="glass-panel border-white/5 p-5 rounded-2xl flex flex-col justify-between text-left">
+            <span class="text-xs text-slate-400 font-bold tracking-wide uppercase flex items-center gap-1.5"><i class="bi bi-check-circle-fill text-slate-300"></i> Terkirim</span>
+            <span class="text-3xl font-unbounded font-black text-slate-100 mt-3">{{ $summary['delivered'] }}</span>
         </div>
     </div>
 
+    <!-- Notifications Section -->
     @if($notifications->isNotEmpty())
-        <x-fe.panel title="Update Paket" subtitle="{{ $summary['unread_notifications'] }} belum dibaca" variant="primary" class="section-animate" style="margin-bottom: 2rem;">
-            <div class="dashboard-notification-list">
+        <x-fe.panel title="Update Paket" subtitle="{{ $summary['unread_notifications'] }} belum dibaca" variant="primary">
+            <div class="space-y-4">
                 @foreach($notifications as $notification)
-                    <div class="ops-card dashboard-notification {{ $notification['is_unread'] ? 'is-unread' : '' }}">
-                        <div class="dashboard-notification__body">
-                            <div>
-                                <div class="dashboard-notification__meta">
-                                    <span class="data-label">{{ $notification['sent_at_label'] }}</span>
-                                    @if($notification['is_unread'])
-                                        <span class="status-chip status-chip--accent">BARU</span>
-                                    @endif
-                                </div>
-                                <div class="text-main dashboard-notification__title">{{ $notification['title'] }}</div>
-                                <p class="data-value" style="margin-top: 0.45rem;">{{ $notification['message'] }}</p>
-                                @if($notification['tracking_url'])
-                                    <a href="{{ $notification['tracking_url'] }}" class="text-accent" style="font-size: 0.78rem; font-weight: 900; text-decoration: none;">
-                                        Lacak {{ $notification['tracking_number'] }}
-                                    </a>
+                    <div class="glass-panel border-white/5 p-5 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 {{ $notification['is_unread'] ? 'border-primary/20 bg-primary/5' : '' }}">
+                        <div class="text-left flex-grow">
+                            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                <span class="text-[10px] text-slate-400 font-semibold">{{ $notification['sent_at_label'] }}</span>
+                                @if($notification['is_unread'])
+                                    <span class="badge badge-accent badge-xs font-bold text-[8px] tracking-wide rounded px-1.5 py-0.5">BARU</span>
                                 @endif
                             </div>
+                            <h3 class="text-sm font-bold text-slate-100 leading-snug">{{ $notification['title'] }}</h3>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">{{ $notification['message'] }}</p>
+                            @if($notification['tracking_url'])
+                                <a href="{{ $notification['tracking_url'] }}" class="text-primary hover:text-primary-focus transition-colors font-bold text-xs mt-2 inline-block">
+                                    Lacak {{ $notification['tracking_number'] }} &rarr;
+                                </a>
+                            @endif
+                        </div>
+                        <div class="shrink-0 text-right">
                             @if($notification['is_unread'])
                                 <form action="{{ route('dashboard.notifications.read', $notification['id']) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn-neon" style="font-size: 0.68rem; padding: 0.55rem 0.75rem;">Dibaca</button>
+                                    <x-fe.button type="submit" variant="outline" class="btn-xs py-1.5 px-3 font-bold text-[10px]">Dibaca</x-fe.button>
                                 </form>
                             @else
-                                <span class="text-gray" style="font-size: 0.72rem;">Sudah dibaca</span>
+                                <span class="text-slate-500 text-xs font-semibold">Sudah dibaca</span>
                             @endif
                         </div>
                     </div>
@@ -205,114 +99,179 @@
         </x-fe.panel>
     @endif
 
+    <!-- Orders Lifecycle Tracking -->
     <x-fe.panel title="Perjalanan Order" subtitle="Pickup, pembayaran, dan shipment dalam satu alur" variant="accent">
-        @forelse($orderLifecycles as $order)
-            <div class="ops-card dashboard-order-card">
-                <div class="ops-card__topline">
-                    <span class="ops-id {{ $order['has_shipment'] ? 'text-accent' : 'text-primary' }}">#{{ $order['reference'] }}</span>
-                    <span class="status-chip {{ $order['status_class'] }}">{{ strtoupper((string) $order['main_status']) }}</span>
-                </div>
+        <!-- Live search bar -->
+        <div class="mb-6 relative">
+            <input type="text" id="order-search-input" placeholder="Cari berdasarkan No. Resi, nama penerima, kota, atau status..." class="w-full bg-slate-950/40 border border-slate-800 focus:border-primary/60 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-2.5 pl-10 text-xs transition-all focus:outline-none">
+            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+        </div>
 
-                <div class="dashboard-lifecycle-body">
-                    <div>
-                        <span class="data-label">Tujuan</span>
-                        <p class="data-value">
-                            {{ $order['receiver_name'] ?: 'Penerima belum diisi' }} / {{ $order['destination'] ?: 'Tujuan belum diisi' }}
-                        </p>
-                        @if($order['pickup_address'])
-                            <div class="ops-divider">
-                                <span class="data-label">Alamat Pickup</span>
-                                <p class="data-value">{{ $order['pickup_address'] }}</p>
-                            </div>
-                        @endif
+        <div class="space-y-6">
+            @forelse($orderLifecycles as $order)
+                <div class="order-lifecycle-card glass-panel border-white/5 p-6 rounded-2xl text-left space-y-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full blur-3xl"></div>
+                    
+                    <div class="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-slate-800/80">
+                        <span class="font-display font-black text-xl tracking-wider {{ $order['has_shipment'] ? 'text-secondary' : 'text-primary' }} flex items-center gap-1.5">
+                            <span>#{{ $order['reference'] }}</span>
+                            <button type="button" onclick="copyToClipboard('{{ $order['reference'] }}', this)" class="btn btn-ghost btn-circle btn-xs hover:bg-white/10 text-slate-400 hover:text-slate-200 cursor-pointer flex items-center justify-center p-0.5" title="Salin kode booking/resi">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                            </button>
+                        </span>
+                        <span class="badge badge-outline border-slate-700 text-slate-300 text-xs font-bold px-3 py-2.5 uppercase">{{ $order['main_status'] }}</span>
                     </div>
-                    <div>
-                        <span class="data-label">Pembayaran</span>
-                        <div class="dashboard-payment-stack">
-                            <span class="status-chip {{ $order['payment_class'] }}">{{ strtoupper((string) $order['payment_status'] ?: 'UNSET') }}</span>
-                            <span class="text-gray" style="font-size: 0.75rem;">{{ strtoupper((string) $order['payment_method'] ?: 'Belum dipilih') }}</span>
+
+                    <!-- Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                        <div class="space-y-4">
+                            <div>
+                                <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Tujuan Penerima</span>
+                                <p class="text-slate-100 font-semibold mt-1">
+                                    {{ $order['receiver_name'] ?: 'Penerima belum diisi' }} / {{ $order['destination'] ?: 'Tujuan belum diisi' }}
+                                </p>
+                            </div>
+                            @if($order['pickup_address'])
+                                <div>
+                                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Alamat Pickup</span>
+                                    <p class="text-slate-100 font-semibold mt-1">{{ $order['pickup_address'] }}</p>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        <div class="bg-slate-950/30 p-4 rounded-xl border border-slate-800/50 flex flex-col justify-between">
+                            <div>
+                                <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Info Pembayaran</span>
+                                <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                    <span class="badge badge-sm font-semibold {{ $order['payment_status'] === 'paid' ? 'badge-success' : 'badge-warning' }}">{{ strtoupper((string) $order['payment_status'] ?: 'UNSET') }}</span>
+                                    <span class="text-xs text-slate-400 uppercase font-bold">{{ $order['payment_method'] ?: 'Belum dipilih' }}</span>
+                                </div>
+                            </div>
                             @if($order['total_price'])
-                                <span class="money-line">Rp {{ number_format((float) $order['total_price'], 0, ',', '.') }}</span>
+                                <div class="mt-4 border-t border-slate-800/50 pt-3">
+                                    <span class="text-[10px] text-slate-400 uppercase">Tarif Pengiriman</span>
+                                    <div class="text-lg font-bold text-primary mt-0.5">Rp {{ number_format((float) $order['total_price'], 0, ',', '.') }}</div>
+                                </div>
                             @endif
                         </div>
                     </div>
-                </div>
 
-                <div class="ops-divider">
-                    <div class="dashboard-lifecycle-steps">
-                        @foreach($stepLabels as $key => $label)
-                            <div class="dashboard-lifecycle-step {{ $order['steps'][$key] ? 'is-done' : '' }}">
-                                <div class="dashboard-lifecycle-step__mark">{{ $order['steps'][$key] ? 'OK' : '-' }}</div>
-                                <div class="text-gray dashboard-lifecycle-step__label">{{ $label }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="ops-divider dashboard-order-footer">
-                    <div>
-                        @if($order['latest_tracking'])
-                            <span class="data-label">Tracking Terakhir</span>
-                            <p class="data-value">{{ strtoupper($order['latest_tracking']->status) }} / {{ $order['latest_tracking']->location }} / {{ $order['latest_tracking']->tracked_at->format('d M H:i') }}</p>
-                        @else
-                            <span class="data-label">Update Terakhir</span>
-                            <p class="data-value">{{ $order['has_shipment'] ? 'Shipment aktif, menunggu update tracking berikutnya.' : 'Hub akan mengaktifkan shipment setelah pickup dan payment diverifikasi.' }}</p>
-                        @endif
+                    <!-- Timeline Steps -->
+                    <div class="pt-4 border-t border-slate-800/80">
+                        <span class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4 block">Alur Progres</span>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                            @foreach($stepLabels as $key => $label)
+                                <div class="glass-panel border-white/5 p-3 rounded-xl text-center flex flex-col justify-center items-center relative {{ $order['steps'][$key] ? 'border-primary/20 bg-primary/5' : '' }}">
+                                    <div class="font-bold text-sm {{ $order['steps'][$key] ? 'text-primary' : 'text-slate-500' }}">
+                                        {{ $order['steps'][$key] ? 'OK' : '-' }}
+                                    </div>
+                                    <div class="text-slate-400 text-[10px] mt-1 font-medium">{{ $label }}</div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
 
-                    @if($order['has_shipment'])
-                        <a href="{{ route('track.show') }}?receipt={{ urlencode($order['reference']) }}" class="btn-neon" style="text-decoration: none; font-size: 0.72rem;">Lacak Paket</a>
-                    @else
-                        <span class="text-gray" style="font-size: 0.72rem;">Nomor resi belum aktif</span>
+                    <!-- Tracking Footer info -->
+                    <div class="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="text-left">
+                            @if($order['latest_tracking'])
+                                <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Tracking Terakhir</span>
+                                <p class="text-xs text-slate-100 mt-1">
+                                    <span class="font-bold text-primary">{{ strtoupper($order['latest_tracking']->status) }}</span> / {{ $order['latest_tracking']->location }} / <span class="text-slate-400 font-medium">{{ $order['latest_tracking']->tracked_at->format('d M H:i') }}</span>
+                                </p>
+                            @else
+                                <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Update Terakhir</span>
+                                <p class="text-xs text-slate-300 mt-1">
+                                    {{ $order['has_shipment'] ? 'Shipment aktif, menunggu update tracking berikutnya.' : 'Hub akan mengaktifkan shipment setelah pickup dan payment diverifikasi.' }}
+                                </p>
+                            @endif
+                        </div>
+
+                        <div class="shrink-0 text-right">
+                            @if($order['has_shipment'])
+                                <x-fe.button href="{{ route('track.show') }}?receipt={{ urlencode($order['reference']) }}" variant="outline" class="btn-sm text-xs px-4">Lacak Paket</x-fe.button>
+                            @else
+                                <span class="text-slate-500 text-xs font-medium">Nomor resi belum aktif</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Next Action suggestion -->
+                    <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-800/80 text-left">
+                        <span class="text-primary font-bold text-xs uppercase tracking-wider">Langkah Berikutnya</span>
+                        <div class="text-slate-200 text-sm mt-1 leading-relaxed">{{ $order['next_action'] }}</div>
+                    </div>
+
+                    <!-- Customer Action Forms -->
+                    @if($order['can_reschedule'] || $order['can_cancel'] || $order['can_reupload_payment'])
+                        <div class="border-t border-slate-800/80 pt-6 space-y-4">
+                            <span class="text-slate-400 text-xs font-bold uppercase tracking-wider block">Aksi Pelanggan</span>
+
+                            @if($order['can_reupload_payment'])
+                                <form action="{{ route('order.payment-proof', $order['id']) }}" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-950/20 border border-slate-800/60 p-4 rounded-xl">
+                                    @csrf
+                                    <label class="text-xs text-slate-400 font-semibold sm:w-40 shrink-0" for="payment_proof_{{ $order['id'] }}">Upload ulang bukti transfer</label>
+                                    <input type="file" id="payment_proof_{{ $order['id'] }}" name="payment_proof" accept="image/*" required class="file-input file-input-bordered file-input-sm bg-slate-900/50 border-slate-800 text-xs rounded-xl focus:outline-none w-full sm:w-auto text-slate-100">
+                                    <x-fe.button type="submit" variant="primary" class="btn-sm py-1.5 px-4 font-bold text-xs w-full sm:w-auto">Kirim Review</x-fe.button>
+                                </form>
+                            @endif
+
+                            @if($order['can_reschedule'])
+                                <form action="{{ route('order.reschedule', $order['id']) }}" method="POST" class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-950/20 border border-slate-800/60 p-4 rounded-xl">
+                                    @csrf
+                                    <label class="text-xs text-slate-400 font-semibold sm:w-40 shrink-0" for="pickup_date_{{ $order['id'] }}">Jadwal ulang pickup</label>
+                                    <input type="date" id="pickup_date_{{ $order['id'] }}" name="pickup_date" value="{{ $order['pickup_date'] }}" min="{{ now()->format('Y-m-d') }}" required class="input input-bordered input-sm bg-slate-900/50 border-slate-800 text-xs rounded-xl focus:outline-none w-full sm:w-auto text-slate-100">
+                                    <x-fe.button type="submit" variant="primary" class="btn-sm py-1.5 px-4 font-bold text-xs w-full sm:w-auto">Update Tanggal</x-fe.button>
+                                </form>
+                            @endif
+
+                            @if($order['can_cancel'])
+                                <form action="{{ route('order.cancel', $order['id']) }}" method="POST" onsubmit="return confirm('Cancel this pickup request before courier assignment?');" class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-950/20 border border-slate-800/60 p-4 rounded-xl">
+                                    @csrf
+                                    <x-fe.button type="submit" variant="outline" class="btn-sm py-1.5 px-4 font-bold text-xs text-red-400 border-red-500/20 hover:bg-red-500/10 hover:border-red-500 w-full sm:w-auto">Batalkan Request</x-fe.button>
+                                    <span class="text-[10px] text-slate-500 font-semibold">Bisa dibatalkan sebelum ada kurir yang ditugaskan.</span>
+                                </form>
+                            @endif
+                        </div>
                     @endif
                 </div>
-
-                <div class="next-action-box">
-                    <span class="data-label">Langkah Berikutnya</span>
-                    <div class="text-main" style="font-size: 0.84rem;">{{ $order['next_action'] }}</div>
-                </div>
-
-                @if($order['can_reschedule'] || $order['can_cancel'] || $order['can_reupload_payment'])
-                    <div class="customer-action-panel">
-                        <span class="data-label">Aksi Tersedia</span>
-
-                        @if($order['can_reupload_payment'])
-                            <form action="{{ route('order.payment-proof', $order['id']) }}" method="POST" enctype="multipart/form-data" class="customer-action-form">
-                                @csrf
-                                <label class="text-gray" for="payment_proof_{{ $order['id'] }}">Upload ulang bukti transfer</label>
-                                <input type="file" id="payment_proof_{{ $order['id'] }}" name="payment_proof" accept="image/*" required>
-                                <button type="submit" class="btn-neon">Kirim Review</button>
-                            </form>
-                        @endif
-
-                        @if($order['can_reschedule'])
-                            <form action="{{ route('order.reschedule', $order['id']) }}" method="POST" class="customer-action-form customer-action-form--inline">
-                                @csrf
-                                <label class="text-gray" for="pickup_date_{{ $order['id'] }}">Jadwal ulang pickup</label>
-                                <input type="date" id="pickup_date_{{ $order['id'] }}" name="pickup_date" value="{{ $order['pickup_date'] }}" min="{{ now()->format('Y-m-d') }}" required>
-                                <button type="submit" class="btn-neon">Update Tanggal</button>
-                            </form>
-                        @endif
-
-                        @if($order['can_cancel'])
-                            <form action="{{ route('order.cancel', $order['id']) }}" method="POST" onsubmit="return confirm('Cancel this pickup request before courier assignment?');" class="customer-action-form customer-action-form--danger">
-                                @csrf
-                                <button type="submit" class="btn-secondary">Batalkan Request</button>
-                                <span class="text-gray">Bisa dilakukan sebelum kurir ditugaskan.</span>
-                            </form>
-                        @endif
+            @empty
+                <div class="text-center py-12 glass-panel border-white/5 rounded-2xl">
+                    <p class="text-slate-400 text-sm leading-relaxed">Belum ada pengiriman aktif.</p>
+                    <p class="text-slate-500 text-xs mt-1 leading-relaxed">Buat pickup pertama, lalu progres pembayaran dan pengiriman akan tampil di sini.</p>
+                    <div class="mt-6">
+                        <x-fe.button href="{{ route('order.create') }}" variant="primary" class="btn-sm">Buat Order Pertama</x-fe.button>
                     </div>
-                @endif
-            </div>
-        @empty
-            <div class="empty-state">
-                <p class="text-gray" style="font-size: 0.95rem;">Belum ada pengiriman aktif.</p>
-                <p class="text-gray" style="font-size: 0.82rem; margin-top: 0.75rem;">Buat pickup pertama, lalu progres pembayaran dan pengiriman akan tampil di sini.</p>
-                <div style="margin-top: 1.5rem;">
-                    <x-fe.button href="{{ route('order.create') }}" variant="primary">Buat Order Pertama</x-fe.button>
                 </div>
-            </div>
-        @endforelse
+            @endforelse
+        </div>
     </x-fe.panel>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('order-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function (e) {
+            const query = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.order-lifecycle-card').forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+</script>
+@endpush

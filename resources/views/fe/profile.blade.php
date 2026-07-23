@@ -2,42 +2,56 @@
 
 @push('head_assets')
     <link rel="preconnect" href="https://unpkg.com">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="preload" as="style" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    </noscript>
+    <style>
+        .loading-pulse {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
 @endpush
 
 @section('content')
-<div style="margin-top: 5rem;">
+<div class="space-y-8">
     <x-fe.page-header title="Profil" subtitle="Kelola identitas, alamat pickup, dan keamanan akun.">
-        <x-fe.button href="{{ route('dashboard') }}" variant="secondary" style="font-size: 0.8rem;">Dashboard</x-fe.button>
+        <x-fe.button href="{{ route('dashboard') }}" variant="outline" class="btn-sm font-bold">Dashboard</x-fe.button>
     </x-fe.page-header>
 
     @if(session('success'))
         <x-fe.alert tone="success" title="Berhasil">{{ session('success') }}</x-fe.alert>
     @endif
 
-    <div class="grid-2 section-animate" style="gap: 4rem; align-items: flex-start;">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <!-- Profile Info -->
-        <x-fe.panel title="Data Profil" variant="primary">
+        <x-fe.panel title="Data Profil" variant="primary" class="text-left">
             <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-            <div class="form-cluster" style="display: flex; gap: 2rem; align-items: center; margin-bottom: 3rem;">
-                    <div id="photo-preview-container">
+                
+                <div class="flex flex-col sm:flex-row items-center gap-6 mb-8 bg-slate-950/20 p-4 rounded-xl border border-slate-800/40">
+                    <div id="photo-preview-container" class="shrink-0">
                         @if($user->photo)
-                            <img src="{{ asset('storage/' . $user->photo) }}" id="photo-preview" style="width: 100px; height: 100px; border: 2px solid var(--color-primary); object-fit: cover;">
+                            <img src="{{ asset('storage/' . $user->photo) }}" id="photo-preview" class="w-24 h-24 rounded-full border-2 border-primary object-cover">
                         @else
-                            <div id="photo-placeholder" style="width: 100px; height: 100px; border: 2px dashed var(--color-gray); display: flex; align-items: center; justify-content: center; color: var(--color-gray); font-size: 0.72rem; text-align: center; padding: 5px;">Belum ada foto</div>
-                            <img src="" id="photo-preview" style="width: 100px; height: 100px; border: 2px solid var(--color-primary); object-fit: cover; display: none;">
+                            <div id="photo-placeholder" class="w-24 h-24 rounded-full border-2 border-dashed border-slate-700 flex items-center justify-center text-slate-500 text-[10px] text-center p-3">Belum ada foto</div>
+                            <img src="" id="photo-preview" class="w-24 h-24 rounded-full border-2 border-primary object-cover" style="display: none;">
                         @endif
                     </div>
-                    <div>
-                        <input type="file" name="photo" id="photo" style="display: none;" onchange="previewImage(this)">
-                        <x-fe.button type="button" onclick="document.getElementById('photo').click()" variant="secondary" style="font-size: 0.7rem;">Pilih Foto</x-fe.button>
-                        @error('photo') <br><small class="text-accent" style="font-weight: bold;">{{ $message }}</small> @enderror
+                    <div class="text-center sm:text-left space-y-2">
+                        <input type="file" name="photo" id="photo" class="hidden" onchange="previewImage(this)">
+                        <x-fe.button type="button" onclick="document.getElementById('photo').click()" variant="outline" class="btn-xs py-2 px-3 font-semibold text-[10px]">Pilih Foto Baru</x-fe.button>
+                        @error('photo') <br><span class="text-xs text-red-400 font-bold block mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
                 <x-fe.input label="Nama Lengkap" name="name" value="{{ $user->name }}" required />
-                <x-fe.input label="Nomor Telepon" name="phone" value="{{ $user->phone }}" required />
+                <x-fe.input label="Nomor Telepon" name="phone" id="phone_input" value="{{ $user->phone }}" required />
 
                 <x-fe.input type="select" label="Provinsi" name="province_id" id="province_id" onchange="loadKota()" required>
                     <option value="" disabled {{ !$user->province_id ? 'selected' : '' }}>Pilih provinsi...</option>
@@ -50,13 +64,17 @@
                     <option value="{{ $user->city }}" selected>{{ $user->city ?: 'Pilih provinsi dahulu...' }}</option>
                 </x-fe.input>
 
-                <div style="margin-top: 1.5rem;">
-                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
-                        <x-fe.input type="textarea" label="Alamat Utama" name="address" id="address" rows="2" class="mb-0" style="flex-grow: 1;">{{ $user->address }}</x-fe.input>
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <x-fe.button type="button" onclick="toggleMap()" variant="secondary" style="font-size: 0.7rem; white-space: nowrap;">Pilih di Map</x-fe.button>
-                            <x-fe.button type="button" onclick="senseLocation()" variant="primary" style="font-size: 0.7rem; white-space: nowrap;">Pakai Lokasi</x-fe.button>
-                        </div>
+                <div class="mt-4">
+                    <x-fe.input type="textarea" label="Alamat Utama" name="address" id="address" rows="3" class="mb-2">{{ $user->address }}</x-fe.input>
+                    
+                    <!-- GPS Inline Status Alert -->
+                    <div id="gps-status-alert" class="alert alert-error bg-error/10 border-error/20 text-red-400 rounded-xl p-3 text-xs font-semibold mb-2" style="display: none;">
+                        <span id="gps-status-text"></span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <x-fe.button type="button" onclick="toggleMap()" variant="outline" class="btn-xs py-1.5 px-3 font-semibold text-[10px]">Pilih di Map &rarr;</x-fe.button>
+                        <x-fe.button type="button" onclick="senseLocation(event)" variant="primary" class="btn-xs py-1.5 px-3 font-semibold text-[10px]">Gunakan Lokasi Saat Ini</x-fe.button>
                     </div>
                 </div>
 
@@ -65,12 +83,12 @@
                 <input type="hidden" name="longitude" id="lng" value="{{ $user->longitude }}">
 
                 <!-- Map Container -->
-                <div id="map-container" style="display: none; margin: 2rem 0; border: 2px solid var(--color-text-main); padding: 5px; background: var(--color-bg);">
-                    <div id="map" style="height: 300px; background: var(--color-bg);"></div>
-                    <p class="text-gray" style="font-size: 0.7rem; margin-top: 0.5rem; font-weight: bold;">Klik map atau geser marker untuk menyesuaikan titik.</p>
+                <div id="map-container" class="glass-panel border-white/5 p-2 rounded-2xl shadow-xl mt-4" style="display: none;">
+                    <div id="map" class="w-full rounded-xl overflow-hidden" style="height: 300px;"></div>
+                    <p class="text-slate-400 text-[10px] mt-2 font-medium px-1">Klik map atau geser marker untuk menyesuaikan titik pickup.</p>
                 </div>
 
-                <x-fe.button type="submit" variant="primary" style="width: 100%; font-weight: 900; margin-top: 2rem;">Simpan Profil</x-fe.button>
+                <x-fe.button type="submit" variant="primary" class="w-full mt-8 py-3.5 font-bold uppercase tracking-wider">Simpan Profil</x-fe.button>
             </form>
         </x-fe.panel>
 
@@ -121,10 +139,14 @@
             const addressInput = document.getElementById('address');
             const oldVal = addressInput.value;
             addressInput.value = "Mencari alamat...";
+            addressInput.classList.add('loading-pulse');
+            addressInput.readOnly = true;
 
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
                 .then(r => r.json())
                 .then(data => {
+                    addressInput.classList.remove('loading-pulse');
+                    addressInput.readOnly = false;
                     if (data.display_name) {
                         addressInput.value = data.display_name;
                     } else {
@@ -132,6 +154,8 @@
                     }
                 })
                 .catch(() => {
+                    addressInput.classList.remove('loading-pulse');
+                    addressInput.readOnly = false;
                     addressInput.value = oldVal;
                 });
         }
@@ -147,9 +171,14 @@
             }
         }
 
-        function senseLocation() {
+        function senseLocation(event) {
+            const alertBox = document.getElementById('gps-status-alert');
+            const alertText = document.getElementById('gps-status-text');
+            
+            if (alertBox) alertBox.style.display = 'none';
+
             if (!navigator.geolocation) {
-                alert("Browser belum mendukung geolocation.");
+                showGpsError("Browser Anda tidak mendukung deteksi lokasi otomatis.");
                 return;
             }
 
@@ -172,12 +201,33 @@
                     btn.disabled = false;
                 },
                 (err) => {
-                    alert("Gagal membaca lokasi: " + err.message);
                     btn.textContent = oldText;
                     btn.disabled = false;
+                    
+                    let errorMsg = "Gagal membaca lokasi: " + err.message;
+                    if (err.code === 1) {
+                        errorMsg = "Izin lokasi ditolak. Aktifkan GPS pada browser Anda.";
+                    } else if (err.code === 2) {
+                        errorMsg = "Informasi lokasi tidak tersedia saat ini.";
+                    } else if (err.code === 3) {
+                        errorMsg = "Waktu pencarian lokasi habis. Silakan coba lagi.";
+                    }
+                    showGpsError(errorMsg);
                 },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
             );
+        }
+
+        function showGpsError(message) {
+            const alertBox = document.getElementById('gps-status-alert');
+            const alertText = document.getElementById('gps-status-text');
+            if (alertBox && alertText) {
+                alertText.textContent = message;
+                alertBox.style.display = 'flex';
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 5000);
+            }
         }
 
         function loadKota() {
@@ -188,10 +238,12 @@
             if (!provId) return;
 
             kotaSelect.innerHTML = '<option value="">Loading...</option>';
+            kotaSelect.classList.add('loading-pulse');
 
             fetch(`/api/locations/kota?provinsi_id=${provId}`)
                 .then(r => r.json())
                 .then(kota => {
+                    kotaSelect.classList.remove('loading-pulse');
                     kotaSelect.innerHTML = '<option value="" disabled selected>Pilih kota...</option>';
                     kota.forEach(k => {
                         const opt = document.createElement('option');
@@ -204,6 +256,10 @@
                         const query = `${kotaSelect.value || ''} ${provText} Indonesia`.trim();
                         recenterMap(query);
                     }
+                })
+                .catch(() => {
+                    kotaSelect.classList.remove('loading-pulse');
+                    kotaSelect.innerHTML = '<option value="">Gagal memuat kota.</option>';
                 });
         }
 
@@ -223,18 +279,32 @@
             const query = `${cityText}, ${provText}, Indonesia`;
             recenterMap(query);
         });
+
+        // Phone input auto formatter
+        document.addEventListener('DOMContentLoaded', () => {
+            const phoneInput = document.getElementById('phone_input');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', (e) => {
+                    let val = e.target.value;
+                    if (val.startsWith('08')) {
+                        val = '+62 8' + val.substring(2);
+                    }
+                    e.target.value = val.replace(/[^\d\s\+\-]/g, '');
+                });
+            }
+        });
         </script>
         @endpush
 
         <!-- Security Access -->
-        <x-fe.panel title="Keamanan Akun" variant="accent">
-            <form action="{{ route('profile.password') }}" method="POST">
+        <x-fe.panel title="Keamanan Akun" variant="accent" class="text-left">
+            <form action="{{ route('profile.password') }}" method="POST" class="space-y-2">
                 @csrf
                 <x-fe.input type="password" label="Password Lama" name="current_password" required />
                 <x-fe.input type="password" label="Password Baru" name="password" required />
                 <x-fe.input type="password" label="Konfirmasi Password Baru" name="password_confirmation" required />
 
-                <x-fe.button type="submit" variant="secondary" style="width: 100%; margin-top: 1rem;">Update Password</x-fe.button>
+                <x-fe.button type="submit" variant="secondary" class="w-full mt-6 py-3.5 font-bold uppercase tracking-wider">Update Password</x-fe.button>
             </form>
         </x-fe.panel>
     </div>

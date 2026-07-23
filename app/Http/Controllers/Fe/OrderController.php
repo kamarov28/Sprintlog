@@ -177,15 +177,24 @@ class OrderController extends Controller
     {
         $this->authorizeCustomerPickup($pickup);
 
-        if ($pickup->status !== 'pending' || $pickup->shipment_id) {
-            return back()->withErrors(['order' => 'Order hanya bisa dibatalkan sebelum kurir di-assign.']);
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($pickup) {
+                // Lock the pickup record for update to prevent concurrent cancellation / assignment race conditions
+                $lockedPickup = PickupRequest::query()->lockForUpdate()->findOrFail($pickup->id);
+
+                if ($lockedPickup->status !== 'pending' || $lockedPickup->shipment_id) {
+                    throw new \Exception('Order hanya bisa dibatalkan sebelum kurir di-assign.');
+                }
+
+                $lockedPickup->update(['status' => 'cancelled']);
+            });
+
+            $this->auditPickup($request, $pickup->fresh(), 'customer_cancelled', 'pending', 'cancelled', null, null, 'Customer cancelled pickup request before courier assignment.');
+
+            return back()->with('success', 'Order request cancelled.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['order' => $e->getMessage()]);
         }
-
-        $previousStatus = $pickup->status;
-        $pickup->update(['status' => 'cancelled']);
-        $this->auditPickup($request, $pickup->fresh(), 'customer_cancelled', $previousStatus, 'cancelled', null, null, 'Customer cancelled pickup request before courier assignment.');
-
-        return back()->with('success', 'Order request cancelled.');
     }
 
     public function replacePaymentProof(Request $request, PickupRequest $pickup)

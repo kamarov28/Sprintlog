@@ -87,20 +87,33 @@ class PaymentController extends Controller
             abort(422, 'Pembayaran ini bukan transfer.');
         }
 
-        if (! $payment->proof_file) {
-            return back()->with('error', 'Bukti transfer belum tersedia.');
-        }
-
         $request->validate([
             'decision' => 'required|in:approve,reject',
         ]);
 
-        $payment->update([
-            'payment_status' => $request->decision === 'approve' ? 'paid' : 'failed',
-            'payment_date' => $request->decision === 'approve' ? now() : null,
-        ]);
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($payment, $request) {
+                // Lock payment record for update to prevent concurrent race conditions
+                $lockedPayment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
 
-        return back()->with('success', $request->decision === 'approve' ? 'Transfer disetujui.' : 'Transfer ditolak.');
+                if (\in_array($lockedPayment->payment_status, ['paid', 'failed'], true)) {
+                    throw new \Exception('Pembayaran ini sudah diverifikasi sebelumnya.');
+                }
+
+                if (! $lockedPayment->proof_file) {
+                    throw new \Exception('Bukti transfer belum tersedia.');
+                }
+
+                $lockedPayment->update([
+                    'payment_status' => $request->decision === 'approve' ? 'paid' : 'failed',
+                    'payment_date' => $request->decision === 'approve' ? now() : null,
+                ]);
+            });
+
+            return back()->with('success', $request->decision === 'approve' ? 'Transfer disetujui.' : 'Transfer ditolak.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function printProof(Payment $payment)

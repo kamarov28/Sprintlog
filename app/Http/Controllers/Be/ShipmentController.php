@@ -75,6 +75,10 @@ class ShipmentController extends Controller
     {
         $user = auth()->user();
 
+        if ($user->role === 'admin') {
+            return;
+        }
+
         if ($user->role === 'courier') {
             if ((int) $shipment->courier_id !== (int) $user->id) {
                 abort(403);
@@ -842,20 +846,7 @@ class ShipmentController extends Controller
 
         app(ShipmentRoutePlanner::class)->applyShipmentStatus($shipment, $nextStatus);
 
-        // If courier marked arrival and this leg is the final destination hub,
-        // record the recipient's name into `received_by` for clarity at hub.
-        if ($nextStatus === 'arrived_at_branch') {
-            $activeLeg = $shipment->legs()
-                ->whereIn('status', ['arrived', 'departed', 'pending'])
-                ->orderByRaw("CASE WHEN status = 'departed' THEN 0 ELSE 1 END")
-                ->orderBy('sequence')
-                ->first();
-
-            if ($activeLeg && (int) $activeLeg->destination_branch_id === (int) $shipment->destination_branch_id) {
-                $shipment->loadMissing('receiver');
-                $shipment->update(['received_by' => $shipment->receiver?->name]);
-            }
-        }
+        // Do not pre-populate received_by early on destination branch arrival.
 
         $shipment->trackings()->create([
             'location' => $request->location,
@@ -885,12 +876,13 @@ class ShipmentController extends Controller
         // Notify customer when package is delivered to recipient at destination.
         if ($nextStatus === 'delivered') {
             $shipment->loadMissing('receiver');
-            $receivedBy = $shipment->receiver?->name ?: null;
 
-            // Prefer explicit receiver name; fallback to description provided by courier.
-            if (! $receivedBy && ! empty($request->description)) {
-                // Try to extract a name from description, otherwise use the raw text.
+            // Prioritize explicit courier description/input (who accepted the package) over profile name.
+            $receivedBy = null;
+            if ($request->filled('description')) {
                 $receivedBy = trim($request->description);
+            } else {
+                $receivedBy = $shipment->receiver?->name ?: null;
             }
 
             if ($receivedBy) {
@@ -1057,20 +1049,8 @@ class ShipmentController extends Controller
                 'notes' => $request->note,
             ]);
 
-            // If this arrival is at the shipment's final destination hub,
-            // record the intended recipient's name into `received_by` so
-            // downstream staff see who the package is for (e.g., "Syamil").
-            $receivedBy = null;
-            if ((int) $leg->destination_branch_id === (int) $shipment->destination_branch_id) {
-                $shipment->loadMissing('receiver');
-                $receivedBy = $shipment->receiver?->name;
-            }
-
+            // Do not pre-populate received_by early on destination branch arrival.
             $updatePayload = ['status' => $nextStatus];
-            if ($receivedBy !== null) {
-                $updatePayload['received_by'] = $receivedBy;
-            }
-
             $shipment->update($updatePayload);
 
             $description = $request->note ?: 'Paket diterima di '.$leg->destinationBranch->name.' dari '.$leg->originBranch->name.'.';
@@ -1268,75 +1248,87 @@ class ShipmentController extends Controller
         $vehicle = $courier->vehicle;
         $now = now();
 
-        $manifest = DB::transaction(function () use ($request, $shipments, $legs, $branchId, $destinationIds, $now, $courier, $vehicle, $packageCount, $totalWeight) {
-            $manifest = ShipmentManifest::create([
-                'manifest_number' => $this->generateManifestNumber(),
-                'origin_branch_id' => $branchId,
-                'destination_branch_id' => $destinationIds->first(),
-                'created_by' => auth()->id(),
-                'courier_id' => $courier->id,
-                'vehicle_id' => $vehicle->id,
-                'package_count' => $packageCount,
-                'total_weight' => $totalWeight,
-                'status' => 'dispatched',
-                'departed_at' => $now,
-                'notes' => $request->notes,
-            ]);
+        try {
+            $manifest = DB::transaction(function () use ($request, $shipments, $legs, $branchId, $destinationIds, $now, $courier, $vehicle, $packageCount, $totalWeight) {
+                // Lock shipment legs for update to prevent concurrent double manifests
+                $legIds = collect($legs)->pluck('id')->filter()->values()->toArray();
+                $lockedLegs = \App\Models\ShipmentLeg::query()->whereIn('id', $legIds)->lockForUpdate()->get();
 
-            foreach ($shipments as $shipment) {
-                $leg = $legs[$shipment->id];
-                $previousStatus = $shipment->status;
-                $description = $request->notes ?: 'Paket diberangkatkan via manifest '.$manifest->manifest_number.' dari '.$leg->originBranch->name.' menuju '.$leg->destinationBranch->name.'.';
+                if ($lockedLegs->contains(fn($leg) => $leg->status !== 'pending')) {
+                    throw new \Exception('Salah satu shipment sudah berada di manifest lain atau telah diberangkatkan.');
+                }
 
-                ShipmentManifestItem::create([
-                    'shipment_manifest_id' => $manifest->id,
-                    'shipment_id' => $shipment->id,
-                    'shipment_leg_id' => $leg->id,
-                    'status' => 'loaded',
-                ]);
-
-                $leg->update([
-                    'status' => 'departed',
-                    'handler_id' => $courier->id,
+                $manifest = ShipmentManifest::create([
+                    'manifest_number' => $this->generateManifestNumber(),
+                    'origin_branch_id' => $branchId,
+                    'destination_branch_id' => $destinationIds->first(),
+                    'created_by' => auth()->id(),
+                    'courier_id' => $courier->id,
                     'vehicle_id' => $vehicle->id,
+                    'package_count' => $packageCount,
+                    'total_weight' => $totalWeight,
+                    'status' => 'dispatched',
                     'departed_at' => $now,
                     'notes' => $request->notes,
                 ]);
 
-                $shipment->update(['status' => 'in_transit']);
+                foreach ($shipments as $shipment) {
+                    $leg = $legs[$shipment->id];
+                    $previousStatus = $shipment->status;
+                    $description = $request->notes ?: 'Paket diberangkatkan via manifest '.$manifest->manifest_number.' dari '.$leg->originBranch->name.' menuju '.$leg->destinationBranch->name.'.';
 
-                $shipment->trackings()->create([
-                    'location' => $leg->originBranch->name,
-                    'description' => $description,
-                    'status' => 'in_transit',
-                    'tracked_at' => $now,
-                ]);
+                    ShipmentManifestItem::create([
+                        'shipment_manifest_id' => $manifest->id,
+                        'shipment_id' => $shipment->id,
+                        'shipment_leg_id' => $leg->id,
+                        'status' => 'loaded',
+                    ]);
 
-                ShipmentStatusAudit::create([
-                    'shipment_id' => $shipment->id,
-                    'user_id' => auth()->id(),
-                    'from_status' => $previousStatus,
-                    'to_status' => 'in_transit',
-                    'location' => $leg->originBranch->name,
-                    'description' => $description,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => substr((string) $request->userAgent(), 0, 512),
-                ]);
+                    $leg->update([
+                        'status' => 'departed',
+                        'handler_id' => $courier->id,
+                        'vehicle_id' => $vehicle->id,
+                        'departed_at' => $now,
+                        'notes' => $request->notes,
+                    ]);
 
-                app(ShipmentNotifier::class)->record(
-                    $shipment,
-                    'manifest_dispatched',
-                    'Paket masuk manifest',
-                    $description
-                );
-            }
+                    $shipment->update(['status' => 'in_transit']);
 
-            return $manifest;
-        });
+                    $shipment->trackings()->create([
+                        'location' => $leg->originBranch->name,
+                        'description' => $description,
+                        'status' => 'in_transit',
+                        'tracked_at' => $now,
+                    ]);
 
-        return back()
-            ->with('success', 'Manifest dispatch recorded: '.$manifest->manifest_number.'.')
-            ->with('manifest_print_url', route('be.shipments.manifest-print', $manifest));
+                    ShipmentStatusAudit::create([
+                        'shipment_id' => $shipment->id,
+                        'user_id' => auth()->id(),
+                        'from_status' => $previousStatus,
+                        'to_status' => 'in_transit',
+                        'location' => $leg->originBranch->name,
+                        'description' => $description,
+                        'ip_address' => $request->ip(),
+                        'user_agent' => substr((string) $request->userAgent(), 0, 512),
+                    ]);
+
+                    app(ShipmentNotifier::class)->record(
+                        $shipment,
+                        'manifest_dispatched',
+                        'Paket masuk manifest',
+                        $description
+                    );
+                }
+
+                return $manifest;
+            });
+
+            return back()
+                ->with('success', 'Manifest dispatch recorded: '.$manifest->manifest_number.'.')
+                ->with('manifest_print_url', route('be.shipments.manifest-print', $manifest));
+        } catch (\Exception $e) {
+            return back()->withErrors(['shipment_ids' => $e->getMessage()]);
+        }
     }
 
     public function recordException(Request $request, Shipment $shipment)
@@ -1461,14 +1453,54 @@ class ShipmentController extends Controller
             return 'Pengiriman antar hub wajib memakai kurir dengan kendaraan truck.';
         }
 
-        if ((float) $vehicle->capacity_kg < $weightKg) {
-            return 'Kapasitas kendaraan '.$vehicle->plate_number.' hanya '
-                .number_format((float) $vehicle->capacity_kg, 0, ',', '.').' KG.';
+        // Calculate currently active workload carried by the courier
+        $assignedShipmentsWeight = Shipment::query()
+            ->where('courier_id', $courier->id)
+            ->whereIn('status', ['picked_up', 'out_for_delivery'])
+            ->sum('total_weight');
+
+        $assignedShipmentsCount = Shipment::query()
+            ->where('courier_id', $courier->id)
+            ->whereIn('status', ['picked_up', 'out_for_delivery'])
+            ->count();
+
+        $transitLegsWeight = Shipment::query()
+            ->whereHas('legs', function ($query) use ($courier) {
+                $query->where('handler_id', $courier->id)
+                    ->where('status', 'departed');
+            })
+            ->sum('total_weight');
+
+        $transitLegsCount = Shipment::query()
+            ->whereHas('legs', function ($query) use ($courier) {
+                $query->where('handler_id', $courier->id)
+                    ->where('status', 'departed');
+            })
+            ->count();
+
+        $activePickupsWeight = PickupRequest::query()
+            ->where('courier_id', $courier->id)
+            ->whereIn('status', ['assigned', 'picked_up'])
+            ->sum('weight');
+
+        $activePickupsCount = PickupRequest::query()
+            ->where('courier_id', $courier->id)
+            ->whereIn('status', ['assigned', 'picked_up'])
+            ->count();
+
+        $cumulativeWeight = (float) $assignedShipmentsWeight + $transitLegsWeight + $activePickupsWeight + $weightKg;
+        $cumulativeCount = (int) $assignedShipmentsCount + $transitLegsCount + $activePickupsCount + $packageCount;
+
+        if ((float) $vehicle->capacity_kg < $cumulativeWeight) {
+            return 'Kapasitas berat kendaraan '.$vehicle->plate_number.' terlampaui (Kumulatif: '
+                .number_format($cumulativeWeight, 1, ',', '.').' KG / Kapasitas: '
+                .number_format((float) $vehicle->capacity_kg, 0, ',', '.').' KG).';
         }
 
-        if ((int) $vehicle->capacity_packages < $packageCount) {
-            return 'Kapasitas kendaraan '.$vehicle->plate_number.' hanya '
-                .number_format((int) $vehicle->capacity_packages, 0, ',', '.').' paket.';
+        if ((int) $vehicle->capacity_packages < $cumulativeCount) {
+            return 'Kapasitas jumlah paket kendaraan '.$vehicle->plate_number.' terlampaui (Kumulatif: '
+                .number_format($cumulativeCount, 0, ',', '.').' paket / Kapasitas: '
+                .number_format((int) $vehicle->capacity_packages, 0, ',', '.').' paket).';
         }
 
         return null;

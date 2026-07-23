@@ -10,38 +10,36 @@
 
 @php
     $inputId = $id ?: 'input_' . Str::random(8);
-    $controlStyle = "width: 100%; border: 1px solid var(--glass-control-border, rgba(255,255,255,0.82)); border-radius: var(--radius-md, 16px); background: var(--glass-control-bg, rgba(255,255,255,0.58)); color: var(--color-text-main); font-size: 1.05rem; padding: 0.82rem 1rem; outline: none;";
-    $textareaStyle = $controlStyle . " resize: vertical; min-height: 104px; line-height: 1.5;";
+    $controlClass = "w-full font-sans font-normal tracking-normal text-sm bg-slate-950/40 border-slate-800 focus:border-primary/60 text-slate-100 placeholder:text-slate-500 rounded-xl backdrop-blur-sm transition-all focus:outline-none";
 @endphp
 
-<div class="field-group mb-4 {{ $class }}">
+<div class="form-control w-full mb-4 {{ $class }}">
     @if($label)
-        <label for="{{ $inputId }}" class="text-gray field-label" style="font-size: 0.8rem;">
-            {{ $label }}
-        </label><br>
+        <label for="{{ $inputId }}" class="label py-1">
+            <span class="label-text text-slate-300 font-sans font-semibold text-xs tracking-normal">{{ $label }}</span>
+        </label>
     @endif
 
     @if($type === 'textarea')
-        <textarea id="{{ $inputId }}" {{ $attributes->except(['style', 'class'])->merge(['class' => 'ui-control ' . $attributes->get('class'), 'rows' => 2]) }} 
-                  style="{{ $textareaStyle }} {{ $attributes->get('style') }}"
+        <textarea id="{{ $inputId }}" 
+                  {{ $attributes->merge(['class' => 'textarea textarea-bordered ' . $controlClass, 'rows' => 3]) }}
                   @if($required) required @endif>{{ $slot->isEmpty() ? $value : $slot }}</textarea>
     @elseif($type === 'select')
-        <select id="{{ $inputId }}" {{ $attributes->except(['style', 'class'])->merge(['class' => 'ui-control ' . $attributes->get('class')]) }}
-                style="{{ $controlStyle }} {{ $attributes->get('style') }}"
+        <select id="{{ $inputId }}" 
+                {{ $attributes->merge(['class' => 'select select-bordered ' . $controlClass]) }}
                 @if($required) required @endif>
             {{ $slot }}
         </select>
     @else
-        <div style="position: relative;">
+        <div class="relative w-full">
             <input type="{{ $type }}" id="{{ $inputId }}" value="{{ $value }}" placeholder="{{ $placeholder }}"
-                {{ $attributes->except(['style', 'class'])->merge(['class' => 'ui-control ' . $attributes->get('class')]) }}
-                style="{{ $controlStyle }} {{ $type === 'password' ? 'padding-right: 5.5rem;' : '' }} {{ $attributes->get('style') }}"
+                {{ $attributes->merge(['class' => 'input input-bordered ' . $controlClass . ($type === 'password' ? ' pr-20' : '')]) }}
                 @if($required) required @endif>
             
             @if($type === 'password')
                 <button type="button" 
                         onclick="const input = document.getElementById('{{ $inputId }}'); input.type = input.type === 'password' ? 'text' : 'password'; this.textContent = input.type === 'password' ? 'SHOW' : 'HIDE';"
-                        class="password-toggle">
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-primary transition-colors cursor-pointer select-none">
                     SHOW
                 </button>
             @endif

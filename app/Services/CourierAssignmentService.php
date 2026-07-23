@@ -125,8 +125,55 @@ class CourierAssignmentService
             return 'Kendaraan '.$vehicle->plate_number.' tidak terdaftar di hub kurir ini.';
         }
 
-        if (! $vehicle->canCarry(max(0.1, (float) ($pickup->weight ?: 1)), 1)) {
-            return 'Kapasitas kendaraan '.$vehicle->plate_number.' tidak cukup untuk paket ini.';
+        // Calculate currently active workload carried by the courier
+        $assignedShipmentsWeight = \App\Models\Shipment::query()
+            ->where('courier_id', $courier->id)
+            ->whereIn('status', ['picked_up', 'out_for_delivery'])
+            ->sum('total_weight');
+
+        $assignedShipmentsCount = \App\Models\Shipment::query()
+            ->where('courier_id', $courier->id)
+            ->whereIn('status', ['picked_up', 'out_for_delivery'])
+            ->count();
+
+        $transitLegsWeight = \App\Models\Shipment::query()
+            ->whereHas('legs', function ($query) use ($courier) {
+                $query->where('handler_id', $courier->id)
+                    ->where('status', 'departed');
+            })
+            ->sum('total_weight');
+
+        $transitLegsCount = \App\Models\Shipment::query()
+            ->whereHas('legs', function ($query) use ($courier) {
+                $query->where('handler_id', $courier->id)
+                    ->where('status', 'departed');
+            })
+            ->count();
+
+        $activePickupsWeight = PickupRequest::query()
+            ->where('courier_id', $courier->id)
+            ->whereIn('status', ['assigned', 'picked_up'])
+            ->sum('weight');
+
+        $activePickupsCount = PickupRequest::query()
+            ->where('courier_id', $courier->id)
+            ->whereIn('status', ['assigned', 'picked_up'])
+            ->count();
+
+        $weightKg = max(0.1, (float) ($pickup->weight ?: 1));
+        $cumulativeWeight = (float) $assignedShipmentsWeight + $transitLegsWeight + $activePickupsWeight + $weightKg;
+        $cumulativeCount = (int) $assignedShipmentsCount + $transitLegsCount + $activePickupsCount + 1;
+
+        if ((float) $vehicle->capacity_kg < $cumulativeWeight) {
+            return 'Kapasitas berat kendaraan '.$vehicle->plate_number.' terlampaui (Kumulatif: '
+                .number_format($cumulativeWeight, 1, ',', '.').' KG / Kapasitas: '
+                .number_format((float) $vehicle->capacity_kg, 0, ',', '.').' KG).';
+        }
+
+        if ((int) $vehicle->capacity_packages < $cumulativeCount) {
+            return 'Kapasitas jumlah paket kendaraan '.$vehicle->plate_number.' terlampaui (Kumulatif: '
+                .number_format($cumulativeCount, 0, ',', '.').' paket / Kapasitas: '
+                .number_format((int) $vehicle->capacity_packages, 0, ',', '.').' paket).';
         }
 
         return null;
