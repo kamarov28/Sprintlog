@@ -291,3 +291,114 @@ body.theme-toy.app-shell--fe .reveal-on-scroll {
         margin-bottom: 0.35rem !important;
     }
 }
+
+/* --- Route-strip operational cards (opsi A rework) --- */
+body.landing-macaron-page .route-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.2rem;
+    align-items: stretch;
+}
+
+body.landing-macaron-page .route-strip__item {
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+    padding: 1.35rem 1.25rem 1.15rem;
+    border: 3px solid var(--color-panel-border);
+    border-radius: 8px;
+    background: var(--color-panel);
+    box-shadow: 7px 7px 0 var(--color-panel-border);
+}
+
+body.landing-macaron-page .route-strip__item:nth-child(2) {
+    background: var(--color-lilac);
+}
+
+body.landing-macaron-page .route-strip__item:nth-child(4) {
+    background: var(--color-peach);
+}
+
+body.landing-macaron-page .route-strip__item--featured {
+    background: var(--color-primary);
+    box-shadow: 9px 9px 0 var(--color-panel-border);
+}
+
+body.landing-macaron-page .route-strip__code {
+    display: block;
+    margin-bottom: 0.85rem;
+    color: var(--color-text-main) !important;
+    font-family: var(--font-ui) !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: none !important;
+}
+
+body.landing-macaron-page .route-strip__title {
+    margin: 0;
+    font-family: var(--font-title) !important;
+    font-size: clamp(1.65rem, 2.4vw, 2.15rem) !important;
+    font-weight: 800 !important;
+    line-height: 0.95 !important;
+    letter-spacing: -0.02em !important;
+}
+
+body.landing-macaron-page .route-strip__line {
+    display: block;
+    color: var(--color-text-main) !important;
+}
+
+body.landing-macaron-page .route-strip__line--accent {
+    color: #0a0a0a !important;
+}
+
+body.landing-macaron-page .route-strip__item--featured .route-strip__line--accent {
+    color: #0a0a0a !important;
+}
+
+body.landing-macaron-page .route-strip__sub {
+    margin: 0.65rem 0 0;
+    color: var(--color-gray) !important;
+    font-family: var(--font-body) !important;
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+}
+
+body.landing-macaron-page .route-strip__chip {
+    margin-top: auto;
+    align-self: flex-start;
+    padding: 0.4rem 0.75rem;
+    border: 2px solid var(--color-panel-border);
+    border-radius: 999px;
+    background: #fffaf2;
+    color: var(--color-text-main) !important;
+    font-family: var(--font-ui) !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+}
+
+@media (max-width: 1100px) {
+    body.landing-macaron-page .route-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    body.landing-macaron-page .route-strip {
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+    }
+
+    body.landing-macaron-page .route-strip__item {
+        min-height: 0;
+        padding: 1.15rem 1rem;
+        box-shadow: 4px 4px 0 var(--color-panel-border);
+    }
+
+    body.landing-macaron-page .route-strip__title {
+        font-size: 1.7rem !important;
+    }
+}
