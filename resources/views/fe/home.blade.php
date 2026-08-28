@@ -20,10 +20,38 @@
     $heroSecondaryText = 'Cek Ongkir';
     $heroSecondaryUrl = '#rates';
     $routeSteps = collect([
-            (object) ['title' => 'Step 01', 'body' => 'Isi detail pickup dan tujuan paket.'],
-            (object) ['title' => 'Step 02', 'body' => 'Kurir mengambil paket sesuai jadwal.'],
-            (object) ['title' => 'Step 03', 'body' => 'Hub memverifikasi pembayaran dan paket.'],
-            (object) ['title' => 'Step 04', 'body' => 'Paket bergerak dan bisa dilacak.'],
+            (object) [
+                'label' => '01 · Pickup',
+                'line1' => 'KURIR',
+                'line2' => 'JEMPUT',
+                'sub' => 'di lokasi',
+                'chip' => 'Sesuai jadwal',
+                'featured' => false,
+            ],
+            (object) [
+                'label' => '02 · Intake',
+                'line1' => 'HUB',
+                'line2' => 'CEK',
+                'sub' => 'paket & bayar',
+                'chip' => 'Kasir approve',
+                'featured' => false,
+            ],
+            (object) [
+                'label' => '03 · Status paket',
+                'line1' => 'LIHAT',
+                'line2' => 'POSISI',
+                'sub' => 'terakhir',
+                'chip' => 'Update tiap hub',
+                'featured' => true,
+            ],
+            (object) [
+                'label' => '04 · Selesai',
+                'line1' => 'PAKET',
+                'line2' => 'SAMPAI',
+                'sub' => 'resi selesai',
+                'chip' => 'Bisa dilacak lagi',
+                'featured' => false,
+            ],
         ]);
     $serviceCards = collect([
             (object) ['title' => 'BEST', 'subtitle' => 'Paling cepat', 'body' => "Estimasi 1 hari.\nCocok untuk paket prioritas.", 'settings' => ['variant' => 'primary']],
@@ -92,10 +120,15 @@
 
     <div class="route-strip section-animate" aria-label="SprintLog operating flow">
         @foreach($routeSteps as $step)
-            <div class="route-strip__item">
-                <span class="route-strip__code">{{ $step->title }}</span>
-                <span class="route-strip__label">{{ $step->body }}</span>
-            </div>
+            <article class="route-strip__item{{ $step->featured ? ' route-strip__item--featured' : '' }}">
+                <span class="route-strip__code">{{ $step->label }}</span>
+                <h3 class="route-strip__title">
+                    <span class="route-strip__line">{{ $step->line1 }}</span>
+                    <span class="route-strip__line route-strip__line--accent">{{ $step->line2 }}</span>
+                </h3>
+                <p class="route-strip__sub">{{ $step->sub }}</p>
+                <span class="route-strip__chip">{{ $step->chip }}</span>
+            </article>
         @endforeach
     </div>
 
