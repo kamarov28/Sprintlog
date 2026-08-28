@@ -197,8 +197,8 @@
         </div>
     </section>
 
-    <!-- HORIZONTAL PINNED NARRATIVE MANIFESTO (ALTERNATIVE SLIDES) -->
-    <section id="horizontal-pin-section" class="relative min-h-screen w-full flex flex-col justify-center overflow-hidden bg-[#06070a] border-y border-slate-800/80 my-20">
+    <!-- HORIZONTAL PINNED NARRATIVE MANIFESTO (full-bleed) -->
+    <section id="horizontal-pin-section" class="relative min-h-screen w-screen max-w-none left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex flex-col justify-center overflow-hidden bg-[#06070a] border-y border-slate-800/80 my-20">
 
         <!-- Floating Guide Badge -->
         <div class="absolute top-8 left-1/2 -translate-x-1/2 text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2.5 bg-slate-900/90 border border-primary/30 rounded-full px-6 py-2.5 shadow-2xl backdrop-blur-md z-20">
@@ -206,10 +206,10 @@
             <span class="font-alt tracking-wider">SCROLL KE BAWAH UNTUK MANIFESTO</span>
         </div>
 
-        <div id="horizontal-text-track" class="flex items-center gap-10 md:gap-16 pl-[12vw] pr-[25vw] py-12">
+        <div id="horizontal-text-track" class="flex items-stretch gap-6 md:gap-8 px-[4vw] py-16">
 
             <!-- SLIDE 1 -->
-            <div class="horizontal-slide w-[75vw] md:w-[60vw] shrink-0 flex flex-col justify-center items-start p-8 md:p-14 glass-panel border-l-4 border-l-primary border-white/10 rounded-3xl shadow-2xl relative overflow-hidden">
+            <div class="horizontal-slide w-[88vw] md:w-[86vw] shrink-0 flex flex-col justify-center items-start p-8 md:p-16 glass-panel border-l-4 border-l-primary border-white/10 rounded-3xl shadow-2xl relative overflow-hidden min-h-[60vh]">
                 <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
                 <span class="text-xs font-bold uppercase tracking-widest text-primary font-alt mb-4">01 · Pickup</span>
                 <h2 class="text-4xl sm:text-6xl md:text-7xl font-black uppercase text-slate-100 font-unbounded leading-[1.1] mb-2">
@@ -223,13 +223,13 @@
             </div>
 
             <!-- SLIDE 2 -->
-            <div class="horizontal-slide w-[75vw] md:w-[60vw] shrink-0 flex flex-col justify-center items-start p-8 md:p-14 glass-panel border-l-4 border-l-secondary border-white/10 rounded-3xl shadow-2xl relative overflow-hidden">
+            <div class="horizontal-slide w-[88vw] md:w-[86vw] shrink-0 flex flex-col justify-center items-start p-8 md:p-16 glass-panel border-l-4 border-l-secondary border-white/10 rounded-3xl shadow-2xl relative overflow-hidden min-h-[60vh]">
                 <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
                 <span class="text-xs font-bold uppercase tracking-widest text-secondary font-alt mb-4">02 · Intake</span>
                 <h2 class="text-4xl sm:text-6xl md:text-7xl font-black uppercase text-slate-100 font-unbounded leading-[1.1] mb-2">
                     HUB<br>CEK
                 </h2>
-                <p class="text-slate-400 text-base md:text-lg font-light mb-6">paket &amp; bayar</p>
+                <p class="text-slate-400 text-base md:text-lg font-light mb-6">paket & bayar</p>
                 <div data-parallax="fast" class="glass-panel border-secondary/40 px-5 py-3 rounded-2xl inline-flex items-center gap-3 text-xs md:text-sm text-secondary font-bold shadow-xl font-alt tracking-wider">
                     <i class="bi bi-lightning-charge-fill text-base"></i>
                     <span>Kasir approve</span>
@@ -237,7 +237,7 @@
             </div>
 
             <!-- SLIDE 3 (featured / Opsi A) -->
-            <div class="horizontal-slide w-[75vw] md:w-[60vw] shrink-0 flex flex-col justify-center items-start p-8 md:p-14 glass-panel border-l-4 border-l-primary border-white/10 rounded-3xl shadow-2xl relative overflow-hidden">
+            <div class="horizontal-slide w-[88vw] md:w-[86vw] shrink-0 flex flex-col justify-center items-start p-8 md:p-16 glass-panel border-l-4 border-l-primary border-white/10 rounded-3xl shadow-2xl relative overflow-hidden min-h-[60vh]">
                 <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-primary/15 rounded-full blur-3xl pointer-events-none"></div>
                 <span class="text-xs font-bold uppercase tracking-widest text-primary font-alt mb-4">03 · Status paket</span>
                 <h2 class="text-4xl sm:text-6xl md:text-7xl font-black uppercase text-slate-100 font-unbounded leading-[1.1] mb-2">
@@ -251,7 +251,7 @@
             </div>
 
             <!-- SLIDE 4 -->
-            <div class="horizontal-slide w-[75vw] md:w-[60vw] shrink-0 flex flex-col justify-center items-start p-8 md:p-14 glass-panel border-l-4 border-l-primary border-white/10 rounded-3xl shadow-2xl relative overflow-hidden">
+            <div class="horizontal-slide w-[88vw] md:w-[86vw] shrink-0 flex flex-col justify-center items-start p-8 md:p-16 glass-panel border-l-4 border-l-primary border-white/10 rounded-3xl shadow-2xl relative overflow-hidden min-h-[60vh]">
                 <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
                 <span class="text-xs font-bold uppercase tracking-widest text-primary font-alt mb-4">04 · Selesai</span>
                 <h2 class="text-4xl sm:text-6xl md:text-7xl font-black uppercase text-slate-100 font-unbounded leading-[1.1] mb-2">
